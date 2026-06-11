@@ -89,7 +89,7 @@ function updateKpis(rows,f) {
   let maximum={value:-1,row:null,month:null};
   rows.forEach(row=>row.months.forEach((v,m)=>{if((f.month==='ALL'||+f.month===m)&&v>maximum.value) maximum={value:v,row,month:m};}));
   const grouped=groupTotals(rows,r=>r.department,f.month), top=Object.entries(grouped).sort((a,b)=>b[1]-a[1])[0];
-  $('kpiTotal').textContent=`${format(total)} mm`; $('kpiTotalDetail').textContent=f.month==='ALL'?'acumulado del período':'acumulado mensual';
+  $('kpiTotal').textContent=`${format(average(values))} mm`; $('kpiTotalDetail').textContent=f.month==='ALL'?'promedio anual por registro':'promedio mensual por registro';
   $('kpiTopDepartment').textContent=top?top[0]:'—'; $('kpiTopDepartmentDetail').textContent=top?`${format(top[1])} mm`:'sin datos';
 }
 function renderAnnual(f) {

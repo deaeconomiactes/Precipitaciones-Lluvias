@@ -1,0 +1,16 @@
+# Original source workbooks belong in the separate private data repository.
+*.xls
+*.xlsx
+Temperatura/
+
+# Local/editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Temporary outputs
+*.log
+__pycache__/
+_site/
+private-data-repo/

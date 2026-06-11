@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Dashboard interactivo de precipitaciones y clima de Corrientes.">
+  <title>Precipitaciones y Clima | Corrientes</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="climate-controls.css">
+  <link rel="stylesheet" href="operational.css">
+</head>
+<body>
+  <div class="loading" id="loading"><div class="spinner"></div><p>Preparando datos climáticos...</p></div>
+  <header class="header">
+    <div class="header-inner">
+      <div class="brand">
+        <div class="brand-icon" aria-hidden="true">
+          <svg viewBox="0 0 48 48"><path d="M24 5C18 14 10 22 10 31a14 14 0 0 0 28 0C38 22 30 14 24 5Z"/><path d="M17 32c4 3 10 3 14 0"/></svg>
+        </div>
+        <div><h1>Sala de Situación Hídrica y Climática</h1><p>Provincia de Corrientes · prototipo de apoyo a la gestión</p></div>
+      </div>
+      <div class="header-stats">
+        <div><span>Cobertura</span><strong id="headerCoverage">—</strong></div>
+        <div><span>Departamentos</span><strong id="headerDepartments">—</strong></div>
+        <div><span>Actualización de datos</span><strong id="headerUpdated">—</strong></div>
+      </div>
+    </div>
+  </header>
+
+  <nav class="section-nav" aria-label="Secciones del dashboard">
+    <div class="section-nav-inner">
+      <button class="section-tab active" data-panel="summaryPanel">Resumen provincial</button>
+      <button class="section-tab" data-panel="departmentPanel">Análisis por departamento</button>
+      <button class="section-tab" data-panel="temporalPanel">Evolución temporal</button>
+      <button class="section-tab" data-panel="riskPanel">Prioridad y alertas</button>
+      <button class="section-tab" data-panel="dataPanel">Metodología y datos</button>
+    </div>
+  </nav>
+
+  <section class="filters">
+    <div class="filters-inner">
+      <label>Departamento<select id="departmentFilter"><option value="ALL">Todos</option></select></label>
+      <label>Año<select id="yearFilter"><option value="ALL">Todos</option></select></label>
+      <label>Mes<select id="monthFilter"><option value="ALL">Año completo</option></select></label>
+      <button id="resetFilters" type="button">Restablecer filtros</button>
+    </div>
+  </section>
+
+  <main>
+    <section class="dashboard-panel active" id="summaryPanel">
+      <div class="panel-intro"><div><span class="eyebrow">Lectura rápida</span><h2>Resumen provincial</h2><p>Qué ocurre, dónde se concentra y qué información falta para decidir.</p></div><span class="status-pill">Último año disponible: <strong id="latestDataYear">—</strong></span></div>
+      <section class="kpi-grid operational-kpis">
+        <article class="kpi blue"><span class="kpi-label">Precipitación acumulada</span><strong id="kpiTotal">—</strong><small id="kpiTotalDetail">según filtros</small></article>
+        <article class="kpi amber"><span class="kpi-label">Mayor acumulado</span><strong id="kpiTopDepartment">—</strong><small id="kpiTopDepartmentDetail">—</small></article>
+        <article class="kpi rose"><span class="kpi-label">Prioridad alta o crítica</span><strong id="kpiPriorityCount">—</strong><small>según lluvia del período</small></article>
+        <article class="kpi neutral"><span class="kpi-label">Superficie inundada</span><strong>Sin datos</strong><small>fuente pendiente</small></article>
+      </section>
+      <section class="availability-strip" aria-label="Indicadores operativos pendientes">
+        <div><span>Lluvia últimas 24 h</span><strong>No disponible</strong></div>
+        <div><span>Lluvia últimos 7 días</span><strong>No disponible</strong></div>
+        <div><span>Lluvia últimos 30 días</span><strong>No disponible</strong></div>
+        <div><span>Variación de superficie inundada</span><strong>No disponible</strong></div>
+      </section>
+      <section class="decision-grid">
+        <article class="card map-placeholder"><div class="card-head"><div><h2>Mapa departamental de Corrientes</h2><p>Preparado para visualizar lluvia, superficie inundada o prioridad territorial.</p></div><span class="pending-badge">Geometría pendiente</span></div><div class="map-empty"><strong>Mapa no disponible</strong><p>El proyecto todavía no contiene GeoJSON, shapefile ni coordenadas departamentales. No se incorpora una geometría externa para mantener la trazabilidad de las fuentes.</p></div></article>
+        <article class="card"><div class="card-head"><div><h2>Departamentos a priorizar</h2><p>Clasificación relativa por intensidad de lluvia del período seleccionado.</p></div></div><div id="prioritySummary" class="priority-list"></div></article>
+      </section>
+      <section class="flood-card">
+        <div class="flood-icon">ha</div><div><span class="eyebrow">Información crítica pendiente</span><h2>Superficie inundada por departamento</h2><p>No existen mediciones de hectáreas inundadas, geometrías ni variaciones temporales en las fuentes locales. El módulo queda preparado sin inventar estimaciones.</p></div><strong>— ha</strong>
+      </section>
+    </section>
+
+    <section class="dashboard-panel" id="departmentPanel">
+      <div class="panel-intro"><div><span class="eyebrow">Lectura territorial</span><h2>Análisis por departamento</h2><p>Usá el selector superior para enfocar un departamento y compararlo con el resto.</p></div></div>
+      <section class="chart-grid">
+        <article class="card"><div class="card-head"><div><h2>Perfil mensual</h2><p>Distribución estacional de las lluvias</p></div></div><div class="chart-box"><canvas id="monthlyChart"></canvas></div></article>
+        <article class="card"><div class="card-head"><div><h2>Ranking departamental</h2><p>Acumulado para el período filtrado</p></div></div><div class="chart-box tall"><canvas id="rankingChart"></canvas></div></article>
+        <article class="card full"><div class="card-head"><div><h2>Mapa de calor departamental</h2><p>Intensidad mensual media según los filtros activos</p></div></div><div class="heatmap-wrap" id="heatmap"></div></article>
+      </section>
+      <section class="card table-card"><div class="card-head"><div><h2>Detalle departamental</h2><p>Resumen calculado con los filtros activos</p></div><button class="download-button" id="downloadTable">Descargar CSV</button></div><div class="table-wrap"><table><thead><tr><th>Departamento</th><th>Registros</th><th>Acumulado</th><th>Promedio</th><th>Máximo</th><th>Mes máximo</th></tr></thead><tbody id="detailsTable"></tbody></table></div></section>
+    </section>
+
+    <section class="dashboard-panel" id="temporalPanel">
+      <div class="panel-intro"><div><span class="eyebrow">Comportamiento histórico</span><h2>Evolución temporal</h2><p>Series disponibles a escala mensual y anual.</p></div></div>
+      <section class="chart-grid">
+        <article class="card wide annual-card"><div class="card-head annual-head"><div><h2>Evolución anual</h2><p>Comparación de la precipitación acumulada entre los años seleccionados.</p></div></div><div class="annual-toolbar"><span class="annual-toolbar-title">Período analizado</span><div class="annual-controls"><label><span>Desde</span><select id="annualFromFilter"></select></label><span class="annual-separator">→</span><label><span>Hasta</span><select id="annualToFilter"></select></label></div></div><div class="chart-box"><canvas id="annualChart"></canvas></div></article>
+        <article class="card"><div class="card-head"><div><h2>Anomalías disponibles</h2><p>Diferencia frente al promedio de la grilla local</p></div><span class="source-tag">May–Oct 2020</span></div><div class="chart-box tall"><canvas id="anomalyChart"></canvas></div></article>
+        <article class="card"><div class="card-head climate-head"><div><h2>Clima observado por localidad</h2><p>Temperatura, humedad, viento y lluvia acumulada mensual.</p></div><div class="climate-controls"><label>Localidad de la estación<select id="stationFilter"></select></label><span class="source-tag" id="stationCoverage">—</span></div></div><div class="chart-box climate"><canvas id="climateChart"></canvas></div></article>
+      </section>
+    </section>
+
+    <section class="dashboard-panel" id="riskPanel">
+      <div class="panel-intro"><div><span class="eyebrow">Priorización transparente</span><h2>Prioridad y alertas</h2><p>Señal orientativa basada únicamente en intensidad relativa de lluvia; no equivale a riesgo de inundación.</p></div><div class="risk-legend"><span class="risk-low">Bajo</span><span class="risk-medium">Medio</span><span class="risk-high">Alto</span><span class="risk-critical">Crítico</span></div></div>
+      <section class="method-callout"><strong>Fórmula actual</strong><p>Puntaje = posición porcentual del promedio de lluvia del departamento dentro del período seleccionado. Bajo: 0–24; Medio: 25–49; Alto: 50–74; Crítico: 75–100. Se actualizará cuando existan superficie inundada y persistencia reciente.</p></section>
+      <section class="card table-card"><div class="card-head"><div><h2>Ranking de prioridad pluviométrica</h2><p>Orden sugerido para revisión territorial, no una alerta hidrológica oficial.</p></div></div><div class="table-wrap"><table><thead><tr><th>Prioridad</th><th>Departamento</th><th>Puntaje</th><th>Lluvia promedio</th><th>Lectura sugerida</th></tr></thead><tbody id="riskTable"></tbody></table></div></section>
+    </section>
+
+    <section class="dashboard-panel" id="dataPanel">
+      <div class="panel-intro"><div><span class="eyebrow">Trazabilidad</span><h2>Metodología y datos</h2><p>Qué puede responder hoy el prototipo y qué necesita para avanzar.</p></div></div>
+      <section class="method-grid">
+        <article class="method-card available"><h3>Datos disponibles</h3><ul><li>Lluvia mensual por departamento, 1993–2026.</li><li>Temperatura, humedad, viento y lluvia diaria de ocho estaciones.</li><li>Una grilla comparativa departamental May–Oct 2020.</li></ul></article>
+        <article class="method-card pending"><h3>Datos pendientes</h3><ul><li>Superficie inundada y hectáreas afectadas.</li><li>Geometrías departamentales para mapas.</li><li>Lluvia reciente departamental de 24 h, 7 y 30 días.</li><li>Variables de vulnerabilidad territorial.</li></ul></article>
+        <article class="method-card"><h3>Procesamiento</h3><ul><li>Nombres departamentales normalizados.</li><li>Filas vacías y años totalmente en cero excluidos.</li><li>Fechas inválidas de estaciones descartadas.</li><li>Sin interpolación ni datos inventados.</li></ul></article>
+        <article class="method-card"><h3>Limitación principal</h3><p>El prototipo permite análisis histórico y priorización relativa por lluvia. No permite afirmar cuántas hectáreas están inundadas ni emitir alertas hidrológicas operativas.</p></article>
+      </section>
+    </section>
+  </main>
+
+  <footer><p>Dashboard independiente · Datos exclusivos de Precipitaciones-Lluvias</p><p id="dataNote"></p></footer>
+  <div class="error-banner" id="errorBanner"></div>
+  <script src="app.js"></script>
+</body>
+</html>

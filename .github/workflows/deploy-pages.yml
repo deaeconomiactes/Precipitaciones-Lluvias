@@ -1,0 +1,57 @@
+name: Deploy dashboard to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Build public site from allowlist
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p _site/data
+          cp index.html app.js styles.css climate-controls.css operational.css _site/
+          cp data/rainfall.json data/anomalies.json data/stations.json data/metadata.json _site/data/
+          touch _site/.nojekyll
+
+      - name: Verify private files are excluded
+        shell: bash
+        run: |
+          set -euo pipefail
+          if find _site -type f \( -name "*.xls" -o -name "*.xlsx" -o -name "*.ps1" -o -name "*.md" \) | grep -q .; then
+            echo "Private or internal files found in the public artifact."
+            exit 1
+          fi
+          find _site -type f -maxdepth 3 -print
+
+      - name: Upload public dashboard only
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - name: Deploy GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

@@ -77,7 +77,7 @@
     <section class="dashboard-panel" id="departmentPanel">
       <div class="panel-intro"><div><span class="eyebrow">Lectura territorial</span><h2>Análisis por departamento</h2><p>Usá el selector superior para enfocar un departamento y compararlo con el resto.</p></div></div>
       <section class="chart-grid">
-        <article class="card"><div class="card-head"><div><h2>Perfil mensual</h2><p>Distribución estacional de las lluvias</p></div></div><div class="chart-box"><canvas id="monthlyChart"></canvas></div></article>
+        <article class="card"><div class="card-head"><div><h2>Perfil mensual</h2><p id="monthlyChartDescription">Promedio provincial de la distribución estacional de las lluvias.</p></div><span class="source-tag" id="monthlyChartScope">Provincia</span></div><div class="chart-box"><canvas id="monthlyChart"></canvas></div></article>
         <article class="card"><div class="card-head"><div><h2>Ranking departamental</h2><p>Acumulado para el período filtrado</p></div></div><div class="chart-box tall"><canvas id="rankingChart"></canvas></div></article>
         <article class="card full"><div class="card-head"><div><h2>Mapa de calor departamental</h2><p>Intensidad mensual media según los filtros activos</p></div></div><div class="heatmap-wrap" id="heatmap"></div></article>
       </section>
@@ -112,6 +112,6 @@
 
   <footer><p>Dashboard independiente · Datos exclusivos de Precipitaciones-Lluvias</p><p id="dataNote"></p></footer>
   <div class="error-banner" id="errorBanner"></div>
-  <script src="app.js"></script>
+  <script src="app.js?v=20260611-1"></script>
 </body>
 </html>

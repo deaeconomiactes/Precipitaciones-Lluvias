@@ -99,9 +99,20 @@ function renderAnnual(f) {
   const divisor=f.department==='ALL'?new Set(rows.map(r=>r.department)).size:1;
   chart('annualChart','line',{labels,datasets:[dataset('Precipitación media',labels.map(y=>grouped[y]/divisor),COLORS[0],true)]},lineOptions('mm'));
 }
-function renderMonthly(rows) {
+function renderMonthly(rows,f) {
   const values=MONTHS.map((_,m)=>average(rows.map(r=>r.months[m]).filter(Number.isFinite)));
-  chart('monthlyChart','bar',{labels:MONTHS,datasets:[dataset('Promedio mensual',values,COLORS[1])]},barOptions('mm'));
+  const datasets=[dataset(f.department==='ALL'?'Promedio provincial':f.department,values,COLORS[1])];
+  if(f.department!=='ALL'){
+    const provincialRows=state.rainfall.filter(r=>f.year==='ALL'||r.year===+f.year);
+    const provincial=MONTHS.map((_,m)=>average(provincialRows.map(r=>r.months[m]).filter(Number.isFinite)));
+    datasets.push({...dataset('Promedio provincial',provincial,COLORS[0]),type:'line',backgroundColor:'transparent',borderWidth:2.5,pointRadius:3});
+    $('monthlyChartScope').textContent=f.department;
+    $('monthlyChartDescription').textContent=`Comparación de ${f.department} frente al promedio provincial.`;
+  }else{
+    $('monthlyChartScope').textContent='Provincia';
+    $('monthlyChartDescription').textContent='Promedio provincial de la distribución estacional de las lluvias.';
+  }
+  chart('monthlyChart','bar',{labels:MONTHS,datasets},barOptions('mm',false,true));
 }
 function renderRanking(rows,f) {
   const grouped=groupTotals(rows,r=>r.department,f.month), entries=Object.entries(grouped).sort((a,b)=>b[1]-a[1]).slice(0,15).reverse();
@@ -168,5 +179,5 @@ function groupTotals(rows,key,month){return rows.reduce((out,row)=>{const k=key(
 function dataset(label,data,color,fill=false){return{label,data,borderColor:color,backgroundColor:fill?`${color}20`:`${color}aa`,borderWidth:2,fill,tension:.3,pointRadius:2,borderRadius:5}}
 function axis(){return{grid:{color:'rgba(52,86,104,.08)'},ticks:{color:'#617887',font:{family:'Inter',size:10}}}}
 function lineOptions(unit){return{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{labels:{color:'#496473',usePointStyle:true}},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${format(c.raw)} ${unit}`}}},scales:{x:axis(),y:axis()}}}
-function barOptions(unit,horizontal=false){return{...lineOptions(unit),indexAxis:horizontal?'y':'x',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${format(c.raw)} ${unit}`}}}}}
+function barOptions(unit,horizontal=false,showLegend=false){return{...lineOptions(unit),indexAxis:horizontal?'y':'x',plugins:{legend:{display:showLegend,labels:{color:'#496473',usePointStyle:true}},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${format(c.raw)} ${unit}`}}}}}
 function chart(id,type,data,options){if(state.charts[id])state.charts[id].destroy();state.charts[id]=new Chart($(id),{type,data,options});}

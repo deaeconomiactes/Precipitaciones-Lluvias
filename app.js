@@ -126,7 +126,7 @@ function renderHeatmap(rows,f) {
   const departments=[...new Set(rows.map(r=>r.department))].sort(), matrix=departments.map(d=>MONTHS.map((_,m)=>average(rows.filter(r=>r.department===d).map(r=>r.months[m]).filter(Number.isFinite))));
   const max=Math.max(1,...matrix.flat()), visible=f.month==='ALL'?[0,1,2,3,4,5,6,7,8,9,10,11]:[+f.month];
   let html='<div class="heatmap-grid"><div></div>'+visible.map(m=>`<div class="heat-cell heat-head">${MONTHS[m]}</div>`).join('');
-  departments.forEach((department,i)=>{html+=`<div class="heat-label">${department}</div>`+visible.map(m=>{const v=matrix[i][m],alpha=.08+.85*(v/max);return `<div class="heat-cell" title="${department} · ${MONTHS_FULL[m]}: ${format(v)} mm" style="background:rgba(34,211,238,${alpha})">${format(v)} mm</div>`}).join('');});
+  departments.forEach((department,i)=>{html+=`<div class="heat-label">${department}</div>`+visible.map(m=>{const v=matrix[i][m],alpha=.08+.85*(v/max);return `<div class="heat-cell" title="${department} · ${MONTHS_FULL[m]}: ${format(v)} mm" style="background:rgba(34,211,238,${alpha})">${format(v)}</div>`}).join('');});
   $('heatmap').innerHTML=html+'</div>';
 }
 function renderClimate() {

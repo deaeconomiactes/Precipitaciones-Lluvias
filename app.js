@@ -97,36 +97,36 @@ function renderAnnual(f) {
   const rows=state.rainfall.filter(r=>(f.department==='ALL'||r.department===f.department)&&r.year>=from&&r.year<=to);
   const grouped=groupTotals(rows,r=>r.year,f.month), labels=Object.keys(grouped).sort((a,b)=>a-b);
   const divisor=f.department==='ALL'?new Set(rows.map(r=>r.department)).size:1;
-  chart('annualChart','line',{labels,datasets:[dataset('Precipitación media',labels.map(y=>grouped[y]/divisor),COLORS[0],true)]},lineOptions('mm'));
+  chart('annualChart','line',{labels,datasets:[dataset('Precipitación media',labels.map(y=>grouped[y]/divisor),COLORS[0],true,'mm')]},lineOptions('mm','Precipitación media (mm)'));
 }
 function renderMonthly(rows,f) {
   const values=MONTHS.map((_,m)=>average(rows.map(r=>r.months[m]).filter(Number.isFinite)));
-  const datasets=[dataset(f.department==='ALL'?'Promedio provincial':f.department,values,COLORS[1])];
+  const datasets=[dataset(f.department==='ALL'?'Promedio provincial':f.department,values,COLORS[1],false,'mm')];
   if(f.department!=='ALL'){
     const provincialRows=state.rainfall.filter(r=>f.year==='ALL'||r.year===+f.year);
     const provincial=MONTHS.map((_,m)=>average(provincialRows.map(r=>r.months[m]).filter(Number.isFinite)));
-    datasets.push({...dataset('Promedio provincial',provincial,COLORS[0]),type:'line',backgroundColor:'transparent',borderWidth:2.5,pointRadius:3});
+    datasets.push({...dataset('Promedio provincial',provincial,COLORS[0],false,'mm'),type:'line',backgroundColor:'transparent',borderWidth:2.5,pointRadius:3});
     $('monthlyChartScope').textContent=f.department;
     $('monthlyChartDescription').textContent=`Comparación de ${f.department} frente al promedio provincial.`;
   }else{
     $('monthlyChartScope').textContent='Provincia';
     $('monthlyChartDescription').textContent='Promedio provincial de la distribución estacional de las lluvias.';
   }
-  chart('monthlyChart','bar',{labels:MONTHS,datasets},barOptions('mm',false,true));
+  chart('monthlyChart','bar',{labels:MONTHS,datasets},barOptions('mm',false,true,'Precipitación mensual (mm)'));
 }
 function renderRanking(rows,f) {
-  const grouped=groupTotals(rows,r=>r.department,f.month), entries=Object.entries(grouped).sort((a,b)=>b[1]-a[1]).slice(0,15).reverse();
-  chart('rankingChart','bar',{labels:entries.map(e=>e[0]),datasets:[dataset('Acumulado',entries.map(e=>e[1]),COLORS[0])]},barOptions('mm',true));
+  const grouped=groupTotals(rows,r=>r.department,f.month), entries=Object.entries(grouped).sort((a,b)=>b[1]-a[1]).slice(0,15);
+  chart('rankingChart','bar',{labels:entries.map(e=>e[0]),datasets:[dataset('Acumulado',entries.map(e=>e[1]),COLORS[0],false,'mm')]},barOptions('mm',true,false,'Precipitación acumulada (mm)'));
 }
 function renderAnomalies(f) {
   let rows=state.anomalies.filter(r=>f.department==='ALL'||r.department===f.department).sort((a,b)=>a.differenceMm-b.differenceMm);
-  chart('anomalyChart','bar',{labels:rows.map(r=>r.department),datasets:[{...dataset('Diferencia',rows.map(r=>r.differenceMm),COLORS[4]),backgroundColor:rows.map(r=>r.differenceMm>=0?'rgba(34,211,238,.65)':'rgba(251,113,133,.7)')}]},barOptions('mm',true));
+  chart('anomalyChart','bar',{labels:rows.map(r=>r.department),datasets:[{...dataset('Diferencia',rows.map(r=>r.differenceMm),COLORS[4],false,'mm'),backgroundColor:rows.map(r=>r.differenceMm>=0?'rgba(34,211,238,.65)':'rgba(251,113,133,.7)')}]},barOptions('mm',true,false,'Diferencia respecto al promedio (mm)'));
 }
 function renderHeatmap(rows,f) {
   const departments=[...new Set(rows.map(r=>r.department))].sort(), matrix=departments.map(d=>MONTHS.map((_,m)=>average(rows.filter(r=>r.department===d).map(r=>r.months[m]).filter(Number.isFinite))));
   const max=Math.max(1,...matrix.flat()), visible=f.month==='ALL'?[0,1,2,3,4,5,6,7,8,9,10,11]:[+f.month];
   let html='<div class="heatmap-grid"><div></div>'+visible.map(m=>`<div class="heat-cell heat-head">${MONTHS[m]}</div>`).join('');
-  departments.forEach((department,i)=>{html+=`<div class="heat-label">${department}</div>`+visible.map(m=>{const v=matrix[i][m],alpha=.08+.85*(v/max);return `<div class="heat-cell" title="${department} · ${MONTHS_FULL[m]}: ${format(v)} mm" style="background:rgba(34,211,238,${alpha})">${format(v)}</div>`}).join('');});
+  departments.forEach((department,i)=>{html+=`<div class="heat-label">${department}</div>`+visible.map(m=>{const v=matrix[i][m],alpha=.08+.85*(v/max);return `<div class="heat-cell" title="${department} · ${MONTHS_FULL[m]}: ${format(v)} mm" style="background:rgba(34,211,238,${alpha})">${format(v)} mm</div>`}).join('');});
   $('heatmap').innerHTML=html+'</div>';
 }
 function renderClimate() {
@@ -136,11 +136,11 @@ function renderClimate() {
   const metric=(key,mode='avg')=>byMonth.map(group=>mode==='sum'?group.reduce((s,r)=>s+(r[key]||0),0):average(group.map(r=>r[key]).filter(Number.isFinite)));
   $('stationCoverage').textContent=`${station.station} · ${rows.length} meses`;
   chart('climateChart','line',{labels:MONTHS,datasets:[
-    {...dataset('Temperatura °C',metric('temperature'),COLORS[4]),yAxisID:'y'},
-    {...dataset('Humedad %',metric('humidity'),COLORS[2]),yAxisID:'y'},
-    {...dataset('Viento',metric('wind'),COLORS[3]),yAxisID:'y'},
-    {...dataset('Lluvia acumulada del mes (mm)',metric('rain24Total','sum'),COLORS[1],true),yAxisID:'rain'}
-  ]},{...lineOptions(''),scales:{x:axis(),y:{...axis(),position:'left'},rain:{...axis(),position:'right',grid:{drawOnChartArea:false}}}});
+    {...dataset('Temperatura',metric('temperature'),COLORS[4],false,'°C'),yAxisID:'y'},
+    {...dataset('Humedad',metric('humidity'),COLORS[2],false,'%'),yAxisID:'y'},
+    {...dataset('Viento',metric('wind'),COLORS[3],false,'unidad original'),yAxisID:'y'},
+    {...dataset('Lluvia acumulada del mes',metric('rain24Total','sum'),COLORS[1],true,'mm'),yAxisID:'rain'}
+  ]},{...lineOptions(''),scales:{x:axis(),y:{...axis('', 'Temperatura (°C), humedad (%) y viento (unidad original)'),position:'left'},rain:{...axis('mm','Lluvia acumulada (mm)'),position:'right',grid:{drawOnChartArea:false}}}});
 }
 function renderTable(rows,f) {
   const grouped={}; rows.forEach(r=>{(grouped[r.department]??=[]).push(r)});
@@ -176,8 +176,9 @@ function downloadTable() {
   const link=document.createElement('a'); link.href=URL.createObjectURL(blob); link.download='resumen_departamental.csv'; link.click(); URL.revokeObjectURL(link.href);
 }
 function groupTotals(rows,key,month){return rows.reduce((out,row)=>{const k=key(row);out[k]=(out[k]||0)+recordValue(row,month);return out},{});}
-function dataset(label,data,color,fill=false){return{label,data,borderColor:color,backgroundColor:fill?`${color}20`:`${color}aa`,borderWidth:2,fill,tension:.3,pointRadius:2,borderRadius:5}}
-function axis(){return{grid:{color:'rgba(52,86,104,.08)'},ticks:{color:'#617887',font:{family:'Inter',size:10}}}}
-function lineOptions(unit){return{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{labels:{color:'#496473',usePointStyle:true}},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${format(c.raw)} ${unit}`}}},scales:{x:axis(),y:axis()}}}
-function barOptions(unit,horizontal=false,showLegend=false){return{...lineOptions(unit),indexAxis:horizontal?'y':'x',plugins:{legend:{display:showLegend,labels:{color:'#496473',usePointStyle:true}},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${format(c.raw)} ${unit}`}}}}}
+function dataset(label,data,color,fill=false,unit=''){return{label,data,unit,borderColor:color,backgroundColor:fill?`${color}20`:`${color}aa`,borderWidth:2,fill,tension:.3,pointRadius:2,borderRadius:5}}
+function axis(unit='',title=''){const ticks={color:'#617887',font:{family:'Inter',size:10}};if(unit)ticks.callback=value=>`${format(value)} ${unit}`;return{grid:{color:'rgba(52,86,104,.08)'},title:{display:Boolean(title),text:title,color:'#496473',font:{family:'Inter',size:11,weight:'600'}},ticks}}
+function tooltipLabel(context,fallbackUnit=''){const unit=context.dataset.unit||fallbackUnit;return `${context.dataset.label}: ${format(context.raw)}${unit?` ${unit}`:''}`;}
+function lineOptions(unit='',axisTitle=''){return{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{labels:{color:'#496473',usePointStyle:true}},tooltip:{callbacks:{label:c=>tooltipLabel(c,unit)}}},scales:{x:axis(),y:axis(unit,axisTitle)}}}
+function barOptions(unit='',horizontal=false,showLegend=false,axisTitle=''){const options=lineOptions(unit,axisTitle);if(horizontal){options.scales={x:axis(unit,axisTitle),y:axis()};}return{...options,indexAxis:horizontal?'y':'x',plugins:{legend:{display:showLegend,labels:{color:'#496473',usePointStyle:true}},tooltip:{callbacks:{label:c=>tooltipLabel(c,unit)}}}}}
 function chart(id,type,data,options){if(state.charts[id])state.charts[id].destroy();state.charts[id]=new Chart($(id),{type,data,options});}

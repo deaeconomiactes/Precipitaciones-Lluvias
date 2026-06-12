@@ -45,7 +45,7 @@ Genera:
 ## Fuentes y criterios
 
 - `DINAMICA LLUVIAS pruebas.xls`: serie histórica principal.
-- `Grilla Dptos Diferencia mm 05-26.xls`: anomalías departamentales. La grilla porcentual contiene las mismas métricas con otro orden.
+- `Grilla Dptos Diferencia mm 05-26.xls`: diferencias departamentales entre el acumulado May–Oct 2020 y un promedio de referencia incluido en la propia grilla. La fuente no documenta el período base ni el método de cálculo de ese promedio. La grilla porcentual contiene las mismas métricas con otro orden.
 - `Temperatura/*.xls`: temperatura, humedad relativa, viento y lluvia registrada en períodos de 24 horas (`Rn24` en las planillas originales). El dashboard suma estos registros para mostrar la lluvia acumulada de cada mes.
 - Se normalizan variantes básicas de nombres departamentales.
 - Se excluyen filas vacías y registros departamentales cuyo año completo suma cero.

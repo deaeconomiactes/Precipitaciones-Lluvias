@@ -120,7 +120,7 @@ function renderRanking(rows,f) {
 }
 function renderAnomalies(f) {
   let rows=state.anomalies.filter(r=>f.department==='ALL'||r.department===f.department).sort((a,b)=>a.differenceMm-b.differenceMm);
-  chart('anomalyChart','bar',{labels:rows.map(r=>r.department),datasets:[{...dataset('Diferencia',rows.map(r=>r.differenceMm),COLORS[4],false,'mm'),backgroundColor:rows.map(r=>r.differenceMm>=0?'rgba(34,211,238,.65)':'rgba(251,113,133,.7)')}]},barOptions('mm',true,false,'Diferencia respecto al promedio (mm)'));
+  chart('anomalyChart','bar',{labels:rows.map(r=>r.department),datasets:[{...dataset('Diferencia',rows.map(r=>r.differenceMm),COLORS[4],false,'mm'),backgroundColor:rows.map(r=>r.differenceMm>=0?'rgba(34,211,238,.65)':'rgba(251,113,133,.7)')}]},barOptions('mm',true,false,'Diferencia respecto al promedio de referencia (mm)'));
 }
 function renderHeatmap(rows,f) {
   const departments=[...new Set(rows.map(r=>r.department))].sort(), matrix=departments.map(d=>MONTHS.map((_,m)=>average(rows.filter(r=>r.department===d).map(r=>r.months[m]).filter(Number.isFinite))));

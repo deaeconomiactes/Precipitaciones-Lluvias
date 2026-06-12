@@ -300,31 +300,57 @@ function renderClimate(f) {
   const stationNames = selectedValues('stationFilter');
   const months = selectedMonths(f);
   const stations = state.stations.filter(station => stationNames.includes(station.station));
-  const dashPatterns = [[], [7,3], [2,3], [10,3,2,3]];
+  const dashPatterns = [[], [8,4], [2,4], [10,4,2,4]];
+  const dashClasses = ['scenario-solid','scenario-dashed','scenario-dotted','scenario-dashdot'];
+  const pointStyles = ['circle','rect','triangle','rectRot','crossRot','star'];
   const metrics = [
-    { key: 'temperature', label: 'Temperatura', unit: '°C', axis: 'y', dash: dashPatterns[0] },
-    { key: 'humidity', label: 'Humedad', unit: '%', axis: 'y', dash: dashPatterns[1] },
-    { key: 'wind', label: 'Viento', unit: 'unidad original', axis: 'y', dash: dashPatterns[2] },
-    { key: 'rain24Total', label: 'Lluvia mensual', unit: 'mm', axis: 'rain', dash: dashPatterns[3] }
+    { key: 'temperature', label: 'Temperatura', unit: '°C', axis: 'y', color: '#c34f59' },
+    { key: 'humidity', label: 'Humedad', unit: '%', axis: 'y', color: '#7667a8' },
+    { key: 'wind', label: 'Viento', unit: 'unidad original', axis: 'y', color: '#d9931a' },
+    { key: 'rain24Total', label: 'Lluvia mensual', unit: 'mm', axis: 'rain', color: '#1677a6' }
   ];
-  const datasets = stations.flatMap((station, stationIndex) => {
-    const rows = station.monthly.filter(row => matchesSelection(row.year, f.years));
-    return metrics.map(metric => ({
-      ...dataset(`${station.station} · ${metric.label}`, months.map(month =>
-        average(rows.filter(row => row.month === month + 1).map(row => row[metric.key]).filter(Number.isFinite))
-      ), COLORS[stationIndex % COLORS.length], false, metric.unit),
-      yAxisID: metric.axis,
-      borderDash: metric.dash,
-      pointRadius: 2
+  const scenarios = stations.flatMap(station => {
+    const years = f.years === null ? [null] : f.years;
+    return years.map(year => ({
+      station,
+      year,
+      label: `${station.station} · ${year === null ? 'Promedio de todos los años' : year}`
     }));
   });
-  const yearText = f.years === null ? 'todos los años' : `${f.years.length} año(s)`;
-  $('stationCoverage').textContent = `${stations.length} localidad(es) · ${yearText}`;
+  const datasets = scenarios.flatMap((scenario, scenarioIndex) => {
+    const rows = scenario.station.monthly.filter(row => scenario.year === null || row.year === scenario.year);
+    return metrics.map(metric => ({
+      ...dataset(`${metric.label} · ${scenario.label}`, months.map(month => {
+        const values = rows.filter(row => row.month === month + 1).map(row => row[metric.key]).filter(Number.isFinite);
+        return values.length ? average(values) : null;
+      }), metric.color, false, metric.unit),
+      yAxisID: metric.axis,
+      borderDash: dashPatterns[scenarioIndex % dashPatterns.length],
+      pointStyle: pointStyles[scenarioIndex % pointStyles.length],
+      pointRadius: 3,
+      pointHoverRadius: 5,
+      spanGaps: false
+    }));
+  });
+  const periodText = f.years === null ? 'promedio de todos los años' : `${f.years.length} año(s) comparado(s)`;
+  $('stationCoverage').textContent = `${stations.length} localidad(es) · ${periodText}`;
+  $('climateLegend').innerHTML = `
+    <div class="climate-legend-group"><span class="climate-legend-title">Color = fenómeno</span><div class="climate-legend-items">
+      ${metrics.map(metric => `<span class="climate-legend-item"><i class="metric-swatch" style="--swatch:${metric.color}"></i>${metric.label} (${metric.unit})</span>`).join('')}
+    </div></div>
+    <div class="climate-legend-group"><span class="climate-legend-title">Trazo y símbolo = localidad y período</span><div class="climate-legend-items">
+      ${scenarios.map((scenario, index) => `<span class="climate-legend-item"><i class="scenario-swatch ${dashClasses[index % dashClasses.length]}" style="--point-rotation:${index % 2 ? 45 : 0}deg"></i>${scenario.label}</span>`).join('')}
+    </div></div>`;
   chart('climateChart', 'line', { labels: months.map(month => MONTHS[month]), datasets }, {
     ...lineOptions(''),
+    interaction: { mode: 'nearest', intersect: false },
     plugins: {
-      legend: { labels: { color: '#496473', usePointStyle: true, boxWidth: 8 } },
-      tooltip: { callbacks: { label: context => tooltipLabel(context) } }
+      legend: { display: false },
+      tooltip: {
+        mode: 'nearest',
+        intersect: false,
+        callbacks: { label: context => tooltipLabel(context) }
+      }
     },
     scales: {
       x: axis(),

@@ -28,6 +28,78 @@
   height: 440px;
 }
 
+.climate-legend {
+  display: grid;
+  grid-template-columns: minmax(250px, .8fr) minmax(320px, 1.2fr);
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.climate-legend-group {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: #f7fafb;
+  padding: 10px 12px;
+}
+
+.climate-legend-title {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--muted);
+  font-size: .62rem;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.climate-legend-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px 13px;
+}
+
+.climate-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text);
+  font-size: .68rem;
+  white-space: nowrap;
+}
+
+.metric-swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--swatch);
+}
+
+.scenario-swatch {
+  position: relative;
+  width: 34px;
+  height: 10px;
+  background: var(--line);
+  background-position: center;
+  background-repeat: repeat-x;
+}
+
+.scenario-swatch::after {
+  content: "";
+  position: absolute;
+  left: 14px;
+  top: 2px;
+  width: 6px;
+  height: 6px;
+  border: 1px solid #496473;
+  background: #fff;
+  transform: rotate(var(--point-rotation, 0deg));
+}
+
+.scenario-solid { --line: linear-gradient(#496473,#496473); }
+.scenario-dashed { --line: repeating-linear-gradient(90deg,#496473 0 8px,transparent 8px 12px); }
+.scenario-dotted { --line: repeating-linear-gradient(90deg,#496473 0 2px,transparent 2px 6px); }
+.scenario-dashdot { --line: repeating-linear-gradient(90deg,#496473 0 9px,transparent 9px 12px,#496473 12px 14px,transparent 14px 18px); }
+
 .climate-controls select {
   min-width: 190px;
   background: var(--surface2);
@@ -116,6 +188,10 @@
   .annual-toolbar {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .climate-legend {
+    grid-template-columns: 1fr;
   }
 
   .annual-controls {

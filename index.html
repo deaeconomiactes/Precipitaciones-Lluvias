@@ -10,7 +10,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
   <link rel="stylesheet" href="styles.css">
-  <link rel="stylesheet" href="climate-controls.css">
+  <link rel="stylesheet" href="climate-controls.css?v=20260612-3">
   <link rel="stylesheet" href="operational.css">
 </head>
 <body>
@@ -88,7 +88,7 @@
       <div class="panel-intro"><div><span class="eyebrow">Comportamiento histórico</span><h2>Evolución temporal</h2><p>Series disponibles a escala mensual y anual.</p></div></div>
       <section class="chart-grid">
         <article class="card wide annual-card"><div class="card-head annual-head"><div><h2>Evolución anual</h2><p>Comparación de la precipitación acumulada entre los años seleccionados.</p></div></div><div class="annual-toolbar"><span class="annual-toolbar-title">Período analizado</span><div class="annual-controls"><label><span>Desde</span><select id="annualFromFilter"></select></label><span class="annual-separator">→</span><label><span>Hasta</span><select id="annualToFilter"></select></label></div></div><div class="chart-box"><canvas id="annualChart"></canvas></div></article>
-        <article class="card full"><div class="card-head climate-head"><div><h2>Clima observado por localidad</h2><p>Comparación de temperatura, humedad, viento y lluvia acumulada mensual entre las localidades seleccionadas.</p></div><div class="climate-controls"><div class="filter-field"><span>Localidades de las estaciones</span><div class="multi-filter station-filter" id="stationFilter"></div></div><span class="source-tag" id="stationCoverage">—</span></div></div><div class="chart-box climate"><canvas id="climateChart"></canvas></div></article>
+        <article class="card full"><div class="card-head climate-head"><div><h2>Clima observado por localidad</h2><p>Los colores identifican fenómenos; los trazos y símbolos distinguen localidad y año. Los meses se comparan sobre el eje horizontal.</p></div><div class="climate-controls"><div class="filter-field"><span>Localidades de las estaciones</span><div class="multi-filter station-filter" id="stationFilter"></div></div><span class="source-tag" id="stationCoverage">—</span></div></div><div class="climate-legend" id="climateLegend"></div><div class="chart-box climate"><canvas id="climateChart"></canvas></div></article>
       </section>
     </section>
 
@@ -111,6 +111,6 @@
 
   <footer><p>Dashboard independiente · Datos exclusivos de Precipitaciones-Lluvias</p><p id="dataNote"></p></footer>
   <div class="error-banner" id="errorBanner"></div>
-  <script src="app.js?v=20260612-2"></script>
+  <script src="app.js?v=20260612-3"></script>
 </body>
 </html>

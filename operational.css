@@ -330,6 +330,11 @@ body {
   cursor: pointer;
 }
 
+.risk-ranking-table th:nth-child(3),
+.risk-ranking-table td:nth-child(3) {
+  text-align: center;
+}
+
 .annual-toolbar {
   background: #f5f9fa;
   border-color: var(--border);

@@ -330,9 +330,20 @@ body {
   cursor: pointer;
 }
 
-.risk-ranking-table th:nth-child(3),
-.risk-ranking-table td:nth-child(3) {
+.risk-ranking-table th,
+.risk-ranking-table td {
   text-align: center;
+  vertical-align: middle;
+}
+
+.risk-ranking-table th:nth-child(1) { width: 15%; }
+.risk-ranking-table th:nth-child(2) { width: 25%; }
+.risk-ranking-table th:nth-child(3) { width: 25%; }
+.risk-ranking-table th:nth-child(4) { width: 20%; }
+.risk-ranking-table th:nth-child(5) { width: 15%; }
+
+.risk-ranking-table td:nth-child(2) {
+  font-weight: 600;
 }
 
 .annual-toolbar {

@@ -61,9 +61,8 @@ Las fuentes actuales no contienen hectáreas inundadas, geometrías ni superfici
 La vista `Prioridad y alertas` utiliza un indicador relativo y transparente:
 
 - Calcula la lluvia promedio de cada departamento para el período seleccionado.
-- Ordena los departamentos de menor a mayor.
-- Convierte la posición dentro del ranking a un puntaje entre 0 y 100.
-- Clasifica el puntaje como Bajo, Medio, Alto o Crítico.
+- Calcula la diferencia porcentual de cada departamento frente al promedio provincial.
+- Clasifica como Bajo los valores menores a −10%, Medio entre −10% y +10%, Alto entre +10% y +30%, y Crítico por encima de +30%.
 
 Este indicador sirve para ordenar revisiones territoriales. No representa riesgo de inundación ni una alerta hidrológica oficial porque todavía no incorpora hectáreas inundadas, persistencia reciente ni vulnerabilidad territorial.
 

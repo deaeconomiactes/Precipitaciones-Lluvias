@@ -154,21 +154,22 @@ function renderTable(rows,f) {
 function priorityData(f) {
   const rows=state.rainfall.filter(r=>f.year==='ALL'||r.year===+f.year);
   const grouped={}; rows.forEach(row=>(grouped[row.department]??=[]).push(recordValue(row,f.month)));
-  const entries=Object.entries(grouped).map(([department,values])=>({department,rain:average(values)})).sort((a,b)=>a.rain-b.rain);
+  const entries=Object.entries(grouped).map(([department,values])=>({department,rain:average(values)})).sort((a,b)=>b.rain-a.rain);
+  const provincialAverage=average(entries.map(entry=>entry.rain));
   return entries.map((entry,index)=>{
-    const score=entries.length>1?Math.round(index/(entries.length-1)*100):0;
-    const level=score>=75?'Crítico':score>=50?'Alto':score>=25?'Medio':'Bajo';
-    return {...entry,score,level};
-  }).sort((a,b)=>b.score-a.score);
+    const differencePct=provincialAverage?((entry.rain-provincialAverage)/provincialAverage)*100:0;
+    const level=differencePct>30?'Crítico':differencePct>10?'Alto':differencePct>=-10?'Medio':'Bajo';
+    return {...entry,differencePct,level,position:index+1};
+  });
 }
 function renderPriority(f) {
   const all=priorityData(f), selected=f.department==='ALL'?all:all.filter(row=>row.department===f.department);
   $('kpiPriorityCount').textContent=all.filter(row=>row.level==='Alto'||row.level==='Crítico').length;
-  $('prioritySummary').innerHTML=all.slice(0,7).map(row=>`<div class="priority-item"><span class="risk-dot ${riskClass(row.level)}"></span><div><strong>${row.department}</strong><br><small>${format(row.rain)} mm promedio</small></div><span class="priority-score">${row.score}</span></div>`).join('');
-  $('riskTable').innerHTML=selected.map(row=>`<tr><td><span class="${riskClass(row.level)}">${row.level}</span></td><td>${row.department}</td><td>${row.score}/100</td><td>${format(row.rain)} mm</td><td>${riskReading(row.level)}</td></tr>`).join('');
+  $('prioritySummary').innerHTML=all.slice(0,7).map(row=>`<div class="priority-item"><span class="risk-dot ${riskClass(row.level)}"></span><div><strong>${row.department}</strong><br><small>${format(row.rain)} mm promedio</small></div><span class="priority-score">${signedPercent(row.differencePct)}</span></div>`).join('');
+  $('riskTable').innerHTML=selected.map(row=>`<tr><td><span class="${riskClass(row.level)}">${row.level}</span></td><td>${row.department}</td><td>${signedPercent(row.differencePct)}</td><td>${format(row.rain)} mm</td><td>${row.position} de ${all.length}</td></tr>`).join('');
 }
 function riskClass(level){return `risk-${level==='Crítico'?'critical':level==='Alto'?'high':level==='Medio'?'medium':'low'}`;}
-function riskReading(level){return level==='Crítico'?'Revisión prioritaria':level==='Alto'?'Seguimiento cercano':level==='Medio'?'Monitoreo periódico':'Sin prioridad relativa';}
+function signedPercent(value){return `${value>0?'+':''}${format(value)}%`;}
 function downloadTable() {
   const headers=['Departamento','Registros','Acumulado_mm','Promedio_mm','Maximo_mm','Mes_maximo'];
   const lines=state.tableRows.map(row=>[row.department,row.records,row.total.toFixed(2),row.average.toFixed(2),row.maximum.toFixed(2),row.peakMonth].join(';'));

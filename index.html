@@ -95,8 +95,8 @@
 
     <section class="dashboard-panel" id="riskPanel">
       <div class="panel-intro"><div><span class="eyebrow">Priorización transparente</span><h2>Prioridad y alertas</h2><p>Señal orientativa basada únicamente en intensidad relativa de lluvia; no equivale a riesgo de inundación.</p></div><div class="risk-legend"><span class="risk-low">Bajo</span><span class="risk-medium">Medio</span><span class="risk-high">Alto</span><span class="risk-critical">Crítico</span></div></div>
-      <section class="method-callout"><strong>Fórmula actual</strong><p>Puntaje = posición porcentual del promedio de lluvia del departamento dentro del período seleccionado. Bajo: 0–24; Medio: 25–49; Alto: 50–74; Crítico: 75–100. Se actualizará cuando existan superficie inundada y persistencia reciente.</p></section>
-      <section class="card table-card"><div class="card-head"><div><h2>Ranking de prioridad pluviométrica</h2><p>Orden sugerido para revisión territorial, no una alerta hidrológica oficial.</p></div></div><div class="table-wrap"><table><thead><tr><th>Prioridad</th><th>Departamento</th><th>Puntaje</th><th>Lluvia promedio</th><th>Lectura sugerida</th></tr></thead><tbody id="riskTable"></tbody></table></div></section>
+      <section class="method-callout"><strong>Fórmula actual</strong><p>Diferencia porcentual = (lluvia promedio del departamento − promedio provincial) / promedio provincial × 100. Bajo: menos de −10%; Medio: entre −10% y +10%; Alto: más de +10% y hasta +30%; Crítico: más de +30%. Se actualizará cuando existan superficie inundada y persistencia reciente.</p></section>
+      <section class="card table-card"><div class="card-head"><div><h2>Ranking de prioridad pluviométrica</h2><p>Comparación de cada departamento frente al promedio provincial del período seleccionado.</p></div></div><div class="table-wrap"><table><thead><tr><th>Prioridad</th><th>Departamento</th><th>Diferencia vs. promedio provincial</th><th>Lluvia promedio</th><th>Posición</th></tr></thead><tbody id="riskTable"></tbody></table></div></section>
     </section>
 
     <section class="dashboard-panel" id="dataPanel">
@@ -112,6 +112,6 @@
 
   <footer><p>Dashboard independiente · Datos exclusivos de Precipitaciones-Lluvias</p><p id="dataNote"></p></footer>
   <div class="error-banner" id="errorBanner"></div>
-  <script src="app.js?v=20260611-3"></script>
+  <script src="app.js?v=20260612-1"></script>
 </body>
 </html>

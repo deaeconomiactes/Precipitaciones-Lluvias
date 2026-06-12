@@ -2,7 +2,7 @@ const MONTHS = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov
 const MONTHS_FULL = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 const COLORS = ['#1677a6','#25a9b5','#7667a8','#d9931a','#c34f59','#3d9a6b','#7b8790','#b46a9b'];
 const ALL_MONTHS = MONTHS.map((_, index) => index);
-const state = { rainfall: [], stations: [], metadata: {}, charts: {}, tableRows: [], filterConfigs: {} };
+const state = { rainfall: [], stations: [], metadata: {}, charts: {}, tableRows: [], filterConfigs: {}, climateMetrics: new Set(['temperature','humidity','wind','rain24Total']) };
 const $ = id => document.getElementById(id);
 const format = value => new Intl.NumberFormat('es-AR', { maximumFractionDigits: 1 }).format(value || 0);
 const average = values => values.length ? values.reduce((a,b) => a + b, 0) / values.length : 0;
@@ -112,6 +112,15 @@ function wireControls() {
     document.querySelectorAll('.multi-filter details[open]').forEach(details => {
       if (!details.contains(event.target)) details.removeAttribute('open');
     });
+  });
+  $('climateLegend').addEventListener('click', event => {
+    const button = event.target.closest('[data-climate-metric]');
+    if (!button) return;
+    const metric = button.dataset.climateMetric;
+    if (state.climateMetrics.has(metric) && state.climateMetrics.size === 1) return;
+    if (state.climateMetrics.has(metric)) state.climateMetrics.delete(metric);
+    else state.climateMetrics.add(metric);
+    renderClimate(filters());
   });
   $('downloadTable').addEventListener('click', downloadTable);
 }
@@ -309,6 +318,7 @@ function renderClimate(f) {
     { key: 'wind', label: 'Viento', unit: 'unidad original', axis: 'y', color: '#d9931a' },
     { key: 'rain24Total', label: 'Lluvia mensual', unit: 'mm', axis: 'rain', color: '#1677a6' }
   ];
+  const visibleMetrics = metrics.filter(metric => state.climateMetrics.has(metric.key));
   const scenarios = stations.flatMap(station => {
     const years = f.years === null ? [null] : f.years;
     return years.map(year => ({
@@ -319,7 +329,7 @@ function renderClimate(f) {
   });
   const datasets = scenarios.flatMap((scenario, scenarioIndex) => {
     const rows = scenario.station.monthly.filter(row => scenario.year === null || row.year === scenario.year);
-    return metrics.map(metric => ({
+    return visibleMetrics.map(metric => ({
       ...dataset(`${metric.label} · ${scenario.label}`, months.map(month => {
         const values = rows.filter(row => row.month === month + 1).map(row => row[metric.key]).filter(Number.isFinite);
         return values.length ? average(values) : null;
@@ -335,10 +345,10 @@ function renderClimate(f) {
   const periodText = f.years === null ? 'promedio de todos los años' : `${f.years.length} año(s) comparado(s)`;
   $('stationCoverage').textContent = `${stations.length} localidad(es) · ${periodText}`;
   $('climateLegend').innerHTML = `
-    <div class="climate-legend-group"><span class="climate-legend-title">Color = fenómeno</span><div class="climate-legend-items">
-      ${metrics.map(metric => `<span class="climate-legend-item"><i class="metric-swatch" style="--swatch:${metric.color}"></i>${metric.label} (${metric.unit})</span>`).join('')}
+    <div class="climate-legend-group climate-variable-group"><span class="climate-legend-title">Variables climáticas visibles</span><div class="climate-legend-items climate-variable-items">
+      ${metrics.map(metric => `<button type="button" class="climate-variable-button ${state.climateMetrics.has(metric.key) ? 'active' : ''}" data-climate-metric="${metric.key}" aria-pressed="${state.climateMetrics.has(metric.key)}"><i class="metric-swatch" style="--swatch:${metric.color}"></i><span>${metric.label}</span><small>${metric.unit}</small></button>`).join('')}
     </div></div>
-    <div class="climate-legend-group"><span class="climate-legend-title">Trazo y símbolo = localidad y período</span><div class="climate-legend-items">
+    <div class="climate-legend-group"><span class="climate-legend-title">Trazo y símbolo = localidad y período</span><div class="climate-legend-items climate-scenario-items">
       ${scenarios.map((scenario, index) => `<span class="climate-legend-item"><i class="scenario-swatch ${dashClasses[index % dashClasses.length]}" style="--point-rotation:${index % 2 ? 45 : 0}deg"></i>${scenario.label}</span>`).join('')}
     </div></div>`;
   chart('climateChart', 'line', { labels: months.map(month => MONTHS[month]), datasets }, {
@@ -354,8 +364,8 @@ function renderClimate(f) {
     },
     scales: {
       x: axis(),
-      y: { ...axis('', 'Temperatura (°C), humedad (%) y viento (unidad original)'), position: 'left' },
-      rain: { ...axis('mm', 'Lluvia mensual promedio (mm)'), position: 'right', grid: { drawOnChartArea: false } }
+      y: { ...axis('', 'Temperatura (°C), humedad (%) y viento (unidad original)'), display: visibleMetrics.some(metric => metric.axis === 'y'), position: 'left' },
+      rain: { ...axis('mm', 'Lluvia mensual promedio (mm)'), display: visibleMetrics.some(metric => metric.axis === 'rain'), position: 'right', grid: { drawOnChartArea: false } }
     }
   });
 }

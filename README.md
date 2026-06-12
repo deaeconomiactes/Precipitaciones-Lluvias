@@ -50,7 +50,7 @@ Genera:
 - Los ceros mensuales se conservan.
 - Las fechas inválidas de estaciones se descartan y no se interpolan datos faltantes.
 - Los filtros de departamento, año, mes y localidad permiten seleccionar múltiples valores para realizar comparaciones.
-- En el gráfico climático, el color identifica la variable y el tipo de línea/símbolo identifica cada combinación de localidad y año. Cuando se eligen varios años, se muestran por separado en lugar de promediarlos.
+- En el gráfico climático, el color identifica la variable climática y el tipo de línea/símbolo identifica cada combinación de localidad y año. Las variables pueden mostrarse u ocultarse desde la leyenda. Cuando se eligen varios años, se muestran por separado en lugar de promediarlos.
 - En el detalle departamental, el acumulado suma las observaciones mensuales seleccionadas y el promedio se calcula sobre esas observaciones, no sobre totales anuales.
 
 ## Áreas inundadas

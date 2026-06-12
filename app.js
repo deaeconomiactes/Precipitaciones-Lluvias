@@ -1,30 +1,31 @@
 const MONTHS = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
 const MONTHS_FULL = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-const COLORS = ['#60a5fa','#22d3ee','#a78bfa','#fbbf24','#fb7185','#34d399'];
-const state = { rainfall: [], anomalies: [], stations: [], metadata: {}, charts: {}, tableRows: [] };
+const COLORS = ['#1677a6','#25a9b5','#7667a8','#d9931a','#c34f59','#3d9a6b','#7b8790','#b46a9b'];
+const ALL_MONTHS = MONTHS.map((_, index) => index);
+const state = { rainfall: [], stations: [], metadata: {}, charts: {}, tableRows: [], filterConfigs: {} };
 const $ = id => document.getElementById(id);
 const format = value => new Intl.NumberFormat('es-AR', { maximumFractionDigits: 1 }).format(value || 0);
-const average = values => values.length ? values.reduce((a,b)=>a+b,0)/values.length : 0;
+const average = values => values.length ? values.reduce((a,b) => a + b, 0) / values.length : 0;
 
 document.addEventListener('DOMContentLoaded', init);
 
 async function init() {
   try {
-    const [rainfall, anomalies, stations, metadata] = await Promise.all(
-      ['rainfall.json','anomalies.json','stations.json','metadata.json'].map(name => fetch(`data/${name}`).then(r => {
-        if (!r.ok) throw new Error(`No se pudo cargar ${name}`);
-        return r.json();
+    const [rainfall, stations, metadata] = await Promise.all(
+      ['rainfall.json','stations.json','metadata.json'].map(name => fetch(`data/${name}`).then(response => {
+        if (!response.ok) throw new Error(`No se pudo cargar ${name}`);
+        return response.json();
       }))
     );
-    Object.assign(state, { rainfall, anomalies, stations, metadata });
+    Object.assign(state, { rainfall, stations, metadata });
     populateFilters();
-    wireFilters();
+    wireControls();
     render();
     $('headerCoverage').textContent = `${metadata.yearMin}–${metadata.yearMax}`;
     $('headerDepartments').textContent = metadata.departments.length;
     $('headerUpdated').textContent = new Date(metadata.generatedAt).toLocaleDateString('es-AR');
     $('latestDataYear').textContent = metadata.yearMax;
-    $('dataNote').textContent = `Fuentes: ${metadata.rainfallSource} · ${metadata.anomalySource}`;
+    $('dataNote').textContent = `Fuente principal: ${metadata.rainfallSource}`;
   } catch (error) {
     $('errorBanner').style.display = 'block';
     $('errorBanner').textContent = `${error.message}. Ejecutá el dashboard mediante un servidor HTTP local.`;
@@ -35,151 +36,399 @@ async function init() {
 }
 
 function populateFilters() {
-  fillSelect('departmentFilter', state.metadata.departments);
-  const years=[...new Set(state.rainfall.map(r=>r.year))].sort((a,b)=>b-a);
-  fillSelect('yearFilter', years);
-  const latestCompleteYear=state.metadata.yearMax-1;
-  if(years.includes(latestCompleteYear)) $('yearFilter').value=String(latestCompleteYear);
-  fillSelect('annualFromFilter', [...years].reverse(), false);
-  fillSelect('annualToFilter', [...years].reverse(), false);
-  $('annualFromFilter').value=state.metadata.yearMin;
-  $('annualToFilter').value=state.metadata.yearMax;
-  MONTHS_FULL.forEach((month,index)=>$('monthFilter').add(new Option(month,index)));
-  fillSelect('stationFilter', state.stations.map(s=>s.station), false);
+  const years = [...new Set(state.rainfall.map(row => row.year))].sort((a,b) => b - a);
+  const latestCompleteYear = state.metadata.yearMax - 1;
+  createMultiFilter('departmentFilter', state.metadata.departments.map(value => ({ value, label: value })), {
+    allLabel: 'Todos los departamentos',
+    defaultValues: ['ALL']
+  });
+  createMultiFilter('yearFilter', years.map(value => ({ value: String(value), label: String(value) })), {
+    allLabel: 'Todos los años',
+    defaultValues: years.includes(latestCompleteYear) ? [String(latestCompleteYear)] : ['ALL']
+  });
+  createMultiFilter('monthFilter', MONTHS_FULL.map((label, value) => ({ value: String(value), label })), {
+    allLabel: 'Año completo',
+    defaultValues: ['ALL']
+  });
+  createMultiFilter('stationFilter', state.stations.map(station => ({ value: station.station, label: station.station })), {
+    allLabel: '',
+    allowAll: false,
+    defaultValues: [state.stations[0].station]
+  });
+  fillSelect('annualFromFilter', [...years].reverse());
+  fillSelect('annualToFilter', [...years].reverse());
+  $('annualFromFilter').value = state.metadata.yearMin;
+  $('annualToFilter').value = state.metadata.yearMax;
 }
-function fillSelect(id, values, keepFirst=true) {
-  const select=$(id); if(!keepFirst) select.innerHTML='';
-  values.forEach(value=>select.add(new Option(value,value)));
+
+function createMultiFilter(id, options, config) {
+  const allowAll = config.allowAll !== false;
+  const container = $(id);
+  const choices = allowAll ? [{ value: 'ALL', label: config.allLabel }, ...options] : options;
+  state.filterConfigs[id] = { ...config, allowAll, options };
+  container.innerHTML = `<details><summary><span></span></summary><div class="multi-filter-menu">${choices.map(choice =>
+    `<label><input type="checkbox" value="${choice.value}"><span>${choice.label}</span></label>`
+  ).join('')}</div></details>`;
+  setMultiSelection(id, config.defaultValues);
 }
-function wireFilters() {
-  ['departmentFilter','yearFilter','monthFilter','stationFilter'].forEach(id=>$(id).addEventListener('change',render));
-  ['annualFromFilter','annualToFilter'].forEach(id=>$(id).addEventListener('change',()=>{
-    let from=+$('annualFromFilter').value, to=+$('annualToFilter').value;
-    if(from>to) [$('annualFromFilter').value,$('annualToFilter').value]=[String(to),String(from)];
+
+function fillSelect(id, values) {
+  const select = $(id);
+  select.innerHTML = '';
+  values.forEach(value => select.add(new Option(value, value)));
+}
+
+function wireControls() {
+  Object.keys(state.filterConfigs).forEach(id => {
+    $(id).addEventListener('change', event => {
+      if (event.target.type !== 'checkbox') return;
+      normalizeMultiSelection(id, event.target);
+      updateMultiSummary(id);
+      render();
+    });
+  });
+  ['annualFromFilter','annualToFilter'].forEach(id => $(id).addEventListener('change', () => {
+    let from = +$('annualFromFilter').value;
+    let to = +$('annualToFilter').value;
+    if (from > to) [$('annualFromFilter').value, $('annualToFilter').value] = [String(to), String(from)];
     renderAnnual(filters());
   }));
-  $('resetFilters').addEventListener('click',()=>{
-    $('departmentFilter').value='ALL'; $('yearFilter').value='ALL'; $('monthFilter').value='ALL'; $('stationFilter').selectedIndex=0;
-    $('annualFromFilter').value=state.metadata.yearMin; $('annualToFilter').value=state.metadata.yearMax; render();
+  $('resetFilters').addEventListener('click', () => {
+    const latestCompleteYear = state.metadata.yearMax - 1;
+    setMultiSelection('departmentFilter', ['ALL']);
+    setMultiSelection('yearFilter', [String(latestCompleteYear)]);
+    setMultiSelection('monthFilter', ['ALL']);
+    setMultiSelection('stationFilter', [state.stations[0].station]);
+    $('annualFromFilter').value = state.metadata.yearMin;
+    $('annualToFilter').value = state.metadata.yearMax;
+    render();
   });
-  document.querySelectorAll('.section-tab').forEach(button=>button.addEventListener('click',()=>{
-    document.querySelectorAll('.section-tab').forEach(tab=>tab.classList.toggle('active',tab===button));
-    document.querySelectorAll('.dashboard-panel').forEach(panel=>panel.classList.toggle('active',panel.id===button.dataset.panel));
-    setTimeout(()=>Object.values(state.charts).forEach(chart=>chart.resize()),0);
+  document.querySelectorAll('.section-tab').forEach(button => button.addEventListener('click', () => {
+    document.querySelectorAll('.section-tab').forEach(tab => tab.classList.toggle('active', tab === button));
+    document.querySelectorAll('.dashboard-panel').forEach(panel => panel.classList.toggle('active', panel.id === button.dataset.panel));
+    setTimeout(() => Object.values(state.charts).forEach(chartInstance => chartInstance.resize()), 0);
   }));
-  $('downloadTable').addEventListener('click',downloadTable);
+  document.addEventListener('click', event => {
+    document.querySelectorAll('.multi-filter details[open]').forEach(details => {
+      if (!details.contains(event.target)) details.removeAttribute('open');
+    });
+  });
+  $('downloadTable').addEventListener('click', downloadTable);
 }
-function filters() {
-  return { department:$('departmentFilter').value, year:$('yearFilter').value, month:$('monthFilter').value };
-}
-function filteredRainfall() {
-  const f=filters();
-  return state.rainfall.filter(r=>(f.department==='ALL'||r.department===f.department)&&(f.year==='ALL'||r.year===+f.year));
-}
-function recordValue(record, month) {
-  return month==='ALL' ? record.months.reduce((s,v)=>s+(v||0),0) : (record.months[+month]||0);
-}
-function render() {
-  const rows=filteredRainfall(), f=filters();
-  updateKpis(rows,f); renderAnnual(f); renderMonthly(rows,f); renderRanking(rows,f); renderAnomalies(f);
-  renderHeatmap(rows,f); renderClimate(); renderTable(rows,f); renderPriority(f);
-}
-function updateKpis(rows,f) {
-  const values=rows.map(r=>recordValue(r,f.month)), total=values.reduce((a,b)=>a+b,0);
-  let maximum={value:-1,row:null,month:null};
-  rows.forEach(row=>row.months.forEach((v,m)=>{if((f.month==='ALL'||+f.month===m)&&v>maximum.value) maximum={value:v,row,month:m};}));
-  const grouped=groupTotals(rows,r=>r.department,f.month), top=Object.entries(grouped).sort((a,b)=>b[1]-a[1])[0];
-  $('kpiTotal').textContent=`${format(average(values))} mm`; $('kpiTotalDetail').textContent=f.month==='ALL'?'promedio anual por registro':'promedio mensual por registro';
-  $('kpiTopDepartment').textContent=top?top[0]:'—'; $('kpiTopDepartmentDetail').textContent=top?`${format(top[1])} mm`:'sin datos';
-}
-function renderAnnual(f) {
-  const from=+$('annualFromFilter').value, to=+$('annualToFilter').value;
-  const rows=state.rainfall.filter(r=>(f.department==='ALL'||r.department===f.department)&&r.year>=from&&r.year<=to);
-  const grouped=groupTotals(rows,r=>r.year,f.month), labels=Object.keys(grouped).sort((a,b)=>a-b);
-  const divisor=f.department==='ALL'?new Set(rows.map(r=>r.department)).size:1;
-  chart('annualChart','line',{labels,datasets:[dataset('Precipitación media',labels.map(y=>grouped[y]/divisor),COLORS[0],true,'mm')]},lineOptions('mm','Precipitación media (mm)'));
-}
-function renderMonthly(rows,f) {
-  const values=MONTHS.map((_,m)=>average(rows.map(r=>r.months[m]).filter(Number.isFinite)));
-  const datasets=[dataset(f.department==='ALL'?'Promedio provincial':f.department,values,COLORS[1],false,'mm')];
-  if(f.department!=='ALL'){
-    const provincialRows=state.rainfall.filter(r=>f.year==='ALL'||r.year===+f.year);
-    const provincial=MONTHS.map((_,m)=>average(provincialRows.map(r=>r.months[m]).filter(Number.isFinite)));
-    datasets.push({...dataset('Promedio provincial',provincial,COLORS[0],false,'mm'),type:'line',backgroundColor:'transparent',borderWidth:2.5,pointRadius:3});
-    $('monthlyChartScope').textContent=f.department;
-    $('monthlyChartDescription').textContent=`Comparación de ${f.department} frente al promedio provincial.`;
-  }else{
-    $('monthlyChartScope').textContent='Provincia';
-    $('monthlyChartDescription').textContent='Promedio provincial de la distribución estacional de las lluvias.';
+
+function normalizeMultiSelection(id, changed) {
+  const config = state.filterConfigs[id];
+  const inputs = [...$(id).querySelectorAll('input[type="checkbox"]')];
+  if (config.allowAll && changed.value === 'ALL' && changed.checked) {
+    inputs.forEach(input => { if (input.value !== 'ALL') input.checked = false; });
+  } else if (config.allowAll && changed.checked) {
+    const all = inputs.find(input => input.value === 'ALL');
+    if (all) all.checked = false;
   }
-  chart('monthlyChart','bar',{labels:MONTHS,datasets},barOptions('mm',false,true,'Precipitación mensual (mm)'));
+  if (!inputs.some(input => input.checked)) {
+    const fallback = config.allowAll ? inputs.find(input => input.value === 'ALL') : changed;
+    fallback.checked = true;
+  }
 }
-function renderRanking(rows,f) {
-  const grouped=groupTotals(rows,r=>r.department,f.month), entries=Object.entries(grouped).sort((a,b)=>b[1]-a[1]).slice(0,15);
-  chart('rankingChart','bar',{labels:entries.map(e=>e[0]),datasets:[dataset('Acumulado',entries.map(e=>e[1]),COLORS[0],false,'mm')]},barOptions('mm',true,false,'Precipitación acumulada (mm)'));
+
+function setMultiSelection(id, values) {
+  const selected = new Set(values.map(String));
+  $(id).querySelectorAll('input[type="checkbox"]').forEach(input => { input.checked = selected.has(input.value); });
+  updateMultiSummary(id);
 }
-function renderAnomalies(f) {
-  let rows=state.anomalies.filter(r=>f.department==='ALL'||r.department===f.department).sort((a,b)=>a.differenceMm-b.differenceMm);
-  chart('anomalyChart','bar',{labels:rows.map(r=>r.department),datasets:[{...dataset('Diferencia',rows.map(r=>r.differenceMm),COLORS[4],false,'mm'),backgroundColor:rows.map(r=>r.differenceMm>=0?'rgba(34,211,238,.65)':'rgba(251,113,133,.7)')}]},barOptions('mm',true,false,'Diferencia respecto al promedio de referencia (mm)'));
+
+function updateMultiSummary(id) {
+  const config = state.filterConfigs[id];
+  const selected = [...$(id).querySelectorAll('input[type="checkbox"]:checked')];
+  const summary = $(id).querySelector('summary span');
+  if (selected.some(input => input.value === 'ALL')) {
+    summary.textContent = config.allLabel;
+  } else if (selected.length === 1) {
+    summary.textContent = selected[0].nextElementSibling.textContent;
+  } else {
+    summary.textContent = `${selected[0].nextElementSibling.textContent} +${selected.length - 1}`;
+  }
 }
-function renderHeatmap(rows,f) {
-  const departments=[...new Set(rows.map(r=>r.department))].sort(), matrix=departments.map(d=>MONTHS.map((_,m)=>average(rows.filter(r=>r.department===d).map(r=>r.months[m]).filter(Number.isFinite))));
-  const max=Math.max(1,...matrix.flat()), visible=f.month==='ALL'?[0,1,2,3,4,5,6,7,8,9,10,11]:[+f.month];
-  let html='<div class="heatmap-grid"><div></div>'+visible.map(m=>`<div class="heat-cell heat-head">${MONTHS[m]}</div>`).join('');
-  departments.forEach((department,i)=>{html+=`<div class="heat-label">${department}</div>`+visible.map(m=>{const v=matrix[i][m],alpha=.08+.85*(v/max);return `<div class="heat-cell" title="${department} · ${MONTHS_FULL[m]}: ${format(v)} mm" style="background:rgba(34,211,238,${alpha})">${format(v)}</div>`}).join('');});
-  $('heatmap').innerHTML=html+'</div>';
+
+function selectedValues(id, numeric = false) {
+  const checked = [...$(id).querySelectorAll('input[type="checkbox"]:checked')].map(input => input.value);
+  if (checked.includes('ALL')) return null;
+  return numeric ? checked.map(Number) : checked;
 }
-function renderClimate() {
-  const station=state.stations.find(s=>s.station===$('stationFilter').value)||state.stations[0], year=$('yearFilter').value;
-  const rows=station.monthly.filter(r=>year==='ALL'||r.year===+year);
-  const byMonth=MONTHS.map((_,m)=>rows.filter(r=>r.month===m+1));
-  const metric=(key,mode='avg')=>byMonth.map(group=>mode==='sum'?group.reduce((s,r)=>s+(r[key]||0),0):average(group.map(r=>r[key]).filter(Number.isFinite)));
-  $('stationCoverage').textContent=`${station.station} · ${rows.length} meses`;
-  chart('climateChart','line',{labels:MONTHS,datasets:[
-    {...dataset('Temperatura',metric('temperature'),COLORS[4],false,'°C'),yAxisID:'y'},
-    {...dataset('Humedad',metric('humidity'),COLORS[2],false,'%'),yAxisID:'y'},
-    {...dataset('Viento',metric('wind'),COLORS[3],false,'unidad original'),yAxisID:'y'},
-    {...dataset('Lluvia acumulada del mes',metric('rain24Total','sum'),COLORS[1],true,'mm'),yAxisID:'rain'}
-  ]},{...lineOptions(''),scales:{x:axis(),y:{...axis('', 'Temperatura (°C), humedad (%) y viento (unidad original)'),position:'left'},rain:{...axis('mm','Lluvia acumulada (mm)'),position:'right',grid:{drawOnChartArea:false}}}});
+
+function filters() {
+  return {
+    departments: selectedValues('departmentFilter'),
+    years: selectedValues('yearFilter', true),
+    months: selectedValues('monthFilter', true)
+  };
 }
-function renderTable(rows,f) {
-  const grouped={}; rows.forEach(r=>{(grouped[r.department]??=[]).push(r)});
-  state.tableRows=Object.entries(grouped).map(([department,records])=>{
-    const vals=records.map(r=>recordValue(r,f.month)), total=vals.reduce((a,b)=>a+b,0); let peak={v:-1,m:0};
-    records.forEach(r=>r.months.forEach((v,m)=>{if((f.month==='ALL'||+f.month===m)&&v>peak.v)peak={v,m}}));
-    return {department,records:records.length,total,average:average(vals),maximum:peak.v,peakMonth:MONTHS_FULL[peak.m]};
+
+function matchesSelection(value, selected) {
+  return selected === null || selected.includes(value);
+}
+
+function filteredRainfall(f = filters()) {
+  return state.rainfall.filter(row => matchesSelection(row.department, f.departments) && matchesSelection(row.year, f.years));
+}
+
+function selectedMonths(f) {
+  return f.months === null ? ALL_MONTHS : f.months;
+}
+
+function recordValue(record, months) {
+  return months.reduce((sum, month) => sum + (Number.isFinite(record.months[month]) ? record.months[month] : 0), 0);
+}
+
+function monthlyObservations(records, months) {
+  return records.flatMap(record => months
+    .filter(month => Number.isFinite(record.months[month]))
+    .map(month => ({ value: record.months[month], month, year: record.year })));
+}
+
+function render() {
+  const f = filters();
+  const rows = filteredRainfall(f);
+  updateKpis(rows, f);
+  renderAnnual(f);
+  renderMonthly(rows, f);
+  renderRanking(rows, f);
+  renderHeatmap(rows, f);
+  renderClimate(f);
+  renderTable(rows, f);
+  renderPriority(f);
+}
+
+function updateKpis(rows, f) {
+  const months = selectedMonths(f);
+  const values = rows.map(row => recordValue(row, months));
+  const grouped = groupTotals(rows, row => row.department, months);
+  const top = Object.entries(grouped).sort((a,b) => b[1] - a[1])[0];
+  $('kpiTotal').textContent = `${format(average(values))} mm`;
+  $('kpiTotalDetail').textContent = f.years === null ? 'promedio por registro seleccionado' : `promedio de ${f.years.length} año(s) seleccionado(s)`;
+  $('kpiTopDepartment').textContent = top ? top[0] : '—';
+  $('kpiTopDepartmentDetail').textContent = top ? `${format(top[1])} mm` : 'sin datos';
+}
+
+function renderAnnual(f) {
+  const from = +$('annualFromFilter').value;
+  const to = +$('annualToFilter').value;
+  const rows = state.rainfall.filter(row =>
+    matchesSelection(row.department, f.departments) &&
+    matchesSelection(row.year, f.years) &&
+    row.year >= from && row.year <= to
+  );
+  const months = selectedMonths(f);
+  const labels = [...new Set(rows.map(row => row.year))].sort((a,b) => a - b);
+  let datasets;
+  if (f.departments === null) {
+    datasets = [dataset('Promedio provincial', labels.map(year =>
+      average(rows.filter(row => row.year === year).map(row => recordValue(row, months)))
+    ), COLORS[0], true, 'mm')];
+  } else {
+    datasets = f.departments.map((department, index) => dataset(department, labels.map(year => {
+      const records = rows.filter(row => row.year === year && row.department === department);
+      return records.length ? average(records.map(row => recordValue(row, months))) : null;
+    }), COLORS[index % COLORS.length], false, 'mm'));
+  }
+  chart('annualChart', 'line', { labels, datasets }, lineOptions('mm', 'Precipitación acumulada (mm)'));
+}
+
+function renderMonthly(rows, f) {
+  const months = selectedMonths(f);
+  const labels = months.map(month => MONTHS[month]);
+  let datasets;
+  if (f.departments === null) {
+    datasets = [dataset('Promedio provincial', months.map(month =>
+      average(rows.map(row => row.months[month]).filter(Number.isFinite))
+    ), COLORS[1], false, 'mm')];
+    $('monthlyChartScope').textContent = 'Provincia';
+    $('monthlyChartDescription').textContent = 'Promedio provincial para los meses y años seleccionados.';
+  } else {
+    datasets = f.departments.map((department, index) => {
+      const departmentRows = rows.filter(row => row.department === department);
+      return dataset(department, months.map(month =>
+        average(departmentRows.map(row => row.months[month]).filter(Number.isFinite))
+      ), COLORS[index % COLORS.length], false, 'mm');
+    });
+    const provincialRows = state.rainfall.filter(row => matchesSelection(row.year, f.years));
+    datasets.push({
+      ...dataset('Promedio provincial', months.map(month =>
+        average(provincialRows.map(row => row.months[month]).filter(Number.isFinite))
+      ), '#6f8794', false, 'mm'),
+      type: 'line',
+      backgroundColor: 'transparent',
+      borderWidth: 2.5,
+      pointRadius: 3
+    });
+    $('monthlyChartScope').textContent = `${f.departments.length} seleccionado(s)`;
+    $('monthlyChartDescription').textContent = 'Comparación de los departamentos elegidos frente al promedio provincial.';
+  }
+  chart('monthlyChart', 'bar', { labels, datasets }, barOptions('mm', false, true, 'Precipitación mensual (mm)'));
+}
+
+function renderRanking(rows, f) {
+  const entries = Object.entries(groupTotals(rows, row => row.department, selectedMonths(f)))
+    .sort((a,b) => b[1] - a[1])
+    .slice(0, 15);
+  chart('rankingChart', 'bar', {
+    labels: entries.map(entry => entry[0]),
+    datasets: [dataset('Acumulado', entries.map(entry => entry[1]), COLORS[0], false, 'mm')]
+  }, barOptions('mm', true, false, 'Precipitación acumulada (mm)'));
+}
+
+function renderHeatmap(rows, f) {
+  const months = selectedMonths(f);
+  const departments = [...new Set(rows.map(row => row.department))].sort();
+  const matrix = departments.map(department => months.map(month =>
+    average(rows.filter(row => row.department === department).map(row => row.months[month]).filter(Number.isFinite))
+  ));
+  const max = Math.max(1, ...matrix.flat());
+  let html = '<div class="heatmap-grid"><div></div>' + months.map(month => `<div class="heat-cell heat-head">${MONTHS[month]}</div>`).join('');
+  departments.forEach((department, rowIndex) => {
+    html += `<div class="heat-label">${department}</div>` + months.map((month, monthIndex) => {
+      const value = matrix[rowIndex][monthIndex];
+      const alpha = .08 + .85 * (value / max);
+      return `<div class="heat-cell" title="${department} · ${MONTHS_FULL[month]}: ${format(value)} mm" style="background:rgba(34,211,238,${alpha})">${format(value)}</div>`;
+    }).join('');
   });
-  $('detailsTable').innerHTML=state.tableRows.map(row=>`<tr><td>${row.department}</td><td>${row.records}</td><td>${format(row.total)} mm</td><td>${format(row.average)} mm</td><td>${format(row.maximum)} mm</td><td>${row.peakMonth}</td></tr>`).join('');
+  $('heatmap').innerHTML = html + '</div>';
+  $('heatmap').querySelector('.heatmap-grid').style.gridTemplateColumns = `155px repeat(${months.length}, minmax(55px, 1fr))`;
 }
+
+function renderClimate(f) {
+  const stationNames = selectedValues('stationFilter');
+  const months = selectedMonths(f);
+  const stations = state.stations.filter(station => stationNames.includes(station.station));
+  const dashPatterns = [[], [7,3], [2,3], [10,3,2,3]];
+  const metrics = [
+    { key: 'temperature', label: 'Temperatura', unit: '°C', axis: 'y', dash: dashPatterns[0] },
+    { key: 'humidity', label: 'Humedad', unit: '%', axis: 'y', dash: dashPatterns[1] },
+    { key: 'wind', label: 'Viento', unit: 'unidad original', axis: 'y', dash: dashPatterns[2] },
+    { key: 'rain24Total', label: 'Lluvia mensual', unit: 'mm', axis: 'rain', dash: dashPatterns[3] }
+  ];
+  const datasets = stations.flatMap((station, stationIndex) => {
+    const rows = station.monthly.filter(row => matchesSelection(row.year, f.years));
+    return metrics.map(metric => ({
+      ...dataset(`${station.station} · ${metric.label}`, months.map(month =>
+        average(rows.filter(row => row.month === month + 1).map(row => row[metric.key]).filter(Number.isFinite))
+      ), COLORS[stationIndex % COLORS.length], false, metric.unit),
+      yAxisID: metric.axis,
+      borderDash: metric.dash,
+      pointRadius: 2
+    }));
+  });
+  const yearText = f.years === null ? 'todos los años' : `${f.years.length} año(s)`;
+  $('stationCoverage').textContent = `${stations.length} localidad(es) · ${yearText}`;
+  chart('climateChart', 'line', { labels: months.map(month => MONTHS[month]), datasets }, {
+    ...lineOptions(''),
+    plugins: {
+      legend: { labels: { color: '#496473', usePointStyle: true, boxWidth: 8 } },
+      tooltip: { callbacks: { label: context => tooltipLabel(context) } }
+    },
+    scales: {
+      x: axis(),
+      y: { ...axis('', 'Temperatura (°C), humedad (%) y viento (unidad original)'), position: 'left' },
+      rain: { ...axis('mm', 'Lluvia mensual promedio (mm)'), position: 'right', grid: { drawOnChartArea: false } }
+    }
+  });
+}
+
+function renderTable(rows, f) {
+  const months = selectedMonths(f);
+  const grouped = {};
+  rows.forEach(row => { (grouped[row.department] ??= []).push(row); });
+  state.tableRows = Object.entries(grouped).map(([department, records]) => {
+    const observations = monthlyObservations(records, months);
+    const values = observations.map(observation => observation.value);
+    const peak = observations.reduce((best, observation) => observation.value > best.value ? observation : best, { value: -1, month: 0 });
+    return {
+      department,
+      observations: observations.length,
+      total: values.reduce((sum, value) => sum + value, 0),
+      average: average(values),
+      maximum: peak.value,
+      peakMonth: peak.value >= 0 ? MONTHS_FULL[peak.month] : 'Sin datos'
+    };
+  });
+  $('detailsTable').innerHTML = state.tableRows.map(row => `<tr><td>${row.department}</td><td>${row.observations}</td><td>${format(row.total)} mm</td><td>${format(row.average)} mm</td><td>${format(row.maximum)} mm</td><td>${row.peakMonth}</td></tr>`).join('');
+}
+
 function priorityData(f) {
-  const rows=state.rainfall.filter(r=>f.year==='ALL'||r.year===+f.year);
-  const grouped={}; rows.forEach(row=>(grouped[row.department]??=[]).push(recordValue(row,f.month)));
-  const entries=Object.entries(grouped).map(([department,values])=>({department,rain:average(values)})).sort((a,b)=>b.rain-a.rain);
-  const provincialAverage=average(entries.map(entry=>entry.rain));
-  return entries.map((entry,index)=>{
-    const differencePct=provincialAverage?((entry.rain-provincialAverage)/provincialAverage)*100:0;
-    const level=differencePct>30?'Crítico':differencePct>10?'Alto':differencePct>=-10?'Medio':'Bajo';
-    return {...entry,differencePct,level,position:index+1};
+  const months = selectedMonths(f);
+  const rows = state.rainfall.filter(row => matchesSelection(row.year, f.years));
+  const grouped = {};
+  rows.forEach(row => (grouped[row.department] ??= []).push(recordValue(row, months)));
+  const entries = Object.entries(grouped).map(([department, values]) => ({ department, rain: average(values) })).sort((a,b) => b.rain - a.rain);
+  const provincialAverage = average(entries.map(entry => entry.rain));
+  return entries.map((entry, index) => {
+    const differencePct = provincialAverage ? ((entry.rain - provincialAverage) / provincialAverage) * 100 : 0;
+    const level = differencePct > 30 ? 'Crítico' : differencePct > 10 ? 'Alto' : differencePct >= -10 ? 'Medio' : 'Bajo';
+    return { ...entry, differencePct, level, position: index + 1 };
   });
 }
+
 function renderPriority(f) {
-  const all=priorityData(f), selected=f.department==='ALL'?all:all.filter(row=>row.department===f.department);
-  $('kpiPriorityCount').textContent=all.filter(row=>row.level==='Alto'||row.level==='Crítico').length;
-  $('prioritySummary').innerHTML=all.slice(0,7).map(row=>`<div class="priority-item"><span class="risk-dot ${riskClass(row.level)}"></span><div><strong>${row.department}</strong><br><small>${format(row.rain)} mm promedio</small></div><span class="priority-score">${signedPercent(row.differencePct)}</span></div>`).join('');
-  $('riskTable').innerHTML=selected.map(row=>`<tr><td><span class="${riskClass(row.level)}">${row.level}</span></td><td>${row.department}</td><td>${signedPercent(row.differencePct)}</td><td>${format(row.rain)} mm</td><td>${row.position} de ${all.length}</td></tr>`).join('');
+  const all = priorityData(f);
+  const selected = f.departments === null ? all : all.filter(row => f.departments.includes(row.department));
+  $('kpiPriorityCount').textContent = selected.filter(row => row.level === 'Alto' || row.level === 'Crítico').length;
+  $('prioritySummary').innerHTML = selected.slice(0, 7).map(row => `<div class="priority-item"><span class="risk-dot ${riskClass(row.level)}"></span><div><strong>${row.department}</strong><br><small>${format(row.rain)} mm promedio</small></div><span class="priority-score">${signedPercent(row.differencePct)}</span></div>`).join('');
+  $('riskTable').innerHTML = selected.map(row => `<tr><td><span class="${riskClass(row.level)}">${row.level}</span></td><td>${row.department}</td><td>${signedPercent(row.differencePct)}</td><td>${format(row.rain)} mm</td><td>${row.position} de ${all.length}</td></tr>`).join('');
 }
-function riskClass(level){return `risk-${level==='Crítico'?'critical':level==='Alto'?'high':level==='Medio'?'medium':'low'}`;}
-function signedPercent(value){return `${value>0?'+':''}${format(value)}%`;}
+
+function riskClass(level) {
+  return `risk-${level === 'Crítico' ? 'critical' : level === 'Alto' ? 'high' : level === 'Medio' ? 'medium' : 'low'}`;
+}
+
+function signedPercent(value) {
+  return `${value > 0 ? '+' : ''}${format(value)}%`;
+}
+
 function downloadTable() {
-  const headers=['Departamento','Registros','Acumulado_mm','Promedio_mm','Maximo_mm','Mes_maximo'];
-  const lines=state.tableRows.map(row=>[row.department,row.records,row.total.toFixed(2),row.average.toFixed(2),row.maximum.toFixed(2),row.peakMonth].join(';'));
-  const blob=new Blob(['\ufeff'+[headers.join(';'),...lines].join('\n')],{type:'text/csv;charset=utf-8'});
-  const link=document.createElement('a'); link.href=URL.createObjectURL(blob); link.download='resumen_departamental.csv'; link.click(); URL.revokeObjectURL(link.href);
+  const headers = ['Departamento','Observaciones_mensuales','Acumulado_periodo_mm','Promedio_mensual_mm','Maximo_mensual_mm','Mes_maximo'];
+  const lines = state.tableRows.map(row => [row.department,row.observations,row.total.toFixed(2),row.average.toFixed(2),row.maximum.toFixed(2),row.peakMonth].join(';'));
+  const blob = new Blob(['\ufeff' + [headers.join(';'), ...lines].join('\n')], { type: 'text/csv;charset=utf-8' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = 'resumen_departamental.csv';
+  link.click();
+  URL.revokeObjectURL(link.href);
 }
-function groupTotals(rows,key,month){return rows.reduce((out,row)=>{const k=key(row);out[k]=(out[k]||0)+recordValue(row,month);return out},{});}
-function dataset(label,data,color,fill=false,unit=''){return{label,data,unit,borderColor:color,backgroundColor:fill?`${color}20`:`${color}aa`,borderWidth:2,fill,tension:.3,pointRadius:2,borderRadius:5}}
-function axis(unit='',title=''){const ticks={color:'#617887',font:{family:'Inter',size:10}};if(unit)ticks.callback=value=>format(value);return{grid:{color:'rgba(52,86,104,.08)'},title:{display:Boolean(title),text:title,color:'#496473',font:{family:'Inter',size:11,weight:'600'}},ticks}}
-function tooltipLabel(context,fallbackUnit=''){const unit=context.dataset.unit||fallbackUnit;return `${context.dataset.label}: ${format(context.raw)}${unit?` ${unit}`:''}`;}
-function lineOptions(unit='',axisTitle=''){return{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{labels:{color:'#496473',usePointStyle:true}},tooltip:{callbacks:{label:c=>tooltipLabel(c,unit)}}},scales:{x:axis(),y:axis(unit,axisTitle)}}}
-function barOptions(unit='',horizontal=false,showLegend=false,axisTitle=''){const options=lineOptions(unit,axisTitle);if(horizontal){options.scales={x:axis(unit,axisTitle),y:axis()};}return{...options,indexAxis:horizontal?'y':'x',interaction:{mode:'nearest',axis:horizontal?'y':'x',intersect:false},plugins:{legend:{display:showLegend,labels:{color:'#496473',usePointStyle:true}},tooltip:{callbacks:{label:c=>tooltipLabel(c,unit)}}}}}
-function chart(id,type,data,options){if(state.charts[id])state.charts[id].destroy();state.charts[id]=new Chart($(id),{type,data,options});}
+
+function groupTotals(rows, key, months) {
+  return rows.reduce((output, row) => {
+    const group = key(row);
+    output[group] = (output[group] || 0) + recordValue(row, months);
+    return output;
+  }, {});
+}
+
+function dataset(label, data, color, fill = false, unit = '') {
+  return { label, data, unit, borderColor: color, backgroundColor: fill ? `${color}20` : `${color}aa`, borderWidth: 2, fill, tension: .3, pointRadius: 2, borderRadius: 5 };
+}
+
+function axis(unit = '', title = '') {
+  const ticks = { color: '#617887', font: { family: 'Inter', size: 10 } };
+  if (unit) ticks.callback = value => format(value);
+  return { grid: { color: 'rgba(52,86,104,.08)' }, title: { display: Boolean(title), text: title, color: '#496473', font: { family: 'Inter', size: 11, weight: '600' } }, ticks };
+}
+
+function tooltipLabel(context, fallbackUnit = '') {
+  const unit = context.dataset.unit || fallbackUnit;
+  return `${context.dataset.label}: ${format(context.raw)}${unit ? ` ${unit}` : ''}`;
+}
+
+function lineOptions(unit = '', axisTitle = '') {
+  return { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false }, plugins: { legend: { labels: { color: '#496473', usePointStyle: true } }, tooltip: { callbacks: { label: context => tooltipLabel(context, unit) } } }, scales: { x: axis(), y: axis(unit, axisTitle) } };
+}
+
+function barOptions(unit = '', horizontal = false, showLegend = false, axisTitle = '') {
+  const options = lineOptions(unit, axisTitle);
+  if (horizontal) options.scales = { x: axis(unit, axisTitle), y: axis() };
+  return { ...options, indexAxis: horizontal ? 'y' : 'x', interaction: { mode: 'nearest', axis: horizontal ? 'y' : 'x', intersect: false }, plugins: { legend: { display: showLegend, labels: { color: '#496473', usePointStyle: true } }, tooltip: { callbacks: { label: context => tooltipLabel(context, unit) } } } };
+}
+
+function chart(id, type, data, options) {
+  if (state.charts[id]) state.charts[id].destroy();
+  state.charts[id] = new Chart($(id), { type, data, options });
+}

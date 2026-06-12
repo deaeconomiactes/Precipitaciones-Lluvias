@@ -16,6 +16,18 @@
   font-weight: 700;
 }
 
+.climate-controls .filter-field {
+  min-width: 260px;
+}
+
+.climate-controls .multi-filter {
+  min-width: 260px;
+}
+
+.chart-box.climate {
+  height: 440px;
+}
+
 .climate-controls select {
   min-width: 190px;
   background: var(--surface2);

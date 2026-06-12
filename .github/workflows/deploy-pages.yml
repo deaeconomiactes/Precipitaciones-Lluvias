@@ -34,7 +34,7 @@ jobs:
           set -euo pipefail
           mkdir -p _site/data
           cp index.html app.js styles.css climate-controls.css operational.css _site/
-          cp data/rainfall.json data/anomalies.json data/stations.json data/metadata.json _site/data/
+          cp data/rainfall.json data/stations.json data/metadata.json _site/data/
           touch _site/.nojekyll
 
       - name: Verify private files are excluded

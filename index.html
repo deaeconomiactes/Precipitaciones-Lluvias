@@ -43,9 +43,9 @@
 
   <section class="filters">
     <div class="filters-inner">
-      <label>Departamento<select id="departmentFilter"><option value="ALL">Todos</option></select></label>
-      <label>Año<select id="yearFilter"><option value="ALL">Todos</option></select></label>
-      <label>Mes<select id="monthFilter"><option value="ALL">Año completo</option></select></label>
+      <div class="filter-field"><span>Departamento</span><div class="multi-filter" id="departmentFilter"></div></div>
+      <div class="filter-field"><span>Año</span><div class="multi-filter" id="yearFilter"></div></div>
+      <div class="filter-field"><span>Mes</span><div class="multi-filter" id="monthFilter"></div></div>
       <button id="resetFilters" type="button">Restablecer filtros</button>
     </div>
   </section>
@@ -81,15 +81,14 @@
         <article class="card"><div class="card-head"><div><h2>Ranking departamental</h2><p>Acumulado para el período filtrado</p></div></div><div class="chart-box tall"><canvas id="rankingChart"></canvas></div></article>
         <article class="card full"><div class="card-head"><div><h2>Mapa de calor departamental</h2><p>Intensidad mensual media según los filtros activos</p></div><span class="source-tag">Unidad: milímetros (mm)</span></div><div class="heatmap-wrap" id="heatmap"></div></article>
       </section>
-      <section class="card table-card"><div class="card-head"><div><h2>Detalle departamental</h2><p>Resumen calculado con los filtros activos</p></div><button class="download-button" id="downloadTable">Descargar CSV</button></div><div class="table-wrap"><table><thead><tr><th>Departamento</th><th>Registros</th><th>Acumulado</th><th>Promedio</th><th>Máximo</th><th>Mes máximo</th></tr></thead><tbody id="detailsTable"></tbody></table></div></section>
+      <section class="card table-card"><div class="card-head"><div><h2>Detalle departamental</h2><p>El acumulado suma los meses seleccionados; el promedio corresponde a las observaciones mensuales disponibles.</p></div><button class="download-button" id="downloadTable">Descargar CSV</button></div><div class="table-wrap"><table><thead><tr><th>Departamento</th><th>Observaciones mensuales</th><th>Acumulado del período</th><th>Promedio mensual</th><th>Máximo mensual</th><th>Mes máximo</th></tr></thead><tbody id="detailsTable"></tbody></table></div></section>
     </section>
 
     <section class="dashboard-panel" id="temporalPanel">
       <div class="panel-intro"><div><span class="eyebrow">Comportamiento histórico</span><h2>Evolución temporal</h2><p>Series disponibles a escala mensual y anual.</p></div></div>
       <section class="chart-grid">
         <article class="card wide annual-card"><div class="card-head annual-head"><div><h2>Evolución anual</h2><p>Comparación de la precipitación acumulada entre los años seleccionados.</p></div></div><div class="annual-toolbar"><span class="annual-toolbar-title">Período analizado</span><div class="annual-controls"><label><span>Desde</span><select id="annualFromFilter"></select></label><span class="annual-separator">→</span><label><span>Hasta</span><select id="annualToFilter"></select></label></div></div><div class="chart-box"><canvas id="annualChart"></canvas></div></article>
-        <article class="card"><div class="card-head"><div><h2>Anomalías disponibles</h2><p>Diferencia entre el acumulado May–Oct 2020 y el promedio de referencia provisto por la grilla. El período base del promedio no está documentado.</p></div><span class="source-tag">May–Oct 2020</span></div><div class="chart-box tall"><canvas id="anomalyChart"></canvas></div></article>
-        <article class="card"><div class="card-head climate-head"><div><h2>Clima observado por localidad</h2><p>Temperatura, humedad, viento y lluvia acumulada mensual.</p></div><div class="climate-controls"><label>Localidad de la estación<select id="stationFilter"></select></label><span class="source-tag" id="stationCoverage">—</span></div></div><div class="chart-box climate"><canvas id="climateChart"></canvas></div></article>
+        <article class="card full"><div class="card-head climate-head"><div><h2>Clima observado por localidad</h2><p>Comparación de temperatura, humedad, viento y lluvia acumulada mensual entre las localidades seleccionadas.</p></div><div class="climate-controls"><div class="filter-field"><span>Localidades de las estaciones</span><div class="multi-filter station-filter" id="stationFilter"></div></div><span class="source-tag" id="stationCoverage">—</span></div></div><div class="chart-box climate"><canvas id="climateChart"></canvas></div></article>
       </section>
     </section>
 
@@ -102,7 +101,7 @@
     <section class="dashboard-panel" id="dataPanel">
       <div class="panel-intro"><div><span class="eyebrow">Trazabilidad</span><h2>Metodología y datos</h2><p>Qué puede responder hoy el prototipo y qué necesita para avanzar.</p></div></div>
       <section class="method-grid">
-        <article class="method-card available"><h3>Datos disponibles</h3><ul><li>Lluvia mensual por departamento, 1993–2026.</li><li>Temperatura, humedad, viento y lluvia diaria de ocho estaciones.</li><li>Una grilla comparativa departamental May–Oct 2020.</li></ul></article>
+        <article class="method-card available"><h3>Datos disponibles</h3><ul><li>Lluvia mensual por departamento, 1993–2026.</li><li>Temperatura, humedad, viento y lluvia diaria de ocho estaciones.</li></ul></article>
         <article class="method-card pending"><h3>Datos pendientes</h3><ul><li>Superficie inundada y hectáreas afectadas.</li><li>Geometrías departamentales para mapas.</li><li>Lluvia reciente departamental de 24 h, 7 y 30 días.</li><li>Variables de vulnerabilidad territorial.</li></ul></article>
         <article class="method-card"><h3>Procesamiento</h3><ul><li>Nombres departamentales normalizados.</li><li>Filas vacías y años totalmente en cero excluidos.</li><li>Fechas inválidas de estaciones descartadas.</li><li>Sin interpolación ni datos inventados.</li></ul></article>
         <article class="method-card"><h3>Limitación principal</h3><p>El prototipo permite análisis histórico y priorización relativa por lluvia. No permite afirmar cuántas hectáreas están inundadas ni emitir alertas hidrológicas operativas.</p></article>
@@ -112,6 +111,6 @@
 
   <footer><p>Dashboard independiente · Datos exclusivos de Precipitaciones-Lluvias</p><p id="dataNote"></p></footer>
   <div class="error-banner" id="errorBanner"></div>
-  <script src="app.js?v=20260612-1"></script>
+  <script src="app.js?v=20260612-2"></script>
 </body>
 </html>

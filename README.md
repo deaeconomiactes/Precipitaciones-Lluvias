@@ -38,19 +38,19 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\build-data.ps1
 Genera:
 
 - `data/rainfall.json`: lluvia mensual por año y departamento.
-- `data/anomalies.json`: grilla comparativa de diferencias en mm y porcentaje.
 - `data/stations.json`: variables meteorológicas agregadas mensualmente.
 - `data/metadata.json`: cobertura y fuentes.
 
 ## Fuentes y criterios
 
 - `DINAMICA LLUVIAS pruebas.xls`: serie histórica principal.
-- `Grilla Dptos Diferencia mm 05-26.xls`: diferencias departamentales entre el acumulado May–Oct 2020 y un promedio de referencia incluido en la propia grilla. La fuente no documenta el período base ni el método de cálculo de ese promedio. La grilla porcentual contiene las mismas métricas con otro orden.
 - `Temperatura/*.xls`: temperatura, humedad relativa, viento y lluvia registrada en períodos de 24 horas (`Rn24` en las planillas originales). El dashboard suma estos registros para mostrar la lluvia acumulada de cada mes.
 - Se normalizan variantes básicas de nombres departamentales.
 - Se excluyen filas vacías y registros departamentales cuyo año completo suma cero.
 - Los ceros mensuales se conservan.
 - Las fechas inválidas de estaciones se descartan y no se interpolan datos faltantes.
+- Los filtros de departamento, año, mes y localidad permiten seleccionar múltiples valores para realizar comparaciones.
+- En el detalle departamental, el acumulado suma las observaciones mensuales seleccionadas y el promedio se calcula sobre esas observaciones, no sobre totales anuales.
 
 ## Áreas inundadas
 

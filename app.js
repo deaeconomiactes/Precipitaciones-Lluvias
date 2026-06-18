@@ -251,41 +251,66 @@ function renderMonthly(rows, f) {
     datasets = [dataset('Promedio provincial', months.map(month =>
       average(rows.map(row => row.months[month]).filter(Number.isFinite))
     ), COLORS[1], false, 'mm')];
-    $('monthlyChartScope').textContent = 'Provincia';
-    $('monthlyChartDescription').textContent = 'Promedio provincial para los meses y años seleccionados.';
-  } else {
-    datasets = f.departments.map((department, index) => {
-      const departmentRows = rows.filter(row => row.department === department);
-      return dataset(department, months.map(month =>
-        average(departmentRows.map(row => row.months[month]).filter(Number.isFinite))
-      ), COLORS[index % COLORS.length], false, 'mm');
-    });
-    const provincialRows = state.rainfall.filter(row => matchesSelection(row.year, f.years));
     datasets.push({
-      ...dataset('Promedio provincial', months.map(month =>
-        average(provincialRows.map(row => row.months[month]).filter(Number.isFinite))
+      ...dataset('Promedio historico provincial', months.map(month =>
+        average(state.rainfall.map(row => row.months[month]).filter(Number.isFinite))
       ), '#6f8794', false, 'mm'),
       type: 'line',
       backgroundColor: 'transparent',
+      borderDash: [7, 4],
       borderWidth: 2.5,
       pointRadius: 3
     });
+    $('monthlyChartScope').textContent = 'Provincia';
+    $('monthlyChartDescription').textContent = 'Promedio del periodo seleccionado comparado con el promedio historico provincial.';
+  } else {
+    datasets = f.departments.flatMap((department, index) => {
+      const departmentRows = rows.filter(row => row.department === department);
+      const historicalRows = state.rainfall.filter(row => row.department === department);
+      return [
+        dataset(`${department} - periodo seleccionado`, months.map(month =>
+          average(departmentRows.map(row => row.months[month]).filter(Number.isFinite))
+        ), COLORS[index % COLORS.length], false, 'mm'),
+        {
+          ...dataset(`${department} - promedio historico`, months.map(month =>
+            average(historicalRows.map(row => row.months[month]).filter(Number.isFinite))
+          ), COLORS[index % COLORS.length], false, 'mm'),
+          type: 'line',
+          backgroundColor: 'transparent',
+          borderDash: [7, 4],
+          borderWidth: 2.5,
+          pointRadius: 3
+        }
+      ];
+    });
     $('monthlyChartScope').textContent = `${f.departments.length} seleccionado(s)`;
-    $('monthlyChartDescription').textContent = 'Comparación de los departamentos elegidos frente al promedio provincial.';
+    $('monthlyChartDescription').textContent = 'Cada departamento se compara contra su propio promedio historico mensual.';
   }
-  chart('monthlyChart', 'bar', { labels, datasets }, barOptions('mm', false, true, 'Precipitación mensual (mm)'));
+  chart('monthlyChart', 'bar', { labels, datasets }, barOptions('mm', false, true, 'Precipitacion mensual (mm)'));
 }
 
 function renderRanking(rows, f) {
-  const entries = Object.entries(groupTotals(rows, row => row.department, selectedMonths(f)))
-    .sort((a,b) => b[1] - a[1])
+  const months = selectedMonths(f);
+  const grouped = {};
+  rows.forEach(row => { (grouped[row.department] ??= []).push(recordValue(row, months)); });
+  const entries = Object.entries(grouped).map(([department, values]) => {
+    const historicalRows = state.rainfall.filter(row => row.department === department);
+    return {
+      department,
+      selected: average(values),
+      historical: average(historicalRows.map(row => recordValue(row, months)))
+    };
+  })
+    .sort((a,b) => b.selected - a.selected)
     .slice(0, 15);
   chart('rankingChart', 'bar', {
-    labels: entries.map(entry => entry[0]),
-    datasets: [dataset('Acumulado', entries.map(entry => entry[1]), COLORS[0], false, 'mm')]
-  }, barOptions('mm', true, false, 'Precipitación acumulada (mm)'));
+    labels: entries.map(entry => entry.department),
+    datasets: [
+      dataset('Periodo seleccionado', entries.map(entry => entry.selected), COLORS[0], false, 'mm'),
+      dataset('Promedio historico', entries.map(entry => entry.historical), '#7b8790', false, 'mm')
+    ]
+  }, barOptions('mm', true, true, 'Precipitacion comparable (mm)'));
 }
-
 function renderHeatmap(rows, f) {
   const months = selectedMonths(f);
   const departments = [...new Set(rows.map(row => row.department))].sort();

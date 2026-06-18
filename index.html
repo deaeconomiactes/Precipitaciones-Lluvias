@@ -77,8 +77,8 @@
     <section class="dashboard-panel" id="departmentPanel">
       <div class="panel-intro"><div><span class="eyebrow">Lectura territorial</span><h2>Análisis por departamento</h2><p>Usá el selector superior para enfocar un departamento y compararlo con el resto.</p></div></div>
       <section class="chart-grid">
-        <article class="card"><div class="card-head"><div><h2>Perfil mensual</h2><p id="monthlyChartDescription">Promedio provincial de la distribución estacional de las lluvias.</p></div><span class="source-tag" id="monthlyChartScope">Provincia</span></div><div class="chart-box"><canvas id="monthlyChart"></canvas></div></article>
-        <article class="card"><div class="card-head"><div><h2>Ranking departamental</h2><p>Acumulado para el período filtrado</p></div></div><div class="chart-box tall"><canvas id="rankingChart"></canvas></div></article>
+        <article class="card"><div class="card-head"><div><h2>Perfil mensual</h2><p id="monthlyChartDescription">Promedio del período seleccionado comparado con el promedio histórico.</p></div><span class="source-tag" id="monthlyChartScope">Provincia</span></div><div class="chart-box"><canvas id="monthlyChart"></canvas></div></article>
+        <article class="card"><div class="card-head"><div><h2>Ranking departamental</h2><p>Período seleccionado frente al promedio histórico comparable</p></div></div><div class="chart-box tall"><canvas id="rankingChart"></canvas></div></article>
         <article class="card full"><div class="card-head"><div><h2>Mapa de calor departamental</h2><p>Intensidad mensual media según los filtros activos</p></div><span class="source-tag">Unidad: milímetros (mm)</span></div><div class="heatmap-wrap" id="heatmap"></div></article>
       </section>
       <section class="card table-card"><div class="card-head"><div><h2>Detalle departamental</h2><p>El acumulado suma los meses seleccionados; el promedio corresponde a las observaciones mensuales disponibles.</p></div><button class="download-button" id="downloadTable">Descargar CSV</button></div><div class="table-wrap"><table><thead><tr><th>Departamento</th><th>Observaciones mensuales</th><th>Acumulado del período</th><th>Promedio mensual</th><th>Máximo mensual</th><th>Mes máximo</th></tr></thead><tbody id="detailsTable"></tbody></table></div></section>
@@ -111,6 +111,6 @@
 
   <footer><p>Dashboard independiente · Datos exclusivos de Precipitaciones-Lluvias</p><p id="dataNote"></p></footer>
   <div class="error-banner" id="errorBanner"></div>
-  <script src="app.js?v=20260612-4"></script>
+  <script src="app.js?v=20260618-1"></script>
 </body>
 </html>

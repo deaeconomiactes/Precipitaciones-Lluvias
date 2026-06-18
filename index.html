@@ -11,7 +11,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="climate-controls.css?v=20260612-4">
-  <link rel="stylesheet" href="operational.css?v=20260618-1">
+  <link rel="stylesheet" href="operational.css?v=20260618-2">
 </head>
 <body>
   <div class="loading" id="loading"><div class="spinner"></div><p>Preparando datos climáticos...</p></div>
@@ -67,7 +67,6 @@
       </section>
       <section class="decision-grid">
         <article class="card map-placeholder"><div class="card-head"><div><h2>Mapa departamental de Corrientes</h2><p>Vista piloto embebida para validar interacción y apariencia. No representa superficie inundada calculada por este dashboard.</p></div><span class="pending-badge">Piloto externo</span></div><div class="pilot-map"><iframe title="Mapa piloto departamental de Corrientes" src="https://geomat-maps.com.ar/mpc/maptiles/mpc-general.php?ori=v84501%22" loading="lazy" referrerpolicy="no-referrer-when-downgrade" allow="geolocation; fullscreen"></iframe><div class="map-note"><strong>Mapa piloto</strong><p>Este visor se usa solo para revisar funcionamiento visual. Los datos de hectáreas inundadas siguen pendientes.</p><a href="https://geomat-maps.com.ar/mpc/maptiles/mpc-general.php?ori=v84501%22" target="_blank" rel="noopener noreferrer">Abrir mapa en una pestaña nueva</a></div></div></article>
-        <article class="card"><div class="card-head"><div><h2>Departamentos a priorizar</h2><p>Clasificación relativa por intensidad de lluvia del período seleccionado.</p></div></div><div id="prioritySummary" class="priority-list"></div></article>
       </section>
       <section class="flood-card">
         <div class="flood-icon">ha</div><div><span class="eyebrow">Información crítica pendiente</span><h2>Superficie inundada por departamento</h2><p>No existen mediciones de hectáreas inundadas, geometrías ni variaciones temporales en las fuentes locales. El módulo queda preparado sin inventar estimaciones.</p></div><strong>— ha</strong>

@@ -433,7 +433,6 @@ function renderPriority(f) {
   const all = priorityData(f);
   const selected = f.departments === null ? all : all.filter(row => f.departments.includes(row.department));
   $('kpiPriorityCount').textContent = selected.filter(row => row.level === 'Alto' || row.level === 'Crítico').length;
-  $('prioritySummary').innerHTML = selected.slice(0, 7).map(row => `<div class="priority-item"><span class="risk-dot ${riskClass(row.level)}"></span><div><strong>${row.department}</strong><br><small>${format(row.rain)} mm promedio</small></div><span class="priority-score">${signedPercent(row.differencePct)}</span></div>`).join('');
   $('riskTable').innerHTML = selected.map(row => `<tr><td><span class="${riskClass(row.level)}">${row.level}</span></td><td>${row.department}</td><td>${signedPercent(row.differencePct)}</td><td>${format(row.rain)} mm</td><td>${row.position} de ${all.length}</td></tr>`).join('');
 }
 

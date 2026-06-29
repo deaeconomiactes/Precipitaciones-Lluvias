@@ -11,7 +11,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="climate-controls.css?v=20260612-4">
-  <link rel="stylesheet" href="operational.css?v=20260629-2">
+  <link rel="stylesheet" href="operational.css?v=20260629-3">
 </head>
 <body>
   <div class="loading" id="loading"><div class="spinner"></div><p>Preparando datos climáticos...</p></div>
@@ -75,7 +75,7 @@
     </section>
 
     <section class="dashboard-panel" id="dailyPanel">
-      <div class="panel-intro"><div><span class="eyebrow">Semáforo pluviométrico</span><h2>Monitoreo diario reciente</h2><p>Compara la lluvia acumulada reciente contra el promedio histórico disponible para la misma ventana calendario.</p></div><span class="status-pill">Último registro diario: <strong id="dailyLatestDate">—</strong></span></div>
+      <div class="panel-intro"><div><span class="eyebrow">Semáforo pluviométrico</span><h2>Monitoreo diario reciente</h2><p>Lectura rápida del comportamiento reciente de la lluvia frente a la referencia histórica comparable.</p></div><span class="status-pill">Último registro diario: <strong id="dailyLatestDate">—</strong></span></div>
       <div class="daily-toolbar"><span class="daily-toolbar-title">Ventana móvil</span><label><span>Período</span><select id="dailyWindowFilter"><option value="7">Últimos 7 días</option><option value="15">Últimos 15 días</option><option value="30">Últimos 30 días</option></select></label><span class="source-tag" id="dailyCoverage">—</span><a class="daily-update-link" href="https://github.com/deaeconomiactes/Precipitaciones-Lluvias/actions/workflows/update-daily-rainfall.yml" target="_blank" rel="noopener noreferrer">Actualizar datos diarios</a></div>
       <section class="kpi-grid daily-kpis">
         <article class="kpi rose"><span class="kpi-label">Departamentos en alerta</span><strong id="dailyAlertCount">—</strong><small>amarillo, naranja o rojo</small></article>
@@ -83,8 +83,8 @@
         <article class="kpi amber"><span class="kpi-label">Mayor exceso vs histórico</span><strong id="dailyTopExcess">—</strong><small id="dailyTopExcessDetail">—</small></article>
         <article class="kpi neutral"><span class="kpi-label">Cobertura histórica</span><strong id="dailyHistoricalYears">—</strong><small>años usados como referencia</small></article>
       </section>
-      <section class="card full daily-card"><div class="card-head"><div><h2>Mapa de calor de exceso reciente</h2><p>Color por nivel preventivo según acumulado reciente, diferencia porcentual y umbrales mínimos en milímetros.</p></div><div class="daily-legend"><span class="daily-normal">Normal</span><span class="daily-yellow">Atención</span><span class="daily-orange">Alerta</span><span class="daily-red">Alerta alta</span></div></div><div id="dailyHeatmap" class="daily-heatmap"></div></section>
-      <section class="card table-card"><div class="card-head"><div><h2>Ranking de presión pluviométrica reciente</h2><p>Ordenado por exceso porcentual frente al promedio histórico disponible.</p></div></div><div class="table-wrap"><table class="daily-table"><thead><tr><th>Departamento</th><th>Nivel</th><th>Reciente</th><th>Promedio histórico</th><th>Diferencia</th><th>Exceso</th><th>Años históricos</th></tr></thead><tbody id="dailyTable"></tbody></table></div></section>
+      <section class="card full daily-card"><div class="card-head daily-card-head"><div><h2>Semáforo por departamento</h2><p>El color resume prioridad de lectura: acumulado reciente, diferencia porcentual y umbrales mínimos de lluvia.</p></div><div class="daily-legend"><span class="daily-normal">Normal</span><span class="daily-yellow">Atención</span><span class="daily-orange">Alerta</span><span class="daily-red">Alerta alta</span></div></div><div id="dailyHeatmap" class="daily-heatmap"></div></section>
+      <section class="card table-card"><div class="card-head"><div><h2>Detalle para revisión</h2><p>Departamentos ordenados por nivel preventivo y exceso respecto de su referencia histórica.</p></div></div><div class="table-wrap"><table class="daily-table"><thead><tr><th>Departamento</th><th>Nivel</th><th>Reciente (mm)</th><th>Promedio histórico (mm)</th><th>Diferencia (mm)</th><th>Exceso (%)</th><th>Años históricos</th></tr></thead><tbody id="dailyTable"></tbody></table></div></section>
     </section>
 
     <section class="dashboard-panel" id="departmentPanel">
@@ -124,6 +124,6 @@
 
   <footer><p>Dashboard independiente · Datos exclusivos de Precipitaciones-Lluvias</p><p id="dataNote"></p></footer>
   <div class="error-banner" id="errorBanner"></div>
-  <script src="app.js?v=20260629-2"></script>
+  <script src="app.js?v=20260629-3"></script>
 </body>
 </html>

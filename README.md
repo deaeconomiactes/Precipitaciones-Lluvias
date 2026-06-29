@@ -49,7 +49,14 @@ Para regenerar solo la base diaria desde el dashboard `Registro-de-lluvias` o de
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\build-daily-data.ps1
 ```
 
-Opcionalmente se puede indicar una fuente explícita:
+Opcionalmente se puede indicar una fuente JSON de Apps Script:
+
+```powershell
+$env:DAILY_RAIN_JSON_URL = "https://script.google.com/macros/s/.../exec"
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\build-daily-data.ps1
+```
+
+También se puede indicar una fuente CSV:
 
 ```powershell
 $env:DAILY_RAIN_CSV_URL = "https://docs.google.com/spreadsheets/d/e/.../pub?output=csv"
@@ -63,7 +70,7 @@ $env:DAILY_RAIN_CSV_URLS = "https://docs.google.com/spreadsheets/d/.../export?fo
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\build-daily-data.ps1
 ```
 
-El workflow `.github/workflows/update-daily-rainfall.yml` puede actualizar estos JSON todos los días si el repositorio tiene configurada la variable `DAILY_RAIN_CSV_URL` con una URL CSV pública del Google Sheets, o `DAILY_RAIN_CSV_URLS` con varias URLs CSV. Desde la pestaña `Monitoreo diario`, el botón `Actualizar datos diarios` abre ese workflow para ejecutarlo manualmente con `Run workflow`; requiere permisos de escritura sobre el repositorio.
+El workflow `.github/workflows/update-daily-rainfall.yml` puede actualizar estos JSON todos los días si el repositorio tiene configurada la variable `DAILY_RAIN_JSON_URL` con una URL JSON de Apps Script, `DAILY_RAIN_CSV_URL` con una URL CSV pública del Google Sheets, o `DAILY_RAIN_CSV_URLS` con varias URLs CSV. Desde la pestaña `Monitoreo diario`, el botón `Actualizar datos diarios` abre ese workflow para ejecutarlo manualmente con `Run workflow`; requiere permisos de escritura sobre el repositorio.
 
 ## Fuentes y criterios
 

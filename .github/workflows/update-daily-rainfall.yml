@@ -12,6 +12,7 @@ jobs:
   update:
     runs-on: ubuntu-latest
     env:
+      DAILY_RAIN_JSON_URL: ${{ vars.DAILY_RAIN_JSON_URL }}
       DAILY_RAIN_CSV_URL: ${{ vars.DAILY_RAIN_CSV_URL }}
       DAILY_RAIN_CSV_URLS: ${{ vars.DAILY_RAIN_CSV_URLS }}
     steps:
@@ -19,17 +20,17 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Skip when Google Sheets CSV URL is not configured
-        if: ${{ env.DAILY_RAIN_CSV_URL == '' && env.DAILY_RAIN_CSV_URLS == '' }}
+        if: ${{ env.DAILY_RAIN_JSON_URL == '' && env.DAILY_RAIN_CSV_URL == '' && env.DAILY_RAIN_CSV_URLS == '' }}
         run: |
-          echo "DAILY_RAIN_CSV_URL or DAILY_RAIN_CSV_URLS repository variable is not configured. Skipping update."
+          echo "DAILY_RAIN_JSON_URL, DAILY_RAIN_CSV_URL or DAILY_RAIN_CSV_URLS repository variable is not configured. Skipping update."
 
-      - name: Build daily JSON from Google Sheets CSV
-        if: ${{ env.DAILY_RAIN_CSV_URL != '' || env.DAILY_RAIN_CSV_URLS != '' }}
+      - name: Build daily JSON from Google Sheets or Apps Script
+        if: ${{ env.DAILY_RAIN_JSON_URL != '' || env.DAILY_RAIN_CSV_URL != '' || env.DAILY_RAIN_CSV_URLS != '' }}
         shell: pwsh
         run: ./scripts/build-daily-data.ps1
 
       - name: Commit updated daily data
-        if: ${{ env.DAILY_RAIN_CSV_URL != '' || env.DAILY_RAIN_CSV_URLS != '' }}
+        if: ${{ env.DAILY_RAIN_JSON_URL != '' || env.DAILY_RAIN_CSV_URL != '' || env.DAILY_RAIN_CSV_URLS != '' }}
         run: |
           set -euo pipefail
           if git diff --quiet -- data/rainfall-daily.json data/rainfall-daily-summary.json; then

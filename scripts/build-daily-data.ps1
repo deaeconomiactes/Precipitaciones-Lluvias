@@ -1,5 +1,6 @@
 param(
     [string]$ProjectRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path,
+    [string]$SourceJsonUrl = $env:DAILY_RAIN_JSON_URL,
     [string]$SourceCsvUrl = $env:DAILY_RAIN_CSV_URL,
     [string]$SourceCsvUrls = $env:DAILY_RAIN_CSV_URLS,
     [string]$SourceCsvPath = $env:DAILY_RAIN_CSV_PATH
@@ -68,6 +69,19 @@ function Get-RowValue($row, [string[]]$names) {
 }
 
 function Read-CsvRows {
+    if (-not [string]::IsNullOrWhiteSpace($SourceJsonUrl)) {
+        Write-Host "Descargando registros diarios JSON desde $SourceJsonUrl"
+        $response = Invoke-WebRequest -Uri $SourceJsonUrl -MaximumRedirection 5 -TimeoutSec 60
+        $payload = $response.Content | ConvertFrom-Json
+        if ($payload.PSObject.Properties.Name -contains 'ok' -and -not $payload.ok) {
+            throw "La fuente JSON respondio con error: $($payload.error)"
+        }
+        if ($payload.PSObject.Properties.Name -contains 'records') { return @($payload.records) }
+        if ($payload.PSObject.Properties.Name -contains 'data') { return @($payload.data) }
+        if ($payload -is [array]) { return @($payload) }
+        throw 'La fuente JSON no contiene records ni data.'
+    }
+
     $urls = @()
     if (-not [string]::IsNullOrWhiteSpace($SourceCsvUrls)) {
         $urls += @($SourceCsvUrls -split '[;\r\n]+' | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
@@ -92,7 +106,7 @@ function Read-CsvRows {
     }
 
     if ([string]::IsNullOrWhiteSpace($script:SourceCsvPath) -or -not (Test-Path $script:SourceCsvPath)) {
-        throw 'No se encontro una fuente diaria. Defina DAILY_RAIN_CSV_URL o DAILY_RAIN_CSV_PATH.'
+        throw 'No se encontro una fuente diaria. Defina DAILY_RAIN_JSON_URL, DAILY_RAIN_CSV_URL o DAILY_RAIN_CSV_PATH.'
     }
 
     Write-Host "Leyendo registros diarios desde $script:SourceCsvPath"
@@ -233,7 +247,7 @@ $jsonOptions = @{ Depth = 8 }
 
 $summary = [ordered]@{
     generatedAt = (Get-Date).ToString('s')
-    source = if ($SourceCsvUrl -or $SourceCsvUrls) { 'Google Sheets CSV configurado' } else { 'Registro-de-lluvias/plantilla_registro_lluvias.csv' }
+    source = if ($SourceJsonUrl) { 'Google Apps Script JSON configurado' } elseif ($SourceCsvUrl -or $SourceCsvUrls) { 'Google Sheets CSV configurado' } else { 'Registro-de-lluvias/plantilla_registro_lluvias.csv' }
     dateMin = $dates[0]
     dateMax = $dates[-1]
     records = $records.Count

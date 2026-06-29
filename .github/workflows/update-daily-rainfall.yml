@@ -7,9 +7,18 @@ on:
 
 permissions:
   contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: daily-rainfall-update
+  cancel-in-progress: false
 
 jobs:
   update:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     env:
       DAILY_RAIN_JSON_URL: ${{ vars.DAILY_RAIN_JSON_URL }}
@@ -42,3 +51,39 @@ jobs:
           git add data/rainfall-daily.json data/rainfall-daily-summary.json
           git commit -m "Update daily rainfall data"
           git push
+
+      - name: Configure GitHub Pages
+        if: ${{ env.DAILY_RAIN_JSON_URL != '' || env.DAILY_RAIN_CSV_URL != '' || env.DAILY_RAIN_CSV_URLS != '' }}
+        uses: actions/configure-pages@v5
+
+      - name: Build public site from allowlist
+        if: ${{ env.DAILY_RAIN_JSON_URL != '' || env.DAILY_RAIN_CSV_URL != '' || env.DAILY_RAIN_CSV_URLS != '' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p _site/data
+          cp index.html app.js styles.css climate-controls.css operational.css _site/
+          cp data/rainfall.json data/rainfall-daily.json data/rainfall-daily-summary.json data/stations.json data/metadata.json _site/data/
+          touch _site/.nojekyll
+
+      - name: Verify private files are excluded
+        if: ${{ env.DAILY_RAIN_JSON_URL != '' || env.DAILY_RAIN_CSV_URL != '' || env.DAILY_RAIN_CSV_URLS != '' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if find _site -type f \( -name "*.xls" -o -name "*.xlsx" -o -name "*.ps1" -o -name "*.md" \) | grep -q .; then
+            echo "Private or internal files found in the public artifact."
+            exit 1
+          fi
+          find _site -maxdepth 3 -type f -print
+
+      - name: Upload public dashboard only
+        if: ${{ env.DAILY_RAIN_JSON_URL != '' || env.DAILY_RAIN_CSV_URL != '' || env.DAILY_RAIN_CSV_URLS != '' }}
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - name: Deploy GitHub Pages
+        id: deployment
+        if: ${{ env.DAILY_RAIN_JSON_URL != '' || env.DAILY_RAIN_CSV_URL != '' || env.DAILY_RAIN_CSV_URLS != '' }}
+        uses: actions/deploy-pages@v4

@@ -536,10 +536,6 @@ body {
   background: #edf7fa;
 }
 
-.daily-kpis {
-  grid-template-columns: repeat(4, 1fr);
-}
-
 .daily-card {
   margin-bottom: 18px;
 }
@@ -782,7 +778,6 @@ footer {
   }
 
   .operational-kpis,
-  .daily-kpis,
   .availability-strip,
   .decision-grid,
   .method-grid {
@@ -799,7 +794,6 @@ footer {
   .decision-grid,
   .method-grid,
   .operational-kpis,
-  .daily-kpis,
   .availability-strip {
     grid-template-columns: 1fr;
   }

@@ -1,12 +1,19 @@
 # Exportar registros diarios desde Apps Script
 
-El dashboard de registro de lluvias ya usa `doPost(e)` para guardar backups en Google Sheets. Para que el dashboard de precipitaciones pueda leer esos registros sin modificar el flujo de carga, reemplazar el `doGet()` actual por esta version.
+El dashboard de registro de lluvias ya usa `doPost(e)` para guardar backups en Google Sheets. Para que el dashboard de precipitaciones pueda leer esos registros sin modificar el flujo de carga, reemplazar el `doGet()` actual por esta version y agregar las funciones auxiliares.
+
+Esta version une dos solapas:
+
+- `plantilla_registro_lluvias.csv`: registros historicos anteriores.
+- `Registros`: registros nuevos cargados desde el dashboard de registro.
 
 ```javascript
+const EXPORT_SHEET_NAMES = ['plantilla_registro_lluvias.csv', 'Registros'];
+
 function doGet(e) {
   const format = (e && e.parameter && e.parameter.format || 'json').toLowerCase();
-  const sheet = getBackupSheet();
-  const rows = readActiveRecords(sheet);
+  const spreadsheet = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const rows = readAllRainRecords(spreadsheet);
 
   if (format === 'csv') {
     return csvResponse(rows);
@@ -15,33 +22,82 @@ function doGet(e) {
   return jsonResponse({
     ok: true,
     generatedAt: new Date().toISOString(),
+    sources: EXPORT_SHEET_NAMES,
     records: rows
   });
 }
 
-function readActiveRecords(sheet) {
-  const lastRow = sheet.getLastRow();
-  if (lastRow < 2) return [];
+function readAllRainRecords(spreadsheet) {
+  const byKey = {};
 
-  const values = sheet.getRange(2, 1, lastRow - 1, HEADERS.length).getValues();
-  return values
-    .map(row => ({
-      id: row[0] || '',
-      date: formatDateForApi(row[1]),
-      department: row[2] || '',
-      municipality: row[3] || '',
-      rain: normalizeNumberForApi(row[4]),
-      lat: normalizeNumberForApi(row[5]),
-      lng: normalizeNumberForApi(row[6]),
-      status: row[8] || '',
-      updatedAt: row[9] || ''
-    }))
+  EXPORT_SHEET_NAMES.forEach(sheetName => {
+    const sheet = spreadsheet.getSheetByName(sheetName);
+    if (!sheet) return;
+
+    readRecordsFromSheet(sheet).forEach(record => {
+      const key = record.id || [
+        record.date,
+        normalizeTextForKey(record.department),
+        normalizeTextForKey(record.municipality),
+        record.rain
+      ].join('|');
+
+      byKey[key] = record;
+    });
+  });
+
+  return Object.keys(byKey)
+    .map(key => byKey[key])
+    .sort((a, b) =>
+      String(a.date).localeCompare(String(b.date)) ||
+      String(a.department).localeCompare(String(b.department)) ||
+      String(a.municipality).localeCompare(String(b.municipality))
+    );
+}
+
+function readRecordsFromSheet(sheet) {
+  const lastRow = sheet.getLastRow();
+  const lastColumn = sheet.getLastColumn();
+  if (lastRow < 2 || lastColumn < 1) return [];
+
+  const values = sheet.getRange(1, 1, lastRow, lastColumn).getValues();
+  const headers = values[0].map(header => normalizeTextForKey(header));
+
+  return values.slice(1)
+    .map(row => rowToRainRecord(row, headers))
     .filter(record =>
       record.status !== 'deleted' &&
       record.date &&
       record.department &&
       record.rain !== ''
     );
+}
+
+function rowToRainRecord(row, headers) {
+  return {
+    id: getByAliases(row, headers, ['id']),
+    date: formatDateForApi(getByAliases(row, headers, ['date', 'fecha'])),
+    department: getByAliases(row, headers, ['department', 'departamento']),
+    municipality: getByAliases(row, headers, ['municipality', 'localidad', 'municipio']),
+    rain: normalizeNumberForApi(getByAliases(row, headers, ['rain', 'lluvia', 'precipitacion', 'precipitacion_mm', 'lluvia_mm', 'mm'])),
+    lat: normalizeNumberForApi(getByAliases(row, headers, ['lat', 'latitude', 'latitud'])),
+    lng: normalizeNumberForApi(getByAliases(row, headers, ['lng', 'lon', 'long', 'longitude', 'longitud'])),
+    status: String(getByAliases(row, headers, ['status', 'estado']) || 'active').trim(),
+    updatedAt: getByAliases(row, headers, ['updatedat', 'updated_at', 'actualizado'])
+  };
+}
+
+function getByAliases(row, headers, aliases) {
+  for (let index = 0; index < aliases.length; index++) {
+    const position = headers.indexOf(normalizeTextForKey(aliases[index]));
+    if (position >= 0) {
+      const value = row[position];
+      if (value !== null && value !== undefined && String(value).trim() !== '') {
+        return value;
+      }
+    }
+  }
+  return '';
 }
 
 function formatDateForApi(value) {
@@ -56,6 +112,15 @@ function normalizeNumberForApi(value) {
   if (value === null || value === undefined || value === '') return '';
   const number = Number(String(value).replace(',', '.'));
   return Number.isFinite(number) ? number : '';
+}
+
+function normalizeTextForKey(value) {
+  return String(value || '')
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/\s+/g, '_');
 }
 
 function csvResponse(records) {

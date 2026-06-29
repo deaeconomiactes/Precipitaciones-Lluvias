@@ -232,16 +232,16 @@ function renderDaily(f) {
 function dailyTile(row, windowDays) {
   const pctForBar = Math.max(0, Math.min(100, row.historicalAverageMm > 0 ? (row.recentMm / Math.max(row.historicalAverageMm * 2, 1)) * 100 : (row.recentMm > 0 ? 100 : 0)));
   const comparison = row.historicalAverageMm > 0
-    ? `${signedPercent(row.differencePct)} vs referencia`
+    ? `${signedPercent(row.differencePct)} relativo`
     : 'Sin referencia previa comparable';
   return `<article class="daily-tile ${row.level}">
     <div class="daily-tile-top"><h3>${row.department}</h3><span class="daily-level daily-${levelCss(row.level)}">${levelLabel(row.level)}</span></div>
     <div class="daily-main-metric"><strong>${format(row.recentMm)}</strong><span>mm en ${windowDays} d&iacute;a${windowDays === 1 ? '' : 's'}</span></div>
     <div class="daily-bar" aria-hidden="true"><span style="width:${pctForBar}%"></span></div>
     <dl class="daily-tile-metrics">
-      <div><dt>Promedio hist&oacute;rico</dt><dd>${format(row.historicalAverageMm)} mm</dd></div>
       <div><dt>Diferencia</dt><dd>${signedMm(row.differenceMm)} mm</dd></div>
-      <div><dt>Exceso</dt><dd>${comparison}</dd></div>
+      <div><dt>Referencia reciente</dt><dd>${format(row.historicalAverageMm)} mm</dd></div>
+      <div><dt>Exceso relativo</dt><dd>${comparison}</dd></div>
     </dl>
   </article>`;
 }

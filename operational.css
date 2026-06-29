@@ -489,6 +489,18 @@ main {
   margin-top: 4px;
 }
 
+.method-note {
+  margin: -4px 0 14px;
+  padding: 10px 12px;
+  border: 1px solid #d7e7df;
+  border-left: 4px solid var(--green);
+  border-radius: 12px;
+  background: #f4faf7;
+  color: var(--muted);
+  font-size: .72rem;
+  line-height: 1.45;
+}
+
 .method-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);

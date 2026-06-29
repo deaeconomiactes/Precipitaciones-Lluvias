@@ -71,7 +71,7 @@ function Get-RowValue($row, [string[]]$names) {
 function Read-CsvRows {
     if (-not [string]::IsNullOrWhiteSpace($SourceJsonUrl)) {
         Write-Host "Descargando registros diarios JSON desde $SourceJsonUrl"
-        $response = Invoke-WebRequest -Uri $SourceJsonUrl -MaximumRedirection 5 -TimeoutSec 60
+        $response = Invoke-WebRequest -Uri $SourceJsonUrl -UseBasicParsing -MaximumRedirection 5 -TimeoutSec 60
         $payload = $response.Content | ConvertFrom-Json
         if ($payload.PSObject.Properties.Name -contains 'ok' -and -not $payload.ok) {
             throw "La fuente JSON respondio con error: $($payload.error)"
@@ -94,7 +94,7 @@ function Read-CsvRows {
         $allRows = @()
         foreach ($url in ($urls | Select-Object -Unique)) {
             Write-Host "Descargando registros diarios desde $url"
-            $response = Invoke-WebRequest -Uri $url -MaximumRedirection 5 -TimeoutSec 60
+            $response = Invoke-WebRequest -Uri $url -UseBasicParsing -MaximumRedirection 5 -TimeoutSec 60
             $allRows += @($response.Content | ConvertFrom-Csv)
         }
         return $allRows
@@ -131,9 +131,24 @@ function Get-RainValue($row) {
     $text = ([string]$raw).Trim() -replace ',', '.'
     $value = 0.0
     if ([double]::TryParse($text, [Globalization.NumberStyles]::Float, [Globalization.CultureInfo]::InvariantCulture, [ref]$value)) {
-        return [Math]::Max(0, $value)
+        if ($value -gt 1000) { return $null }
+        return [Math]::Max([double]0, [double]$value)
     }
     return $null
+}
+
+function Get-CoordinateValue($row, [string[]]$names, [double]$limit) {
+    $raw = Get-RowValue $row $names
+    $text = ([string]$raw).Trim() -replace ',', '.'
+    $value = 0.0
+    if (-not [double]::TryParse($text, [Globalization.NumberStyles]::Float, [Globalization.CultureInfo]::InvariantCulture, [ref]$value)) {
+        return $null
+    }
+    while ([Math]::Abs($value) -gt $limit -and [Math]::Abs($value) -gt 1) {
+        $value = $value / 10
+    }
+    if ([Math]::Abs($value) -gt $limit) { return $null }
+    return [Math]::Round($value, 6)
 }
 
 function Get-WindowSum($lookup, [string]$department, [datetime]$endDate, [int]$days) {
@@ -174,11 +189,9 @@ foreach ($row in $rows) {
     $dailyByKey[$key] = [double]$dailyByKey[$key] + [double]$rain
 
     if (-not $coordsByDepartment.ContainsKey($department)) {
-        $lat = 0.0; $lng = 0.0
-        $rawLat = Get-RowValue $row @('lat','latitude','latitud')
-        $rawLng = Get-RowValue $row @('lng','lon','long','longitude','longitud')
-        if ([double]::TryParse(([string]$rawLat), [Globalization.NumberStyles]::Float, [Globalization.CultureInfo]::InvariantCulture, [ref]$lat) -and
-            [double]::TryParse(([string]$rawLng), [Globalization.NumberStyles]::Float, [Globalization.CultureInfo]::InvariantCulture, [ref]$lng)) {
+        $lat = Get-CoordinateValue $row @('lat','latitude','latitud') 90
+        $lng = Get-CoordinateValue $row @('lng','lon','long','longitude','longitud') 180
+        if ($null -ne $lat -and $null -ne $lng) {
             $coordsByDepartment[$department] = @{ lat = $lat; lng = $lng }
         }
     }

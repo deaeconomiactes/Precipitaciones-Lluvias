@@ -7,6 +7,8 @@ Esta version une dos solapas:
 - `plantilla_registro_lluvias.csv`: registros historicos anteriores.
 - `Registros`: registros nuevos cargados desde el dashboard de registro.
 
+La solapa `Registros` se procesa despues de la historica, por lo que una fila con el mismo `id` reemplaza a la anterior. Si esa fila tiene `status = deleted`, el registro queda excluido de la salida publica.
+
 ```javascript
 const EXPORT_SHEET_NAMES = ['plantilla_registro_lluvias.csv', 'Registros'];
 
@@ -48,6 +50,12 @@ function readAllRainRecords(spreadsheet) {
 
   return Object.keys(byKey)
     .map(key => byKey[key])
+    .filter(record =>
+      record.status !== 'deleted' &&
+      record.date &&
+      record.department &&
+      record.rain !== ''
+    )
     .sort((a, b) =>
       String(a.date).localeCompare(String(b.date)) ||
       String(a.department).localeCompare(String(b.department)) ||
@@ -65,12 +73,7 @@ function readRecordsFromSheet(sheet) {
 
   return values.slice(1)
     .map(row => rowToRainRecord(row, headers))
-    .filter(record =>
-      record.status !== 'deleted' &&
-      record.date &&
-      record.department &&
-      record.rain !== ''
-    );
+    .filter(record => record.date && record.department);
 }
 
 function rowToRainRecord(row, headers) {
@@ -147,4 +150,3 @@ function csvEscape(value) {
 Despues de publicar el Apps Script como Web App, guardar la URL `/exec` en la variable del repositorio:
 
 `DAILY_RAIN_JSON_URL`
-

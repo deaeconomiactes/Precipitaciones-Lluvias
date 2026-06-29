@@ -516,6 +516,26 @@ body {
   font: 600 .74rem Inter;
 }
 
+.daily-update-link {
+  margin-left: auto;
+  border: 1px solid #b8d0da;
+  border-radius: 999px;
+  background: #fff;
+  color: #17647f;
+  padding: 9px 13px;
+  font-size: .68rem;
+  font-weight: 800;
+  letter-spacing: .03em;
+  text-decoration: none;
+  text-transform: uppercase;
+  box-shadow: 0 4px 10px rgba(27,58,75,.06);
+}
+
+.daily-update-link:hover {
+  border-color: #5fb7d0;
+  background: #edf7fa;
+}
+
 .daily-kpis {
   grid-template-columns: repeat(4, 1fr);
 }
@@ -699,8 +719,14 @@ footer {
   }
 
   .daily-toolbar label,
-  .daily-toolbar select {
+  .daily-toolbar select,
+  .daily-update-link {
     width: 100%;
+  }
+
+  .daily-update-link {
+    margin-left: 0;
+    text-align: center;
   }
 
   .panel-intro {

@@ -1,6 +1,7 @@
 param(
     [string]$ProjectRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path,
     [string]$SourceCsvUrl = $env:DAILY_RAIN_CSV_URL,
+    [string]$SourceCsvUrls = $env:DAILY_RAIN_CSV_URLS,
     [string]$SourceCsvPath = $env:DAILY_RAIN_CSV_PATH
 )
 
@@ -56,11 +57,33 @@ function Normalize-Department([string]$value) {
     return (Get-Culture).TextInfo.ToTitleCase($key)
 }
 
+function Get-RowValue($row, [string[]]$names) {
+    foreach ($name in $names) {
+        if ($row.PSObject.Properties.Name -contains $name) {
+            $value = $row.$name
+            if (-not [string]::IsNullOrWhiteSpace([string]$value)) { return $value }
+        }
+    }
+    return $null
+}
+
 function Read-CsvRows {
+    $urls = @()
+    if (-not [string]::IsNullOrWhiteSpace($SourceCsvUrls)) {
+        $urls += @($SourceCsvUrls -split '[;\r\n]+' | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+    }
     if (-not [string]::IsNullOrWhiteSpace($SourceCsvUrl)) {
-        Write-Host "Descargando registros diarios desde $SourceCsvUrl"
-        $response = Invoke-WebRequest -Uri $SourceCsvUrl -MaximumRedirection 5 -TimeoutSec 60
-        return $response.Content | ConvertFrom-Csv
+        $urls += $SourceCsvUrl
+    }
+
+    if ($urls.Count -gt 0) {
+        $allRows = @()
+        foreach ($url in ($urls | Select-Object -Unique)) {
+            Write-Host "Descargando registros diarios desde $url"
+            $response = Invoke-WebRequest -Uri $url -MaximumRedirection 5 -TimeoutSec 60
+            $allRows += @($response.Content | ConvertFrom-Csv)
+        }
+        return $allRows
     }
 
     if ([string]::IsNullOrWhiteSpace($script:SourceCsvPath)) {
@@ -90,8 +113,7 @@ function Parse-DateValue($value) {
 }
 
 function Get-RainValue($row) {
-    $raw = $row.rain
-    if ($null -eq $raw -and $row.PSObject.Properties.Name -contains 'lluvia') { $raw = $row.lluvia }
+    $raw = Get-RowValue $row @('rain','lluvia','precipitacion','precipitacion_mm','precipitacionMm','lluvia_mm','mm')
     $text = ([string]$raw).Trim() -replace ',', '.'
     $value = 0.0
     if ([double]::TryParse($text, [Globalization.NumberStyles]::Float, [Globalization.CultureInfo]::InvariantCulture, [ref]$value)) {
@@ -127,10 +149,8 @@ $dailyByKey = @{}
 $coordsByDepartment = @{}
 
 foreach ($row in $rows) {
-    $date = Parse-DateValue $row.date
-    if ($null -eq $date -and $row.PSObject.Properties.Name -contains 'fecha') { $date = Parse-DateValue $row.fecha }
-    $departmentRaw = $row.department
-    if ([string]::IsNullOrWhiteSpace($departmentRaw) -and $row.PSObject.Properties.Name -contains 'departamento') { $departmentRaw = $row.departamento }
+    $date = Parse-DateValue (Get-RowValue $row @('date','fecha','Fecha','FECHA'))
+    $departmentRaw = Get-RowValue $row @('department','departamento','Departamento','DEPARTAMENTO')
     $department = Normalize-Department $departmentRaw
     $rain = Get-RainValue $row
     if ($null -eq $date -or $null -eq $department -or $null -eq $rain) { continue }
@@ -141,8 +161,10 @@ foreach ($row in $rows) {
 
     if (-not $coordsByDepartment.ContainsKey($department)) {
         $lat = 0.0; $lng = 0.0
-        if ([double]::TryParse(([string]$row.lat), [Globalization.NumberStyles]::Float, [Globalization.CultureInfo]::InvariantCulture, [ref]$lat) -and
-            [double]::TryParse(([string]$row.lng), [Globalization.NumberStyles]::Float, [Globalization.CultureInfo]::InvariantCulture, [ref]$lng)) {
+        $rawLat = Get-RowValue $row @('lat','latitude','latitud')
+        $rawLng = Get-RowValue $row @('lng','lon','long','longitude','longitud')
+        if ([double]::TryParse(([string]$rawLat), [Globalization.NumberStyles]::Float, [Globalization.CultureInfo]::InvariantCulture, [ref]$lat) -and
+            [double]::TryParse(([string]$rawLng), [Globalization.NumberStyles]::Float, [Globalization.CultureInfo]::InvariantCulture, [ref]$lng)) {
             $coordsByDepartment[$department] = @{ lat = $lat; lng = $lng }
         }
     }
@@ -211,7 +233,7 @@ $jsonOptions = @{ Depth = 8 }
 
 $summary = [ordered]@{
     generatedAt = (Get-Date).ToString('s')
-    source = if ($SourceCsvUrl) { 'Google Sheets CSV configurado' } else { 'Registro-de-lluvias/plantilla_registro_lluvias.csv' }
+    source = if ($SourceCsvUrl -or $SourceCsvUrls) { 'Google Sheets CSV configurado' } else { 'Registro-de-lluvias/plantilla_registro_lluvias.csv' }
     dateMin = $dates[0]
     dateMax = $dates[-1]
     records = $records.Count

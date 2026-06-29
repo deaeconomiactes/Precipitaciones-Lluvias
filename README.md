@@ -38,12 +38,30 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\build-data.ps1
 Genera:
 
 - `data/rainfall.json`: lluvia mensual por año y departamento.
+- `data/rainfall-daily.json`: lluvia diaria departamental normalizada.
+- `data/rainfall-daily-summary.json`: indicadores de semáforo pluviométrico para ventanas móviles de 1, 7, 15 y 30 días.
 - `data/stations.json`: variables meteorológicas agregadas mensualmente.
 - `data/metadata.json`: cobertura y fuentes.
+
+Para regenerar solo la base diaria desde el dashboard `Registro-de-lluvias` o desde una planilla publicada como CSV:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\build-daily-data.ps1
+```
+
+Opcionalmente se puede indicar una fuente explícita:
+
+```powershell
+$env:DAILY_RAIN_CSV_URL = "https://docs.google.com/spreadsheets/d/e/.../pub?output=csv"
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\build-daily-data.ps1
+```
+
+El workflow `.github/workflows/update-daily-rainfall.yml` puede actualizar estos JSON todos los días si el repositorio tiene configurada la variable `DAILY_RAIN_CSV_URL` con una URL CSV pública del Google Sheets.
 
 ## Fuentes y criterios
 
 - `DINAMICA LLUVIAS pruebas.xls`: serie histórica principal.
+- `Registro-de-lluvias/plantilla_registro_lluvias.csv` o Google Sheets publicado como CSV: registros diarios departamentales usados para el monitoreo reciente.
 - `Temperatura/*.xls`: temperatura, humedad relativa, viento y lluvia registrada en períodos de 24 horas (`Rn24` en las planillas originales). El dashboard suma estos registros para mostrar la lluvia acumulada de cada mes.
 - Se normalizan variantes básicas de nombres departamentales.
 - Se excluyen filas vacías y registros departamentales cuyo año completo suma cero.
@@ -53,6 +71,7 @@ Genera:
 - En el gráfico climático, el color identifica la variable climática y el tipo de línea/símbolo identifica cada combinación de localidad y año. Las variables pueden mostrarse u ocultarse desde la leyenda. Cuando se eligen varios años, se muestran por separado en lugar de promediarlos.
 - En el detalle departamental, el acumulado suma las observaciones mensuales seleccionadas y el promedio se calcula sobre esas observaciones, no sobre totales anuales.
 - En `Perfil mensual` y `Ranking departamental`, el período seleccionado se contrasta con el promedio histórico comparable del mismo departamento o de la provincia, calculado con la serie mensual completa disponible.
+- El `Monitoreo diario` mantiene la serie diaria separada de la mensual. El semáforo compara la lluvia reciente contra el promedio histórico disponible para la misma ventana calendario; como la base diaria comienza en 2023, la referencia se muestra como promedio histórico disponible y no como normal climatológica oficial.
 
 ## Áreas inundadas
 

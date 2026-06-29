@@ -2,7 +2,7 @@ const MONTHS = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov
 const MONTHS_FULL = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 const COLORS = ['#1677a6','#25a9b5','#7667a8','#d9931a','#c34f59','#3d9a6b','#7b8790','#b46a9b'];
 const ALL_MONTHS = MONTHS.map((_, index) => index);
-const state = { rainfall: [], stations: [], metadata: {}, charts: {}, tableRows: [], filterConfigs: {}, climateMetrics: new Set(['temperature','humidity','wind','rain24Total']) };
+const state = { rainfall: [], dailySummary: null, stations: [], metadata: {}, charts: {}, tableRows: [], filterConfigs: {}, climateMetrics: new Set(['temperature','humidity','wind','rain24Total']) };
 const $ = id => document.getElementById(id);
 const format = value => new Intl.NumberFormat('es-AR', { maximumFractionDigits: 1 }).format(value || 0);
 const average = values => values.length ? values.reduce((a,b) => a + b, 0) / values.length : 0;
@@ -11,13 +11,13 @@ document.addEventListener('DOMContentLoaded', init);
 
 async function init() {
   try {
-    const [rainfall, stations, metadata] = await Promise.all(
-      ['rainfall.json','stations.json','metadata.json'].map(name => fetch(`data/${name}`).then(response => {
+    const [rainfall, dailySummary, stations, metadata] = await Promise.all(
+      ['rainfall.json','rainfall-daily-summary.json','stations.json','metadata.json'].map(name => fetch(`data/${name}`).then(response => {
         if (!response.ok) throw new Error(`No se pudo cargar ${name}`);
         return response.json();
       }))
     );
-    Object.assign(state, { rainfall, stations, metadata });
+    Object.assign(state, { rainfall, dailySummary, stations, metadata });
     populateFilters();
     wireControls();
     render();
@@ -93,6 +93,7 @@ function wireControls() {
     if (from > to) [$('annualFromFilter').value, $('annualToFilter').value] = [String(to), String(from)];
     renderAnnual(filters());
   }));
+  $('dailyWindowFilter').addEventListener('change', () => renderDaily(filters()));
   $('resetFilters').addEventListener('click', () => {
     const latestCompleteYear = state.metadata.yearMax - 1;
     setMultiSelection('departmentFilter', ['ALL']);
@@ -202,10 +203,73 @@ function render() {
   renderAnnual(f);
   renderMonthly(rows, f);
   renderRanking(rows, f);
-  renderHeatmap(rows, f);
+    renderHeatmap(rows, f);
+  renderDaily(f);
   renderClimate(f);
   renderTable(rows, f);
   renderPriority(f);
+}
+
+function dailyRows(f = filters()) {
+  if (!state.dailySummary || !Array.isArray(state.dailySummary.rows)) return [];
+  const windowDays = +$('dailyWindowFilter').value || 7;
+  return state.dailySummary.rows
+    .filter(row => row.windowDays === windowDays && matchesSelection(row.department, f.departments))
+    .sort((a,b) => levelWeight(b.level) - levelWeight(a.level) || b.differencePct - a.differencePct);
+}
+
+function renderDaily(f) {
+  if (!state.dailySummary) return;
+  const rows = dailyRows(f);
+  const windowDays = +$('dailyWindowFilter').value || 7;
+  $('dailyLatestDate').textContent = formatDate(state.dailySummary.dateMax);
+  $('dailyCoverage').textContent = `${state.dailySummary.dateMin} a ${state.dailySummary.dateMax} · ${state.dailySummary.records} registros`;
+  const alertRows = rows.filter(row => row.level !== 'normal');
+  const topRain = rows.slice().sort((a,b) => b.recentMm - a.recentMm)[0];
+  const topExcess = rows.slice().sort((a,b) => b.differencePct - a.differencePct)[0];
+  const years = rows.map(row => row.historicalYears).filter(Number.isFinite);
+  $('dailyAlertCount').textContent = alertRows.length;
+  $('dailyTopRain').textContent = topRain ? `${format(topRain.recentMm)} mm` : '—';
+  $('dailyTopRainDetail').textContent = topRain ? `${topRain.department} · ${windowDays} días` : 'sin datos';
+  $('dailyTopExcess').textContent = topExcess ? signedPercent(topExcess.differencePct) : '—';
+  $('dailyTopExcessDetail').textContent = topExcess ? `${topExcess.department} · ${format(topExcess.differenceMm)} mm` : 'sin datos';
+  if (years.length) {
+    const minYears = Math.min(...years);
+    const maxYears = Math.max(...years);
+    $('dailyHistoricalYears').textContent = minYears === maxYears ? String(minYears) : `${minYears}-${maxYears}`;
+  } else {
+    $('dailyHistoricalYears').textContent = '—';
+  }
+  $('dailyHeatmap').innerHTML = rows.map(row => `<article class="daily-tile ${row.level}"><h3>${row.department}</h3><strong>${format(row.recentMm)} mm</strong><p>${levelLabel(row.level)} · ${signedPercent(row.differencePct)} vs promedio histórico (${format(row.historicalAverageMm)} mm)</p></article>`).join('');
+  $('dailyTable').innerHTML = rows.map(row => `<tr><td>${row.department}</td><td><span class="daily-level daily-${levelCss(row.level)}">${levelLabel(row.level)}</span></td><td>${format(row.recentMm)} mm</td><td>${format(row.historicalAverageMm)} mm</td><td>${format(row.differenceMm)} mm</td><td>${signedPercent(row.differencePct)}</td><td>${row.historicalYears}</td></tr>`).join('');
+  updateDailyQuickStats(f);
+}
+
+function updateDailyQuickStats(f) {
+  [1, 7, 30].forEach(days => {
+    const selected = state.dailySummary.rows.filter(row => row.windowDays === days && matchesSelection(row.department, f.departments));
+    const total = selected.reduce((sum, row) => sum + row.recentMm, 0);
+    const id = days === 1 ? 'quickRain24' : `quickRain${days}`;
+    $(id).textContent = selected.length ? `${format(total)} mm` : 'No disponible';
+  });
+}
+
+function levelWeight(level) {
+  return { rojo: 4, naranja: 3, amarillo: 2, normal: 1 }[level] || 0;
+}
+
+function levelLabel(level) {
+  return { rojo: 'Alerta alta', naranja: 'Alerta', amarillo: 'Atención', normal: 'Normal' }[level] || 'Sin datos';
+}
+
+function levelCss(level) {
+  return level === 'rojo' ? 'red' : level === 'naranja' ? 'orange' : level === 'amarillo' ? 'yellow' : 'normal';
+}
+
+function formatDate(value) {
+  if (!value) return '—';
+  const [year, month, day] = value.split('-').map(Number);
+  return new Date(year, month - 1, day).toLocaleDateString('es-AR');
 }
 
 function updateKpis(rows, f) {

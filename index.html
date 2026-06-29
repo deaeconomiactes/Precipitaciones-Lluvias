@@ -11,7 +11,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="climate-controls.css?v=20260612-4">
-  <link rel="stylesheet" href="operational.css?v=20260618-2">
+  <link rel="stylesheet" href="operational.css?v=20260629-1">
 </head>
 <body>
   <div class="loading" id="loading"><div class="spinner"></div><p>Preparando datos climáticos...</p></div>
@@ -34,6 +34,7 @@
   <nav class="section-nav" aria-label="Secciones del dashboard">
     <div class="section-nav-inner">
       <button class="section-tab active" data-panel="summaryPanel">Resumen provincial</button>
+      <button class="section-tab" data-panel="dailyPanel">Monitoreo diario</button>
       <button class="section-tab" data-panel="departmentPanel">Análisis por departamento</button>
       <button class="section-tab" data-panel="temporalPanel">Evolución temporal</button>
       <button class="section-tab" data-panel="riskPanel">Prioridad y alertas</button>
@@ -60,9 +61,9 @@
         <article class="kpi neutral"><span class="kpi-label">Superficie inundada</span><strong>Sin datos</strong><small>fuente pendiente</small></article>
       </section>
       <section class="availability-strip" aria-label="Indicadores operativos pendientes">
-        <div><span>Lluvia últimas 24 h</span><strong>No disponible</strong></div>
-        <div><span>Lluvia últimos 7 días</span><strong>No disponible</strong></div>
-        <div><span>Lluvia últimos 30 días</span><strong>No disponible</strong></div>
+        <div><span>Lluvia últimas 24 h</span><strong id="quickRain24">No disponible</strong></div>
+        <div><span>Lluvia últimos 7 días</span><strong id="quickRain7">No disponible</strong></div>
+        <div><span>Lluvia últimos 30 días</span><strong id="quickRain30">No disponible</strong></div>
         <div><span>Variación de superficie inundada</span><strong>No disponible</strong></div>
       </section>
       <section class="decision-grid">
@@ -71,6 +72,19 @@
       <section class="flood-card">
         <div class="flood-icon">ha</div><div><span class="eyebrow">Información crítica pendiente</span><h2>Superficie inundada por departamento</h2><p>No existen mediciones de hectáreas inundadas, geometrías ni variaciones temporales en las fuentes locales. El módulo queda preparado sin inventar estimaciones.</p></div><strong>— ha</strong>
       </section>
+    </section>
+
+    <section class="dashboard-panel" id="dailyPanel">
+      <div class="panel-intro"><div><span class="eyebrow">Semáforo pluviométrico</span><h2>Monitoreo diario reciente</h2><p>Compara la lluvia acumulada reciente contra el promedio histórico disponible para la misma ventana calendario.</p></div><span class="status-pill">Último registro diario: <strong id="dailyLatestDate">—</strong></span></div>
+      <div class="daily-toolbar"><span class="daily-toolbar-title">Ventana móvil</span><label><span>Período</span><select id="dailyWindowFilter"><option value="7">Últimos 7 días</option><option value="15">Últimos 15 días</option><option value="30">Últimos 30 días</option></select></label><span class="source-tag" id="dailyCoverage">—</span></div>
+      <section class="kpi-grid daily-kpis">
+        <article class="kpi rose"><span class="kpi-label">Departamentos en alerta</span><strong id="dailyAlertCount">—</strong><small>amarillo, naranja o rojo</small></article>
+        <article class="kpi blue"><span class="kpi-label">Mayor acumulado reciente</span><strong id="dailyTopRain">—</strong><small id="dailyTopRainDetail">—</small></article>
+        <article class="kpi amber"><span class="kpi-label">Mayor exceso vs histórico</span><strong id="dailyTopExcess">—</strong><small id="dailyTopExcessDetail">—</small></article>
+        <article class="kpi neutral"><span class="kpi-label">Cobertura histórica</span><strong id="dailyHistoricalYears">—</strong><small>años usados como referencia</small></article>
+      </section>
+      <section class="card full daily-card"><div class="card-head"><div><h2>Mapa de calor de exceso reciente</h2><p>Color por nivel preventivo según acumulado reciente, diferencia porcentual y umbrales mínimos en milímetros.</p></div><div class="daily-legend"><span class="daily-normal">Normal</span><span class="daily-yellow">Atención</span><span class="daily-orange">Alerta</span><span class="daily-red">Alerta alta</span></div></div><div id="dailyHeatmap" class="daily-heatmap"></div></section>
+      <section class="card table-card"><div class="card-head"><div><h2>Ranking de presión pluviométrica reciente</h2><p>Ordenado por exceso porcentual frente al promedio histórico disponible.</p></div></div><div class="table-wrap"><table class="daily-table"><thead><tr><th>Departamento</th><th>Nivel</th><th>Reciente</th><th>Promedio histórico</th><th>Diferencia</th><th>Exceso</th><th>Años históricos</th></tr></thead><tbody id="dailyTable"></tbody></table></div></section>
     </section>
 
     <section class="dashboard-panel" id="departmentPanel">
@@ -100,7 +114,7 @@
     <section class="dashboard-panel" id="dataPanel">
       <div class="panel-intro"><div><span class="eyebrow">Trazabilidad</span><h2>Metodología y datos</h2><p>Qué puede responder hoy el prototipo y qué necesita para avanzar.</p></div></div>
       <section class="method-grid">
-        <article class="method-card available"><h3>Datos disponibles</h3><ul><li>Lluvia mensual por departamento, 1993–2026.</li><li>Temperatura, humedad, viento y lluvia diaria de ocho estaciones.</li></ul></article>
+        <article class="method-card available"><h3>Datos disponibles</h3><ul><li>Lluvia mensual por departamento, 1993–2026.</li><li>Registro diario departamental, 2023 a la última carga disponible.</li><li>Temperatura, humedad, viento y lluvia diaria de ocho estaciones.</li></ul></article>
         <article class="method-card pending"><h3>Datos pendientes</h3><ul><li>Superficie inundada y hectáreas afectadas.</li><li>Geometrías departamentales para mapas.</li><li>Lluvia reciente departamental de 24 h, 7 y 30 días.</li><li>Variables de vulnerabilidad territorial.</li></ul></article>
         <article class="method-card"><h3>Procesamiento</h3><ul><li>Nombres departamentales normalizados.</li><li>Filas vacías y años totalmente en cero excluidos.</li><li>Fechas inválidas de estaciones descartadas.</li><li>Sin interpolación ni datos inventados.</li></ul></article>
         <article class="method-card"><h3>Limitación principal</h3><p>El prototipo permite análisis histórico y priorización relativa por lluvia. No permite afirmar cuántas hectáreas están inundadas ni emitir alertas hidrológicas operativas.</p></article>
@@ -110,6 +124,6 @@
 
   <footer><p>Dashboard independiente · Datos exclusivos de Precipitaciones-Lluvias</p><p id="dataNote"></p></footer>
   <div class="error-banner" id="errorBanner"></div>
-  <script src="app.js?v=20260618-1"></script>
+  <script src="app.js?v=20260629-2"></script>
 </body>
 </html>

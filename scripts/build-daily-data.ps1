@@ -189,9 +189,8 @@ function Get-Level([double]$recent, [double]$historical, [double]$pct, [int]$day
 }
 
 $rows = Read-CsvRows
-$dailyByKey = @{}
+$departmentDaily = @{}
 $coordsByDepartment = @{}
-$seenRows = @{}
 
 foreach ($row in $rows) {
     $status = Normalize-Text (Get-RowValue $row @('status','estado','Estado','STATUS'))
@@ -204,14 +203,12 @@ foreach ($row in $rows) {
     $rain = Get-RainValue $row
     if ($null -eq $date -or $null -eq $department -or $null -eq $rain) { continue }
 
-    $municipality = Normalize-Text (Get-RowValue $row @('municipality','municipio','localidad','Municipio','Localidad'))
-    $rowIdentity = "$($date.ToString('yyyy-MM-dd'))|$department|$municipality|$([Math]::Round([double]$rain, 2))"
-    if ($seenRows.ContainsKey($rowIdentity)) { continue }
-    $seenRows[$rowIdentity] = $true
-
     $key = "$department|$($date.ToString('yyyy-MM-dd'))"
-    if (-not $dailyByKey.ContainsKey($key)) { $dailyByKey[$key] = 0.0 }
-    $dailyByKey[$key] = [double]$dailyByKey[$key] + [double]$rain
+    if (-not $departmentDaily.ContainsKey($key)) {
+        $departmentDaily[$key] = @{ sum = 0.0; count = 0 }
+    }
+    $departmentDaily[$key].sum = [double]$departmentDaily[$key].sum + [double]$rain
+    $departmentDaily[$key].count = [int]$departmentDaily[$key].count + 1
 
     if (-not $coordsByDepartment.ContainsKey($department)) {
         $lat = Get-CoordinateValue $row @('lat','latitude','latitud') 90
@@ -220,6 +217,11 @@ foreach ($row in $rows) {
             $coordsByDepartment[$department] = @{ lat = $lat; lng = $lng }
         }
     }
+}
+
+$dailyByKey = @{}
+foreach ($key in $departmentDaily.Keys) {
+    $dailyByKey[$key] = [double]$departmentDaily[$key].sum / [int]$departmentDaily[$key].count
 }
 
 $records = foreach ($key in $dailyByKey.Keys) {

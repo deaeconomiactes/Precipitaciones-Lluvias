@@ -84,6 +84,7 @@ El workflow `.github/workflows/update-daily-rainfall.yml` puede actualizar estos
 - `Registro-de-lluvias/plantilla_registro_lluvias.csv`, Apps Script o Google Sheets publicado como CSV: registros diarios departamentales usados para el monitoreo reciente.
 - `Temperatura/*.xls`: temperatura, humedad relativa, viento y lluvia registrada en períodos de 24 horas (`Rn24` en las planillas originales). El dashboard suma estos registros para mostrar la lluvia acumulada de cada mes.
 - Se normalizan variantes básicas de nombres departamentales.
+- En la base diaria, si existe más de un registro para el mismo departamento y fecha, se calcula un promedio departamental diario antes de generar las ventanas de 1, 7, 15 y 30 días.
 - Se excluyen filas vacías y registros departamentales cuyo año completo suma cero.
 - Los ceros mensuales se conservan.
 - Las fechas inválidas de estaciones se descartan y no se interpolan datos faltantes.

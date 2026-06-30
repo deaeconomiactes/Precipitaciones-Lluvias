@@ -533,6 +533,42 @@ main {
   cursor: pointer;
 }
 
+.card-actions,
+.daily-card-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.daily-card-actions {
+  max-width: 520px;
+}
+
+.inline-select {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+  font-size: .62rem;
+  font-weight: 850;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+}
+
+.inline-select select {
+  min-width: 145px;
+  border: 1px solid #c8d9d5;
+  border-radius: 10px;
+  background: #fff;
+  color: var(--text);
+  padding: 8px 10px;
+  font: 750 .7rem Inter, system-ui, sans-serif;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
 .daily-toolbar {
   display: flex;
   align-items: center;
@@ -958,8 +994,19 @@ footer {
 
   .daily-toolbar label,
   .daily-toolbar select,
+  .card-actions,
+  .daily-card-actions,
+  .inline-select,
+  .inline-select select,
   .daily-update-link {
     width: 100%;
+  }
+
+  .card-actions,
+  .daily-card-actions,
+  .inline-select {
+    align-items: stretch;
+    justify-content: flex-start;
   }
 
   .daily-update-link {

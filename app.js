@@ -95,6 +95,8 @@ function wireControls() {
     renderAnnual(filters());
   }));
   $('dailyWindowFilter').addEventListener('change', () => renderDaily(filters()));
+  $('dailySortFilter').addEventListener('change', () => renderDaily(filters()));
+  $('detailSortFilter').addEventListener('change', () => renderTable(filteredRainfall(filters()), filters()));
   $('resetFilters').addEventListener('click', () => {
     const latestCompleteYear = state.metadata.yearMax - 1;
     setMultiSelection('departmentFilter', ['ALL']);
@@ -214,9 +216,10 @@ function render() {
 function dailyRows(f = filters()) {
   if (!state.dailySummary || !Array.isArray(state.dailySummary.rows)) return [];
   const windowDays = +$('dailyWindowFilter').value || 7;
+  const sortDirection = $('dailySortFilter')?.value === 'asc' ? 1 : -1;
   return state.dailySummary.rows
     .filter(row => row.windowDays === windowDays && matchesSelection(row.department, f.departments))
-    .sort((a,b) => levelWeight(b.level) - levelWeight(a.level) || b.differencePct - a.differencePct);
+    .sort((a,b) => sortDirection * (a.recentMm - b.recentMm) || a.department.localeCompare(b.department, 'es'));
 }
 
 function renderDaily(f) {
@@ -243,8 +246,8 @@ function dailyMatrix(f, selectedWindow) {
   const departments = [...byDepartment.keys()].sort((a, b) => {
     const aSelected = byDepartment.get(a).get(selectedWindow);
     const bSelected = byDepartment.get(b).get(selectedWindow);
-    return levelWeight(bSelected?.level) - levelWeight(aSelected?.level)
-      || (bSelected?.differenceMm ?? -Infinity) - (aSelected?.differenceMm ?? -Infinity)
+    const sortDirection = $('dailySortFilter')?.value === 'asc' ? 1 : -1;
+    return sortDirection * ((aSelected?.recentMm ?? 0) - (bSelected?.recentMm ?? 0))
       || a.localeCompare(b, 'es');
   });
 
@@ -516,6 +519,9 @@ function renderTable(rows, f) {
       maximum: peak.value,
       peakMonth: peak.value >= 0 ? MONTHS_FULL[peak.month] : 'Sin datos'
     };
+  }).sort((a,b) => {
+    const sortDirection = $('detailSortFilter')?.value === 'asc' ? 1 : -1;
+    return sortDirection * (a.total - b.total) || a.department.localeCompare(b.department, 'es');
   });
   $('detailsTable').innerHTML = state.tableRows.map(row => `<tr><td>${row.department}</td><td>${row.observations}</td><td>${format(row.total)} mm</td><td>${format(row.average)} mm</td><td>${format(row.maximum)} mm</td><td>${row.peakMonth}</td></tr>`).join('');
 }

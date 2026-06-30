@@ -8,6 +8,7 @@ param(
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
+$script:DailySourceLabel = ''
 
 function Normalize-Text([string]$value) {
     if ([string]::IsNullOrWhiteSpace($value)) { return $null }
@@ -69,6 +70,9 @@ function Get-RowValue($row, [string[]]$names) {
 }
 
 function Read-CsvRows {
+    $allRows = @()
+    $sourceLabels = @()
+
     if (-not [string]::IsNullOrWhiteSpace($SourceJsonUrl)) {
         Write-Host "Descargando registros diarios JSON desde $SourceJsonUrl"
         $response = Invoke-WebRequest -Uri $SourceJsonUrl -UseBasicParsing -MaximumRedirection 5 -TimeoutSec 60
@@ -76,10 +80,16 @@ function Read-CsvRows {
         if ($payload.PSObject.Properties.Name -contains 'ok' -and -not $payload.ok) {
             throw "La fuente JSON respondio con error: $($payload.error)"
         }
-        if ($payload.PSObject.Properties.Name -contains 'records') { return @($payload.records) }
-        if ($payload.PSObject.Properties.Name -contains 'data') { return @($payload.data) }
-        if ($payload -is [array]) { return @($payload) }
-        throw 'La fuente JSON no contiene records ni data.'
+        if ($payload.PSObject.Properties.Name -contains 'records') {
+            $allRows += @($payload.records)
+        } elseif ($payload.PSObject.Properties.Name -contains 'data') {
+            $allRows += @($payload.data)
+        } elseif ($payload -is [array]) {
+            $allRows += @($payload)
+        } else {
+            throw 'La fuente JSON no contiene records ni data.'
+        }
+        $sourceLabels += 'Apps Script JSON'
     }
 
     $urls = @()
@@ -91,12 +101,16 @@ function Read-CsvRows {
     }
 
     if ($urls.Count -gt 0) {
-        $allRows = @()
         foreach ($url in ($urls | Select-Object -Unique)) {
             Write-Host "Descargando registros diarios desde $url"
             $response = Invoke-WebRequest -Uri $url -UseBasicParsing -MaximumRedirection 5 -TimeoutSec 60
             $allRows += @($response.Content | ConvertFrom-Csv)
         }
+        $sourceLabels += 'Google Sheets CSV'
+    }
+
+    if ($allRows.Count -gt 0) {
+        $script:DailySourceLabel = ($sourceLabels | Select-Object -Unique) -join ' + '
         return $allRows
     }
 
@@ -110,6 +124,7 @@ function Read-CsvRows {
     }
 
     Write-Host "Leyendo registros diarios desde $script:SourceCsvPath"
+    $script:DailySourceLabel = 'Registro-de-lluvias/plantilla_registro_lluvias.csv'
     return Import-Csv -Path $script:SourceCsvPath
 }
 
@@ -176,13 +191,23 @@ function Get-Level([double]$recent, [double]$historical, [double]$pct, [int]$day
 $rows = Read-CsvRows
 $dailyByKey = @{}
 $coordsByDepartment = @{}
+$seenRows = @{}
 
 foreach ($row in $rows) {
+    $status = Normalize-Text (Get-RowValue $row @('status','estado','Estado','STATUS'))
+    $action = Normalize-Text (Get-RowValue $row @('action','accion','Accion','ACCIÓN','ACTION'))
+    if ($status -eq 'deleted' -or $status -eq 'eliminado' -or $action -eq 'delete' -or $action -eq 'eliminar') { continue }
+
     $date = Parse-DateValue (Get-RowValue $row @('date','fecha','Fecha','FECHA'))
     $departmentRaw = Get-RowValue $row @('department','departamento','Departamento','DEPARTAMENTO')
     $department = Normalize-Department $departmentRaw
     $rain = Get-RainValue $row
     if ($null -eq $date -or $null -eq $department -or $null -eq $rain) { continue }
+
+    $municipality = Normalize-Text (Get-RowValue $row @('municipality','municipio','localidad','Municipio','Localidad'))
+    $rowIdentity = "$($date.ToString('yyyy-MM-dd'))|$department|$municipality|$([Math]::Round([double]$rain, 2))"
+    if ($seenRows.ContainsKey($rowIdentity)) { continue }
+    $seenRows[$rowIdentity] = $true
 
     $key = "$department|$($date.ToString('yyyy-MM-dd'))"
     if (-not $dailyByKey.ContainsKey($key)) { $dailyByKey[$key] = 0.0 }
@@ -260,7 +285,7 @@ $jsonOptions = @{ Depth = 8 }
 
 $summary = [ordered]@{
     generatedAt = (Get-Date).ToString('s')
-    source = if ($SourceJsonUrl) { 'Google Apps Script JSON configurado' } elseif ($SourceCsvUrl -or $SourceCsvUrls) { 'Google Sheets CSV configurado' } else { 'Registro-de-lluvias/plantilla_registro_lluvias.csv' }
+    source = $script:DailySourceLabel
     dateMin = $dates[0]
     dateMax = $dates[-1]
     records = $records.Count

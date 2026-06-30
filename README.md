@@ -56,6 +56,12 @@ $env:DAILY_RAIN_JSON_URL = "https://script.google.com/macros/s/.../exec"
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\build-daily-data.ps1
 ```
 
+La fuente JSON actualmente usada para el monitoreo diario es el Apps Script exportador del registro de lluvias:
+
+```text
+https://script.google.com/macros/s/AKfycbyWxsaNypgJegUB419DKjF5tXhTRAyY4mT7aH34L3fwUwmGpy_J4ywwwZAsEhJWcEY/exec
+```
+
 También se puede indicar una fuente CSV:
 
 ```powershell

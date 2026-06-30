@@ -2,6 +2,7 @@
 const MONTHS_FULL = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 const COLORS = ['#1677a6','#25a9b5','#7667a8','#d9931a','#c34f59','#3d9a6b','#7b8790','#b46a9b'];
 const ALL_MONTHS = MONTHS.map((_, index) => index);
+const DAILY_WINDOWS = [1, 7, 15, 30];
 const state = { rainfall: [], dailySummary: null, stations: [], metadata: {}, charts: {}, tableRows: [], filterConfigs: {}, climateMetrics: new Set(['temperature','humidity','wind','rain24Total']) };
 const $ = id => document.getElementById(id);
 const format = value => new Intl.NumberFormat('es-AR', { maximumFractionDigits: 1 }).format(value || 0);
@@ -224,26 +225,65 @@ function renderDaily(f) {
   const windowDays = +$('dailyWindowFilter').value || 7;
   $('dailyLatestDate').textContent = formatDate(state.dailySummary.dateMax);
   $('dailyCoverage').textContent = `${state.dailySummary.dateMin} a ${state.dailySummary.dateMax} - ${state.dailySummary.records} registros`;
-  $('dailyHeatmap').innerHTML = rows.length ? rows.map(row => dailyTile(row, windowDays)).join('') : '<div class="empty-state">No hay datos diarios para los filtros seleccionados.</div>';
+  $('dailyHeatmap').innerHTML = dailyMatrix(f, windowDays);
   $('dailyTable').innerHTML = rows.map(row => `<tr><td>${row.department}</td><td><span class="daily-level daily-${levelCss(row.level)}">${levelLabel(row.level)}</span></td><td>${format(row.recentMm)}</td><td>${format(row.historicalAverageMm)}</td><td>${signedMm(row.differenceMm)}</td><td>${signedPercent(row.differencePct)}</td><td>${row.historicalYears}</td></tr>`).join('');
   updateDailyQuickStats(f);
 }
 
-function dailyTile(row, windowDays) {
-  const pctForBar = Math.max(0, Math.min(100, row.historicalAverageMm > 0 ? (row.recentMm / Math.max(row.historicalAverageMm * 2, 1)) * 100 : (row.recentMm > 0 ? 100 : 0)));
-  const comparison = row.historicalAverageMm > 0
-    ? `${signedPercent(row.differencePct)} relativo`
-    : 'Sin referencia previa comparable';
-  return `<article class="daily-tile ${row.level}">
-    <div class="daily-tile-top"><h3>${row.department}</h3><span class="daily-level daily-${levelCss(row.level)}">${levelLabel(row.level)}</span></div>
-    <div class="daily-main-metric"><strong>${format(row.recentMm)}</strong><span>mm en ${windowDays} d&iacute;a${windowDays === 1 ? '' : 's'}</span></div>
-    <div class="daily-bar" aria-hidden="true"><span style="width:${pctForBar}%"></span></div>
-    <dl class="daily-tile-metrics">
-      <div><dt>Diferencia</dt><dd>${signedMm(row.differenceMm)} mm</dd></div>
-      <div><dt>Referencia reciente</dt><dd>${format(row.historicalAverageMm)} mm</dd></div>
-      <div><dt>Exceso relativo</dt><dd>${comparison}</dd></div>
-    </dl>
-  </article>`;
+function dailyMatrix(f, selectedWindow) {
+  const rows = state.dailySummary.rows.filter(row => matchesSelection(row.department, f.departments));
+  if (!rows.length) return '<div class="empty-state">No hay datos diarios para los filtros seleccionados.</div>';
+
+  const byDepartment = new Map();
+  rows.forEach(row => {
+    if (!byDepartment.has(row.department)) byDepartment.set(row.department, new Map());
+    byDepartment.get(row.department).set(row.windowDays, row);
+  });
+
+  const departments = [...byDepartment.keys()].sort((a, b) => {
+    const aSelected = byDepartment.get(a).get(selectedWindow);
+    const bSelected = byDepartment.get(b).get(selectedWindow);
+    return levelWeight(bSelected?.level) - levelWeight(aSelected?.level)
+      || (bSelected?.differenceMm ?? -Infinity) - (aSelected?.differenceMm ?? -Infinity)
+      || a.localeCompare(b, 'es');
+  });
+
+  const header = `<div class="daily-matrix-head daily-matrix-corner">Departamento</div>${DAILY_WINDOWS.map(days => `<div class="daily-matrix-head ${days === selectedWindow ? 'selected' : ''}">${dailyWindowLabel(days)}</div>`).join('')}`;
+  const body = departments.map(department => {
+    const values = byDepartment.get(department);
+    return `<div class="daily-matrix-department">${department}</div>${DAILY_WINDOWS.map(days => dailyMatrixCell(values.get(days), days === selectedWindow)).join('')}`;
+  }).join('');
+
+  return `<div class="daily-matrix">${header}${body}</div>`;
+}
+
+function dailyMatrixCell(row, selected) {
+  if (!row) return '<div class="daily-matrix-cell empty">Sin datos</div>';
+  const tooltip = [
+    row.department,
+    `${dailyWindowLabel(row.windowDays)}`,
+    `Nivel: ${levelLabel(row.level)}`,
+    `Reciente: ${format(row.recentMm)} mm`,
+    `Referencia: ${format(row.historicalAverageMm)} mm`,
+    `Diferencia: ${signedMm(row.differenceMm)} mm`,
+    `Exceso relativo: ${signedPercent(row.differencePct)}`,
+    `Años usados: ${row.historicalYears}`
+  ].join(' | ');
+  return `<div class="daily-matrix-cell ${row.level} ${selected ? 'selected' : ''}" title="${escapeAttr(tooltip)}">
+    <strong>${signedMm(row.differenceMm)}</strong>
+  </div>`;
+}
+
+function dailyWindowLabel(days) {
+  return days === 1 ? '24 h' : `${days} días`;
+}
+
+function escapeAttr(value) {
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
 }
 
 function updateDailyQuickStats(f) {

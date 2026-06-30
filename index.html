@@ -11,7 +11,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="climate-controls.css?v=20260612-4">
-  <link rel="stylesheet" href="operational.css?v=20260629-5">
+  <link rel="stylesheet" href="operational.css?v=20260630-1">
 </head>
 <body>
   <div class="loading" id="loading"><div class="spinner"></div><p>Preparando datos climáticos...</p></div>
@@ -77,7 +77,7 @@
     <section class="dashboard-panel" id="dailyPanel">
       <div class="panel-intro"><div><span class="eyebrow">Semáforo pluviométrico</span><h2>Monitoreo diario reciente</h2><p>Lectura rápida del comportamiento reciente de la lluvia frente a una referencia reciente comparable.</p></div><span class="status-pill">Último registro diario: <strong id="dailyLatestDate">—</strong></span></div>
       <div class="daily-toolbar"><span class="daily-toolbar-title">Ventana móvil</span><label><span>Período</span><select id="dailyWindowFilter"><option value="1">Últimas 24 h</option><option value="7" selected>Últimos 7 días</option><option value="15">Últimos 15 días</option><option value="30">Últimos 30 días</option></select></label><span class="source-tag" id="dailyCoverage">—</span><a class="daily-update-link" href="https://github.com/deaeconomiactes/Precipitaciones-Lluvias/actions/workflows/update-daily-rainfall.yml" target="_blank" rel="noopener noreferrer">Actualizar datos diarios</a></div>
-      <section class="card full daily-card"><div class="card-head daily-card-head"><div><h2>Semáforo por departamento</h2><p>Prioriza lectura por acumulado reciente y diferencia en mm; el porcentaje queda como apoyo.</p></div><div class="daily-legend"><span class="daily-normal">Normal</span><span class="daily-yellow">Atención</span><span class="daily-orange">Alerta</span><span class="daily-red">Alerta alta</span></div></div><div class="method-note">La referencia compara la misma ventana calendario en los años diarios disponibles. No equivale a una normal climatológica oficial.</div><div id="dailyHeatmap" class="daily-heatmap"></div></section>
+      <section class="card full daily-card"><div class="card-head daily-card-head"><div><h2>Semáforo por departamento</h2><p>Mapa de calor con la diferencia en mm entre la lluvia reciente y su referencia comparable. Pasá el cursor sobre cada celda para ver el detalle.</p></div><div class="daily-legend"><span class="daily-normal">Normal</span><span class="daily-yellow">Atención</span><span class="daily-orange">Alerta</span><span class="daily-red">Alerta alta</span></div></div><div class="method-note">La referencia compara la misma ventana calendario en los años diarios disponibles. No equivale a una normal climatológica oficial. La ventana seleccionada se resalta y ordena la lectura.</div><div id="dailyHeatmap" class="daily-heatmap"></div></section>
       <section class="card table-card"><div class="card-head"><div><h2>Detalle para revisión</h2><p>Departamentos ordenados por nivel preventivo y diferencia frente a su referencia reciente.</p></div></div><div class="table-wrap"><table class="daily-table"><thead><tr><th>Departamento</th><th>Nivel</th><th>Reciente (mm)</th><th>Referencia reciente (mm)</th><th>Diferencia (mm)</th><th>Exceso (%)</th><th>Años usados</th></tr></thead><tbody id="dailyTable"></tbody></table></div></section>
     </section>
 
@@ -118,6 +118,6 @@
 
   <footer><p>Dashboard independiente · Datos exclusivos de Precipitaciones-Lluvias</p><p id="dataNote"></p></footer>
   <div class="error-banner" id="errorBanner"></div>
-  <script src="app.js?v=20260629-5"></script>
+  <script src="app.js?v=20260630-1"></script>
 </body>
 </html>

@@ -218,7 +218,7 @@ function dailyRows(f = filters()) {
   const windowDays = +$('dailyWindowFilter').value || 7;
   const sortDirection = $('dailySortFilter')?.value === 'asc' ? 1 : -1;
   return state.dailySummary.rows
-    .filter(row => row.windowDays === windowDays && matchesSelection(row.department, f.departments))
+    .filter(row => row.windowDays === windowDays && row.recentMm > 0 && matchesSelection(row.department, f.departments))
     .sort((a,b) => sortDirection * (a.recentMm - b.recentMm) || a.department.localeCompare(b.department, 'es'));
 }
 
@@ -234,8 +234,11 @@ function renderDaily(f) {
 }
 
 function dailyMatrix(f, selectedWindow) {
-  const rows = state.dailySummary.rows.filter(row => matchesSelection(row.department, f.departments));
-  if (!rows.length) return '<div class="empty-state">No hay datos diarios para los filtros seleccionados.</div>';
+  const activeDepartments = new Set(state.dailySummary.rows
+    .filter(row => row.windowDays === selectedWindow && row.recentMm > 0 && matchesSelection(row.department, f.departments))
+    .map(row => row.department));
+  const rows = state.dailySummary.rows.filter(row => activeDepartments.has(row.department));
+  if (!rows.length) return '<div class="empty-state">No hay lluvia registrada para la ventana y filtros seleccionados.</div>';
 
   const byDepartment = new Map();
   rows.forEach(row => {

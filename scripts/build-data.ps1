@@ -49,6 +49,14 @@ function As-Number($value) {
     return $null
 }
 
+function As-ExcelNumber($value) {
+    if ($null -eq $value -or $value -eq '') { return $null }
+    if ($value -is [double] -or $value -is [int] -or $value -is [decimal]) {
+        return [Math]::Round([double]$value, 2)
+    }
+    return $null
+}
+
 function Parse-Date($value) {
     if ($null -eq $value -or $value -eq '') { return $null }
     if ($value -is [double] -or $value -is [int]) {
@@ -95,9 +103,10 @@ try {
         $blankStreak = 0
         $months = @()
         $sum = 0.0
+        $validMonths = 0
         for ($column = 3; $column -le 14; $column++) {
-            $number = As-Number $values[$row, $column]
-            if ($null -eq $number) { $months += $null } else { $months += $number; $sum += $number }
+            $number = As-ExcelNumber $values[$row, $column]
+            if ($null -eq $number) { $months += $null } else { $months += $number; $sum += $number; $validMonths++ }
         }
         if ($sum -le 0) { continue }
         $rainfall.Add([ordered]@{
@@ -105,7 +114,7 @@ try {
             department = $department
             months = $months
             total = [Math]::Round($sum, 2)
-            average = [Math]::Round($sum / 12, 2)
+            average = [Math]::Round($sum / $validMonths, 2)
         })
     }
     $book.Close($false)

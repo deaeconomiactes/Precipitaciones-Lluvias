@@ -301,9 +301,13 @@ $dataDir = Join-Path $ProjectRoot 'data'
 New-Item -ItemType Directory -Force -Path $dataDir | Out-Null
 $existingDailyPath = Join-Path $dataDir 'rainfall-daily.json'
 if (Test-Path $existingDailyPath) {
-    $existingRecords = @(Get-Content -Raw -Path $existingDailyPath | ConvertFrom-Json)
-    if ($existingRecords.Count -gt 0 -and $records.Count -lt ($existingRecords.Count * 0.95)) {
-        throw "La nueva fuente diaria genero $($records.Count) registros, menos que los $($existingRecords.Count) existentes. Se cancela para no perder base historica."
+    try {
+        $existingRecords = @(Get-Content -Raw -Path $existingDailyPath | ConvertFrom-Json)
+        if ($existingRecords.Count -gt 0 -and $records.Count -lt ($existingRecords.Count * 0.95)) {
+            throw "La nueva fuente diaria genero $($records.Count) registros, menos que los $($existingRecords.Count) existentes. Se cancela para no perder base historica."
+        }
+    } catch {
+        Write-Warning "No se pudo leer la base diaria existente para comparar cantidad de registros. Se regenerara el archivo."
     }
 }
 $jsonOptions = @{ Depth = 8 }

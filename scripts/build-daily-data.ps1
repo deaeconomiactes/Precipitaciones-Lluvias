@@ -205,6 +205,14 @@ function Get-Level([double]$recent, [double]$historical, [double]$pct, [int]$day
     return 'normal'
 }
 
+function Read-JsonArrayFile([string]$path) {
+    $text = Get-Content -Raw -Path $path
+    $text = $text.TrimStart([char]0xFEFF)
+    $value = $text | ConvertFrom-Json
+    if ($value -is [array]) { return @($value) }
+    return @($value)
+}
+
 $rows = Read-CsvRows
 $departmentDaily = @{}
 $coordsByDepartment = @{}
@@ -256,6 +264,33 @@ $records = foreach ($key in $dailyByKey.Keys) {
 $records = @($records | Sort-Object date, department)
 if ($records.Count -eq 0) { throw 'No se generaron registros diarios validos.' }
 
+$dataDir = Join-Path $ProjectRoot 'data'
+New-Item -ItemType Directory -Force -Path $dataDir | Out-Null
+$existingDailyPath = Join-Path $dataDir 'rainfall-daily.json'
+if (Test-Path $existingDailyPath) {
+    try {
+        $existingRecords = Read-JsonArrayFile $existingDailyPath
+        if ($existingRecords.Count -gt 0 -and $records.Count -lt ($existingRecords.Count * 0.95)) {
+            $incomingLatestDate = @($records.date | Sort-Object -Unique)[-1]
+            Write-Warning "La fuente diaria genero $($records.Count) registros, menos que los $($existingRecords.Count) existentes. Se conserva la base publicada y se actualiza solo la fecha mas reciente disponible ($incomingLatestDate)."
+
+            $mergedByKey = @{}
+            foreach ($existing in $existingRecords) {
+                if ($existing.date -ne $incomingLatestDate) {
+                    $mergedByKey["$($existing.department)|$($existing.date)"] = $existing
+                }
+            }
+            foreach ($incoming in ($records | Where-Object { $_.date -eq $incomingLatestDate })) {
+                $mergedByKey["$($incoming.department)|$($incoming.date)"] = $incoming
+            }
+            $records = @($mergedByKey.Values | Sort-Object date, department)
+            $script:DailySourceLabel = "$script:DailySourceLabel + base publicada preservada"
+        }
+    } catch {
+        Write-Warning "No se pudo leer la base diaria existente para comparar cantidad de registros. Se regenerara el archivo."
+    }
+}
+
 $lookup = @{}
 foreach ($record in $records) {
     $lookup["$($record.department)|$($record.date)"] = $record.rainfallMm
@@ -294,20 +329,6 @@ foreach ($days in $windows) {
             level = Get-Level $recent $historical $pct $days
             historicalYears = $historicalValues.Count
         }
-    }
-}
-
-$dataDir = Join-Path $ProjectRoot 'data'
-New-Item -ItemType Directory -Force -Path $dataDir | Out-Null
-$existingDailyPath = Join-Path $dataDir 'rainfall-daily.json'
-if (Test-Path $existingDailyPath) {
-    try {
-        $existingRecords = @(Get-Content -Raw -Path $existingDailyPath | ConvertFrom-Json)
-        if ($existingRecords.Count -gt 0 -and $records.Count -lt ($existingRecords.Count * 0.95)) {
-            throw "La nueva fuente diaria genero $($records.Count) registros, menos que los $($existingRecords.Count) existentes. Se cancela para no perder base historica."
-        }
-    } catch {
-        Write-Warning "No se pudo leer la base diaria existente para comparar cantidad de registros. Se regenerara el archivo."
     }
 }
 $jsonOptions = @{ Depth = 8 }

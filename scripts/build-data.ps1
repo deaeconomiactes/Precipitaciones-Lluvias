@@ -31,7 +31,22 @@ function Normalize-Name([string]$value) {
 
 function As-Number($value) {
     if ($null -eq $value -or $value -eq '') { return $null }
-    try { return [Math]::Round([double]$value, 2) } catch { return $null }
+    if ($value -is [double] -or $value -is [int] -or $value -is [decimal]) {
+        return [Math]::Round([double]$value, 2)
+    }
+    $text = ([string]$value).Trim()
+    if ([string]::IsNullOrWhiteSpace($text)) { return $null }
+    if ($text -match ',' -and $text -match '\.') {
+        $text = $text -replace '\.', ''
+        $text = $text -replace ',', '.'
+    } elseif ($text -match ',') {
+        $text = $text -replace ',', '.'
+    }
+    $number = 0.0
+    if ([double]::TryParse($text, [Globalization.NumberStyles]::Float, [Globalization.CultureInfo]::InvariantCulture, [ref]$number)) {
+        return [Math]::Round($number, 2)
+    }
+    return $null
 }
 
 function Parse-Date($value) {

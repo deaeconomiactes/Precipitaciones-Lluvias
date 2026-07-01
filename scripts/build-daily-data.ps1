@@ -1,6 +1,7 @@
 param(
     [string]$ProjectRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path,
     [string]$SourceJsonUrl = $env:DAILY_RAIN_JSON_URL,
+    [string]$SourceJsonPath = $env:DAILY_RAIN_JSON_PATH,
     [string]$SourceCsvUrl = $env:DAILY_RAIN_CSV_URL,
     [string]$SourceCsvUrls = $env:DAILY_RAIN_CSV_URLS,
     [string]$SourceCsvPath = $env:DAILY_RAIN_CSV_PATH
@@ -73,6 +74,22 @@ function Read-CsvRows {
     $allRows = @()
     $sourceLabels = @()
 
+    if (-not [string]::IsNullOrWhiteSpace($SourceJsonPath)) {
+        if (-not (Test-Path $SourceJsonPath)) {
+            throw "No se encontro la fuente JSON local: $SourceJsonPath"
+        }
+        Write-Host "Leyendo registros diarios JSON desde $SourceJsonPath"
+        $payload = Get-Content -Raw -Path $SourceJsonPath | ConvertFrom-Json
+        if ($payload.PSObject.Properties.Name -contains 'records') {
+            $allRows += @($payload.records)
+        } elseif ($payload -is [array]) {
+            $allRows += @($payload)
+        } else {
+            throw 'La fuente JSON local no contiene records ni es un array.'
+        }
+        $sourceLabels += 'JSON local'
+    }
+
     if (-not [string]::IsNullOrWhiteSpace($SourceJsonUrl)) {
         Write-Host "Descargando registros diarios JSON desde $SourceJsonUrl"
         $response = Invoke-WebRequest -Uri $SourceJsonUrl -UseBasicParsing -MaximumRedirection 5 -TimeoutSec 60
@@ -109,23 +126,23 @@ function Read-CsvRows {
         $sourceLabels += 'Google Sheets CSV'
     }
 
-    if ($allRows.Count -gt 0) {
-        $script:DailySourceLabel = ($sourceLabels | Select-Object -Unique) -join ' + '
-        return $allRows
-    }
-
     if ([string]::IsNullOrWhiteSpace($script:SourceCsvPath)) {
         $candidate = Join-Path (Split-Path $ProjectRoot -Parent) 'Registro-de-lluvias\plantilla_registro_lluvias.csv'
         if (Test-Path $candidate) { $script:SourceCsvPath = $candidate }
     }
 
-    if ([string]::IsNullOrWhiteSpace($script:SourceCsvPath) -or -not (Test-Path $script:SourceCsvPath)) {
+    if (-not [string]::IsNullOrWhiteSpace($script:SourceCsvPath) -and (Test-Path $script:SourceCsvPath)) {
+        Write-Host "Leyendo registros diarios desde $script:SourceCsvPath"
+        $allRows += @(Import-Csv -Path $script:SourceCsvPath)
+        $sourceLabels += 'Registro-de-lluvias/plantilla_registro_lluvias.csv'
+    }
+
+    if ($allRows.Count -eq 0) {
         throw 'No se encontro una fuente diaria. Defina DAILY_RAIN_JSON_URL, DAILY_RAIN_CSV_URL o DAILY_RAIN_CSV_PATH.'
     }
 
-    Write-Host "Leyendo registros diarios desde $script:SourceCsvPath"
-    $script:DailySourceLabel = 'Registro-de-lluvias/plantilla_registro_lluvias.csv'
-    return Import-Csv -Path $script:SourceCsvPath
+    $script:DailySourceLabel = ($sourceLabels | Select-Object -Unique) -join ' + '
+    return $allRows
 }
 
 function Parse-DateValue($value) {
@@ -282,6 +299,13 @@ foreach ($days in $windows) {
 
 $dataDir = Join-Path $ProjectRoot 'data'
 New-Item -ItemType Directory -Force -Path $dataDir | Out-Null
+$existingDailyPath = Join-Path $dataDir 'rainfall-daily.json'
+if (Test-Path $existingDailyPath) {
+    $existingRecords = @(Get-Content -Raw -Path $existingDailyPath | ConvertFrom-Json)
+    if ($existingRecords.Count -gt 0 -and $records.Count -lt ($existingRecords.Count * 0.95)) {
+        throw "La nueva fuente diaria genero $($records.Count) registros, menos que los $($existingRecords.Count) existentes. Se cancela para no perder base historica."
+    }
+}
 $jsonOptions = @{ Depth = 8 }
 @($records) | ConvertTo-Json @jsonOptions | Set-Content -Encoding UTF8 (Join-Path $dataDir 'rainfall-daily.json')
 

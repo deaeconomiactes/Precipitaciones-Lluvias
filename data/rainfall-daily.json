@@ -35456,6 +35456,13 @@
   },
   {
     "date": "2026-06-28",
+    "department": "Ituzaingo",
+    "rainfallMm": 27.0,
+    "lat": -27.5808,
+    "lng": -56.6853
+  },
+  {
+    "date": "2026-06-28",
     "department": "Capital",
     "rainfallMm": 1.0,
     "lat": -27.4692,
@@ -35467,12 +35474,5 @@
     "rainfallMm": 1.0,
     "lat": -29.1744,
     "lng": -56.6433
-  },
-  {
-    "date": "2026-06-28",
-    "department": "Ituzaingo",
-    "rainfallMm": 27.0,
-    "lat": -27.5808,
-    "lng": -56.6853
   }
 ]

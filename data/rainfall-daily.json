@@ -35477,16 +35477,16 @@
   },
   {
     "date": "2026-07-01",
-    "department": "Ituzaingo",
-    "rainfallMm": 5.0,
-    "lat": -27.5808,
-    "lng": -56.6853
-  },
-  {
-    "date": "2026-07-01",
     "department": "Santo Tome",
     "rainfallMm": 1.3,
     "lat": -28.5492,
     "lng": -56.0428
+  },
+  {
+    "date": "2026-07-01",
+    "department": "Ituzaingo",
+    "rainfallMm": 5.0,
+    "lat": -27.5808,
+    "lng": -56.6853
   }
 ]

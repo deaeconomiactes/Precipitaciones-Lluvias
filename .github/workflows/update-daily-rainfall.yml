@@ -1,0 +1,89 @@
+name: Update daily rainfall data
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 10 * * *"
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: daily-rainfall-update
+  cancel-in-progress: false
+
+jobs:
+  update:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    env:
+      DAILY_RAIN_JSON_URL: ${{ vars.DAILY_RAIN_JSON_URL }}
+      DAILY_RAIN_CSV_URL: ${{ vars.DAILY_RAIN_CSV_URL }}
+      DAILY_RAIN_CSV_URLS: ${{ vars.DAILY_RAIN_CSV_URLS }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Skip when Google Sheets CSV URL is not configured
+        if: ${{ env.DAILY_RAIN_JSON_URL == '' && env.DAILY_RAIN_CSV_URL == '' && env.DAILY_RAIN_CSV_URLS == '' }}
+        run: |
+          echo "DAILY_RAIN_JSON_URL, DAILY_RAIN_CSV_URL or DAILY_RAIN_CSV_URLS repository variable is not configured. Skipping update."
+
+      - name: Build daily JSON from Google Sheets or Apps Script
+        if: ${{ env.DAILY_RAIN_JSON_URL != '' || env.DAILY_RAIN_CSV_URL != '' || env.DAILY_RAIN_CSV_URLS != '' }}
+        shell: pwsh
+        run: ./scripts/build-daily-data.ps1
+
+      - name: Commit updated daily data
+        if: ${{ env.DAILY_RAIN_JSON_URL != '' || env.DAILY_RAIN_CSV_URL != '' || env.DAILY_RAIN_CSV_URLS != '' }}
+        run: |
+          set -euo pipefail
+          if git diff --quiet -- data/rainfall-daily.json data/rainfall-daily-summary.json; then
+            echo "No daily data changes."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/rainfall-daily.json data/rainfall-daily-summary.json
+          git commit -m "Update daily rainfall data"
+          git push
+
+      - name: Configure GitHub Pages
+        if: ${{ env.DAILY_RAIN_JSON_URL != '' || env.DAILY_RAIN_CSV_URL != '' || env.DAILY_RAIN_CSV_URLS != '' }}
+        uses: actions/configure-pages@v5
+
+      - name: Build public site from allowlist
+        if: ${{ env.DAILY_RAIN_JSON_URL != '' || env.DAILY_RAIN_CSV_URL != '' || env.DAILY_RAIN_CSV_URLS != '' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p _site/data
+          cp index.html app.js styles.css climate-controls.css operational.css _site/
+          cp data/rainfall.json data/rainfall-daily.json data/rainfall-daily-summary.json data/stations.json data/metadata.json _site/data/
+          touch _site/.nojekyll
+
+      - name: Verify private files are excluded
+        if: ${{ env.DAILY_RAIN_JSON_URL != '' || env.DAILY_RAIN_CSV_URL != '' || env.DAILY_RAIN_CSV_URLS != '' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if find _site -type f \( -name "*.xls" -o -name "*.xlsx" -o -name "*.ps1" -o -name "*.md" \) | grep -q .; then
+            echo "Private or internal files found in the public artifact."
+            exit 1
+          fi
+          find _site -maxdepth 3 -type f -print
+
+      - name: Upload public dashboard only
+        if: ${{ env.DAILY_RAIN_JSON_URL != '' || env.DAILY_RAIN_CSV_URL != '' || env.DAILY_RAIN_CSV_URLS != '' }}
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - name: Deploy GitHub Pages
+        id: deployment
+        if: ${{ env.DAILY_RAIN_JSON_URL != '' || env.DAILY_RAIN_CSV_URL != '' || env.DAILY_RAIN_CSV_URLS != '' }}
+        uses: actions/deploy-pages@v4

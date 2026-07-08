@@ -1,8 +1,9 @@
-const MONTHS = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+﻿const MONTHS = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
 const MONTHS_FULL = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 const COLORS = ['#1677a6','#25a9b5','#7667a8','#d9931a','#c34f59','#3d9a6b','#7b8790','#b46a9b'];
 const ALL_MONTHS = MONTHS.map((_, index) => index);
-const state = { rainfall: [], stations: [], metadata: {}, charts: {}, tableRows: [], filterConfigs: {}, temporalFiltersExplicit: { years: false, months: false }, climateMetrics: new Set(['temperature','humidity','wind','rain24Total']) };
+const DAILY_WINDOWS = [1, 7, 15, 30];
+const state = { rainfall: [], dailySummary: null, stations: [], metadata: {}, charts: {}, tableRows: [], filterConfigs: {}, temporalFiltersExplicit: { years: false, months: false }, climateMetrics: new Set(['temperature','humidity','wind','rain24Total']) };
 const $ = id => document.getElementById(id);
 const format = value => new Intl.NumberFormat('es-AR', { maximumFractionDigits: 1 }).format(value || 0);
 const average = values => values.length ? values.reduce((a,b) => a + b, 0) / values.length : 0;
@@ -11,24 +12,24 @@ document.addEventListener('DOMContentLoaded', init);
 
 async function init() {
   try {
-    const [rainfall, stations, metadata] = await Promise.all(
-      ['rainfall.json','stations.json','metadata.json'].map(name => fetch(`data/${name}`).then(response => {
+    const [rainfall, dailySummary, stations, metadata] = await Promise.all(
+      ['rainfall.json','rainfall-daily-summary.json','stations.json','metadata.json'].map(name => fetch(`data/${name}`).then(response => {
         if (!response.ok) throw new Error(`No se pudo cargar ${name}`);
         return response.json();
       }))
     );
-    Object.assign(state, { rainfall, stations, metadata });
+    Object.assign(state, { rainfall, dailySummary, stations, metadata });
     populateFilters();
     wireControls();
     render();
-    $('headerCoverage').textContent = `${metadata.yearMin}–${metadata.yearMax}`;
+    $('headerCoverage').textContent = `${metadata.yearMin}-${metadata.yearMax}`;
     $('headerDepartments').textContent = metadata.departments.length;
     $('headerUpdated').textContent = new Date(metadata.generatedAt).toLocaleDateString('es-AR');
     $('latestDataYear').textContent = metadata.yearMax;
     $('dataNote').textContent = `Fuente principal: ${metadata.rainfallSource}`;
   } catch (error) {
     $('errorBanner').style.display = 'block';
-    $('errorBanner').textContent = `${error.message}. Ejecutá el dashboard mediante un servidor HTTP local.`;
+    $('errorBanner').textContent = `${error.message}. Ejecuta el dashboard mediante un servidor HTTP local.`;
     console.error(error);
   } finally {
     $('loading').classList.add('hidden');
@@ -43,11 +44,11 @@ function populateFilters() {
     defaultValues: ['ALL']
   });
   createMultiFilter('yearFilter', years.map(value => ({ value: String(value), label: String(value) })), {
-    allLabel: 'Todos los años',
+    allLabel: 'Todos los a\u00f1os',
     defaultValues: years.includes(latestCompleteYear) ? [String(latestCompleteYear)] : ['ALL']
   });
   createMultiFilter('monthFilter', MONTHS_FULL.map((label, value) => ({ value: String(value), label })), {
-    allLabel: 'Año completo',
+    allLabel: 'A\u00f1o completo',
     defaultValues: ['ALL']
   });
   createMultiFilter('stationFilter', state.stations.map(station => ({ value: station.station, label: station.station })), {
@@ -95,6 +96,8 @@ function wireControls() {
     if (from > to) [$('annualFromFilter').value, $('annualToFilter').value] = [String(to), String(from)];
     renderAnnual(filters());
   }));
+  $('dailyWindowFilter').addEventListener('change', () => renderDaily(filters()));
+  $('dailySortFilter').addEventListener('change', () => renderDaily(filters()));
   $('resetFilters').addEventListener('click', () => {
     const latestCompleteYear = state.metadata.yearMax - 1;
     setMultiSelection('departmentFilter', ['ALL']);
@@ -206,7 +209,8 @@ function render() {
   renderAnnual(f);
   renderMonthly(rows, f);
   renderRanking(rows, f);
-  renderHeatmap(rows, f);
+    renderHeatmap(rows, f);
+  renderDaily(f);
   renderClimate(f);
   renderDepartmentDetail(getDepartmentMonthlyDeviationRows(f), f);
 }
@@ -302,6 +306,112 @@ function classifyHistoricalProgress(progressPct) {
   return 'Muy por encima';
 }
 
+function dailyRows(f = filters()) {
+  if (!state.dailySummary || !Array.isArray(state.dailySummary.rows)) return [];
+  const windowDays = +$('dailyWindowFilter').value || 7;
+  const sortDirection = $('dailySortFilter')?.value === 'asc' ? 1 : -1;
+  return state.dailySummary.rows
+    .filter(row => row.windowDays === windowDays && row.recentMm > 0 && matchesSelection(row.department, f.departments))
+    .sort((a,b) => sortDirection * (a.recentMm - b.recentMm) || a.department.localeCompare(b.department, 'es'));
+}
+
+function renderDaily(f) {
+  if (!state.dailySummary) return;
+  const rows = dailyRows(f);
+  const windowDays = +$('dailyWindowFilter').value || 7;
+  $('dailyLatestDate').textContent = formatDate(state.dailySummary.dateMax);
+  $('dailyCoverage').textContent = `${state.dailySummary.dateMin} a ${state.dailySummary.dateMax} - ${state.dailySummary.records} registros`;
+  $('dailyHeatmap').innerHTML = dailyMatrix(f, windowDays);
+  $('dailyTable').innerHTML = rows.map(row => `<tr><td>${row.department}</td><td><span class="daily-level daily-${levelCss(row.level)}">${levelLabel(row.level)}</span></td><td>${format(row.recentMm)}</td><td>${format(row.historicalAverageMm)}</td><td>${signedMm(row.differenceMm)}</td><td>${signedPercent(row.differencePct)}</td><td>${row.historicalYears}</td></tr>`).join('');
+  updateDailyQuickStats(f);
+}
+
+function dailyMatrix(f, selectedWindow) {
+  const activeDepartments = new Set(state.dailySummary.rows
+    .filter(row => row.windowDays === selectedWindow && row.recentMm > 0 && matchesSelection(row.department, f.departments))
+    .map(row => row.department));
+  const rows = state.dailySummary.rows.filter(row => activeDepartments.has(row.department));
+  if (!rows.length) return '<div class="empty-state">No hay lluvia registrada para la ventana y filtros seleccionados.</div>';
+
+  const byDepartment = new Map();
+  rows.forEach(row => {
+    if (!byDepartment.has(row.department)) byDepartment.set(row.department, new Map());
+    byDepartment.get(row.department).set(row.windowDays, row);
+  });
+
+  const departments = [...byDepartment.keys()].sort((a, b) => {
+    const aSelected = byDepartment.get(a).get(selectedWindow);
+    const bSelected = byDepartment.get(b).get(selectedWindow);
+    const sortDirection = $('dailySortFilter')?.value === 'asc' ? 1 : -1;
+    return sortDirection * ((aSelected?.recentMm ?? 0) - (bSelected?.recentMm ?? 0))
+      || a.localeCompare(b, 'es');
+  });
+
+  const header = `<div class="daily-matrix-head daily-matrix-corner">Departamento</div>${DAILY_WINDOWS.map(days => `<div class="daily-matrix-head ${days === selectedWindow ? 'selected' : ''}">${dailyWindowLabel(days)}</div>`).join('')}`;
+  const body = departments.map(department => {
+    const values = byDepartment.get(department);
+    return `<div class="daily-matrix-department">${department}</div>${DAILY_WINDOWS.map(days => dailyMatrixCell(values.get(days), days === selectedWindow)).join('')}`;
+  }).join('');
+
+  return `<div class="daily-matrix">${header}${body}</div>`;
+}
+
+function dailyMatrixCell(row, selected) {
+  if (!row) return '<div class="daily-matrix-cell empty">Sin datos</div>';
+  const tooltip = [
+    row.department,
+    `${dailyWindowLabel(row.windowDays)}`,
+    `Nivel: ${levelLabel(row.level)}`,
+    `Reciente: ${format(row.recentMm)} mm`,
+    `Referencia: ${format(row.historicalAverageMm)} mm`,
+    `Diferencia: ${signedMm(row.differenceMm)} mm`,
+    `Exceso relativo: ${signedPercent(row.differencePct)}`,
+    `Años usados: ${row.historicalYears}`
+  ].join(' | ');
+  return `<div class="daily-matrix-cell ${row.level} ${selected ? 'selected' : ''}" title="${escapeAttr(tooltip)}">
+    <strong>${signedMm(row.differenceMm)}</strong>
+  </div>`;
+}
+
+function dailyWindowLabel(days) {
+  return days === 1 ? '24 h' : `${days} días`;
+}
+
+function escapeAttr(value) {
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+function updateDailyQuickStats(f) {
+  [1, 7, 30].forEach(days => {
+    const selected = state.dailySummary.rows.filter(row => row.windowDays === days && matchesSelection(row.department, f.departments));
+    const values = selected.map(row => row.recentMm).filter(Number.isFinite);
+    const id = days === 1 ? 'quickRain24' : `quickRain${days}`;
+    $(id).textContent = values.length ? `${format(average(values))} mm` : 'No disponible';
+  });
+}
+
+function levelWeight(level) {
+  return { rojo: 4, naranja: 3, amarillo: 2, normal: 1 }[level] || 0;
+}
+
+function levelLabel(level) {
+  return { rojo: 'Alerta alta', naranja: 'Alerta', amarillo: 'Atenci\u00f3n', normal: 'Normal' }[level] || 'Sin datos';
+}
+
+function levelCss(level) {
+  return level === 'rojo' ? 'red' : level === 'naranja' ? 'orange' : level === 'amarillo' ? 'yellow' : 'normal';
+}
+
+function formatDate(value) {
+  if (!value) return '\u2014';
+  const [year, month, day] = value.split('-').map(Number);
+  return new Date(year, month - 1, day).toLocaleDateString('es-AR');
+}
+
 function renderAnnual(f) {
   const from = +$('annualFromFilter').value;
   const to = +$('annualToFilter').value;
@@ -323,7 +433,7 @@ function renderAnnual(f) {
       return records.length ? average(records.map(row => recordValue(row, months))) : null;
     }), COLORS[index % COLORS.length], false, 'mm'));
   }
-  chart('annualChart', 'line', { labels, datasets }, lineOptions('mm', 'Precipitación acumulada (mm)'));
+  chart('annualChart', 'line', { labels, datasets }, lineOptions('mm', 'Precipitaci\u00f3n acumulada (mm)'));
 }
 
 function renderMonthly(rows, f) {
@@ -406,7 +516,7 @@ function renderHeatmap(rows, f) {
     html += `<div class="heat-label">${department}</div>` + months.map((month, monthIndex) => {
       const value = matrix[rowIndex][monthIndex];
       const alpha = .08 + .85 * (value / max);
-      return `<div class="heat-cell" title="${department} · ${MONTHS_FULL[month]}: ${format(value)} mm" style="background:rgba(34,211,238,${alpha})">${format(value)}</div>`;
+      return `<div class="heat-cell" title="${department} - ${MONTHS_FULL[month]}: ${format(value)} mm" style="background:rgba(34,211,238,${alpha})">${format(value)}</div>`;
     }).join('');
   });
   $('heatmap').innerHTML = html + '</div>';
@@ -421,7 +531,7 @@ function renderClimate(f) {
   const dashClasses = ['scenario-solid','scenario-dashed','scenario-dotted','scenario-dashdot'];
   const pointStyles = ['circle','rect','triangle','rectRot','crossRot','star'];
   const metrics = [
-    { key: 'temperature', label: 'Temperatura', unit: '°C', axis: 'y', color: '#c34f59' },
+    { key: 'temperature', label: 'Temperatura', unit: '\u00b0C', axis: 'y', color: '#c34f59' },
     { key: 'humidity', label: 'Humedad', unit: '%', axis: 'y', color: '#7667a8' },
     { key: 'wind', label: 'Viento', unit: 'unidad original', axis: 'y', color: '#d9931a' },
     { key: 'rain24Total', label: 'Lluvia mensual', unit: 'mm', axis: 'rain', color: '#1677a6' }
@@ -432,13 +542,13 @@ function renderClimate(f) {
     return years.map(year => ({
       station,
       year,
-      label: `${station.station} · ${year === null ? 'Promedio de todos los años' : year}`
+      label: `${station.station} - ${year === null ? 'Promedio de todos los a\u00f1os' : year}`
     }));
   });
   const datasets = scenarios.flatMap((scenario, scenarioIndex) => {
     const rows = scenario.station.monthly.filter(row => scenario.year === null || row.year === scenario.year);
     return visibleMetrics.map(metric => ({
-      ...dataset(`${metric.label} · ${scenario.label}`, months.map(month => {
+      ...dataset(`${metric.label} - ${scenario.label}`, months.map(month => {
         const values = rows.filter(row => row.month === month + 1).map(row => row[metric.key]).filter(Number.isFinite);
         return values.length ? average(values) : null;
       }), metric.color, false, metric.unit),
@@ -450,13 +560,13 @@ function renderClimate(f) {
       spanGaps: false
     }));
   });
-  const periodText = f.years === null ? 'promedio de todos los años' : `${f.years.length} año(s) comparado(s)`;
-  $('stationCoverage').textContent = `${stations.length} localidad(es) · ${periodText}`;
+  const periodText = f.years === null ? 'promedio de todos los a\u00f1os' : `${f.years.length} a\u00f1o(s) comparado(s)`;
+  $('stationCoverage').textContent = `${stations.length} localidad(es) - ${periodText}`;
   $('climateLegend').innerHTML = `
-    <div class="climate-legend-group climate-variable-group"><span class="climate-legend-title">Variables climáticas visibles</span><div class="climate-legend-items climate-variable-items">
+    <div class="climate-legend-group climate-variable-group"><span class="climate-legend-title">Variables clim\u00e1ticas visibles</span><div class="climate-legend-items climate-variable-items">
       ${metrics.map(metric => `<button type="button" class="climate-variable-button ${state.climateMetrics.has(metric.key) ? 'active' : ''}" data-climate-metric="${metric.key}" aria-pressed="${state.climateMetrics.has(metric.key)}"><i class="metric-swatch" style="--swatch:${metric.color}"></i><span>${metric.label}</span><small>${metric.unit}</small></button>`).join('')}
     </div></div>
-    <div class="climate-legend-group"><span class="climate-legend-title">Trazo y símbolo = localidad y período</span><div class="climate-legend-items climate-scenario-items">
+    <div class="climate-legend-group"><span class="climate-legend-title">Trazo y s\u00edmbolo = localidad y per\u00edodo</span><div class="climate-legend-items climate-scenario-items">
       ${scenarios.map((scenario, index) => `<span class="climate-legend-item"><i class="scenario-swatch ${dashClasses[index % dashClasses.length]}" style="--point-rotation:${index % 2 ? 45 : 0}deg"></i>${scenario.label}</span>`).join('')}
     </div></div>`;
   chart('climateChart', 'line', { labels: months.map(month => MONTHS[month]), datasets }, {
@@ -472,7 +582,7 @@ function renderClimate(f) {
     },
     scales: {
       x: axis(),
-      y: { ...axis('', 'Temperatura (°C), humedad (%) y viento (unidad original)'), display: visibleMetrics.some(metric => metric.axis === 'y'), position: 'left' },
+      y: { ...axis('', 'Temperatura (\u00b0C), humedad (%) y viento (unidad original)'), display: visibleMetrics.some(metric => metric.axis === 'y'), position: 'left' },
       rain: { ...axis('mm', 'Lluvia mensual promedio (mm)'), display: visibleMetrics.some(metric => metric.axis === 'rain'), position: 'right', grid: { drawOnChartArea: false } }
     }
   });
@@ -574,6 +684,11 @@ function formatSignedPercent(value) {
 
 function formatProgress(value) {
   return Number.isFinite(value) ? `${format(value)}%` : 'No calculable';
+}
+
+function signedMm(value) {
+  if (!Number.isFinite(value)) return '\u2014';
+  return `${value > 0 ? '+' : ''}${format(value)}`;
 }
 
 function downloadTable() {

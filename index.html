@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
@@ -11,22 +11,22 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="climate-controls.css?v=20260612-4">
-  <link rel="stylesheet" href="operational.css?v=20260618-2">
+  <link rel="stylesheet" href="operational.css?v=20260701-1">
 </head>
 <body>
-  <div class="loading" id="loading"><div class="spinner"></div><p>Preparando datos climáticos...</p></div>
+  <div class="loading" id="loading"><div class="spinner"></div><p>Preparando datos climÃ¡ticos...</p></div>
   <header class="header">
     <div class="header-inner">
       <div class="brand">
         <div class="brand-icon" aria-hidden="true">
           <svg viewBox="0 0 48 48"><path d="M24 5C18 14 10 22 10 31a14 14 0 0 0 28 0C38 22 30 14 24 5Z"/><path d="M17 32c4 3 10 3 14 0"/></svg>
         </div>
-        <div><h1>Sala de Situación Hídrica y Climática</h1><p>Provincia de Corrientes · prototipo de apoyo a la gestión</p></div>
+        <div><h1>Sala de SituaciÃ³n HÃ­drica y ClimÃ¡tica</h1><p>Provincia de Corrientes Â· prototipo de apoyo a la gestiÃ³n</p></div>
       </div>
       <div class="header-stats">
-        <div><span>Cobertura</span><strong id="headerCoverage">—</strong></div>
-        <div><span>Departamentos</span><strong id="headerDepartments">—</strong></div>
-        <div><span>Actualización de datos</span><strong id="headerUpdated">—</strong></div>
+        <div><span>Cobertura</span><strong id="headerCoverage">â€”</strong></div>
+        <div><span>Departamentos</span><strong id="headerDepartments">â€”</strong></div>
+        <div><span>ActualizaciÃ³n de datos</span><strong id="headerUpdated">â€”</strong></div>
       </div>
     </div>
   </header>
@@ -34,16 +34,17 @@
   <nav class="section-nav" aria-label="Secciones del dashboard">
     <div class="section-nav-inner">
       <button class="section-tab active" data-panel="summaryPanel">Resumen provincial</button>
-      <button class="section-tab" data-panel="departmentPanel">Análisis por departamento</button>
-      <button class="section-tab" data-panel="temporalPanel">Evolución temporal</button>
-      <button class="section-tab" data-panel="dataPanel">Metodología y datos</button>
+      <button class="section-tab" data-panel="dailyPanel">Monitoreo diario</button>
+      <button class="section-tab" data-panel="departmentPanel">AnÃ¡lisis por departamento</button>
+      <button class="section-tab" data-panel="temporalPanel">EvoluciÃ³n temporal</button>
+      <button class="section-tab" data-panel="dataPanel">MetodologÃ­a y datos</button>
     </div>
   </nav>
 
   <section class="filters">
     <div class="filters-inner">
       <div class="filter-field"><span>Departamento</span><div class="multi-filter" id="departmentFilter"></div></div>
-      <div class="filter-field"><span>Año</span><div class="multi-filter" id="yearFilter"></div></div>
+      <div class="filter-field"><span>AÃ±o</span><div class="multi-filter" id="yearFilter"></div></div>
       <div class="filter-field"><span>Mes</span><div class="multi-filter" id="monthFilter"></div></div>
       <button id="resetFilters" type="button">Restablecer filtros</button>
     </div>
@@ -51,7 +52,7 @@
 
   <main>
     <section class="dashboard-panel active" id="summaryPanel">
-      <div class="panel-intro"><div><span class="eyebrow">Lectura rápida</span><h2>Resumen provincial</h2><p>Qué ocurre, dónde se concentra y qué información falta para decidir.</p></div><span class="status-pill">Último año disponible: <strong id="latestDataYear">—</strong></span></div>
+      <div class="panel-intro"><div><span class="eyebrow">Lectura rÃ¡pida</span><h2>Resumen provincial</h2><p>QuÃ© ocurre, dÃ³nde se concentra y quÃ© informaciÃ³n falta para decidir.</p></div><span class="status-pill">Ãšltimo aÃ±o disponible: <strong id="latestDataYear">â€”</strong></span></div>
       <section class="kpi-grid operational-kpis">
         <article class="kpi blue"><span class="kpi-label">Mes de referencia</span><strong id="kpiReferenceMonth">—</strong><small id="kpiReferenceDetail">base mensual histórica</small></article>
         <article class="kpi cyan"><span class="kpi-label">Observado del mes</span><strong id="kpiObserved">—</strong><small id="kpiObservedDetail">—</small></article>
@@ -62,50 +63,57 @@
       </section>
       <section class="method-callout compact"><strong>Nota metodológica</strong><p>Este indicador compara la lluvia observada del mes contra el promedio histórico del mismo mes calendario. Cuando se muestran todos los departamentos, se informa el promedio departamental en mm. No se suman milímetros entre departamentos.</p></section>
       <section class="availability-strip" aria-label="Indicadores operativos pendientes">
-        <div><span>Lluvia últimas 24 h</span><strong>No disponible</strong></div>
-        <div><span>Lluvia últimos 7 días</span><strong>No disponible</strong></div>
-        <div><span>Lluvia últimos 30 días</span><strong>No disponible</strong></div>
-        <div><span>Variación de superficie inundada</span><strong>No disponible</strong></div>
+        <div><span>Lluvia Ãºltimas 24 h</span><strong id="quickRain24">No disponible</strong></div>
+        <div><span>Lluvia Ãºltimos 7 dÃ­as</span><strong id="quickRain7">No disponible</strong></div>
+        <div><span>Lluvia Ãºltimos 30 dÃ­as</span><strong id="quickRain30">No disponible</strong></div>
+        <div><span>VariaciÃ³n de superficie inundada</span><strong>No disponible</strong></div>
       </section>
       <section class="decision-grid">
-        <article class="card map-placeholder"><div class="card-head"><div><h2>Mapa departamental de Corrientes</h2><p>Vista piloto embebida para validar interacción y apariencia. No representa superficie inundada calculada por este dashboard.</p></div><span class="pending-badge">Piloto externo</span></div><div class="pilot-map"><iframe title="Mapa piloto departamental de Corrientes" src="https://geomat-maps.com.ar/mpc/maptiles/mpc-general.php?ori=v84501%22" loading="lazy" referrerpolicy="no-referrer-when-downgrade" allow="geolocation; fullscreen"></iframe><div class="map-note"><strong>Mapa piloto</strong><p>Este visor se usa solo para revisar funcionamiento visual. Los datos de hectáreas inundadas siguen pendientes.</p><a href="https://geomat-maps.com.ar/mpc/maptiles/mpc-general.php?ori=v84501%22" target="_blank" rel="noopener noreferrer">Abrir mapa en una pestaña nueva</a></div></div></article>
+        <article class="card map-placeholder"><div class="card-head"><div><h2>Mapa departamental de Corrientes</h2><p>Vista piloto embebida para validar interacciÃ³n y apariencia. No representa superficie inundada calculada por este dashboard.</p></div><span class="pending-badge">Piloto externo</span></div><div class="pilot-map"><iframe title="Mapa piloto departamental de Corrientes" src="https://geomat-maps.com.ar/mpc/maptiles/mpc-general.php?ori=v84501%22" loading="lazy" referrerpolicy="no-referrer-when-downgrade" allow="geolocation; fullscreen"></iframe><div class="map-note"><strong>Mapa piloto</strong><p>Este visor se usa solo para revisar funcionamiento visual. Los datos de hectÃ¡reas inundadas siguen pendientes.</p><a href="https://geomat-maps.com.ar/mpc/maptiles/mpc-general.php?ori=v84501%22" target="_blank" rel="noopener noreferrer">Abrir mapa en una pestaÃ±a nueva</a></div></div></article>
       </section>
       <section class="flood-card">
-        <div class="flood-icon">ha</div><div><span class="eyebrow">Información crítica pendiente</span><h2>Superficie inundada por departamento</h2><p>No existen mediciones de hectáreas inundadas, geometrías ni variaciones temporales en las fuentes locales. El módulo queda preparado sin inventar estimaciones.</p></div><strong>— ha</strong>
+        <div class="flood-icon">ha</div><div><span class="eyebrow">InformaciÃ³n crÃ­tica pendiente</span><h2>Superficie inundada por departamento</h2><p>No existen mediciones de hectÃ¡reas inundadas, geometrÃ­as ni variaciones temporales en las fuentes locales. El mÃ³dulo queda preparado sin inventar estimaciones.</p></div><strong>â€” ha</strong>
       </section>
     </section>
 
+    <section class="dashboard-panel" id="dailyPanel">
+      <div class="panel-intro"><div><span class="eyebrow">SemÃ¡foro pluviomÃ©trico</span><h2>Monitoreo diario reciente</h2><p>Lectura rÃ¡pida del comportamiento reciente de la lluvia frente a una referencia reciente comparable.</p></div><span class="status-pill">Ãšltimo registro diario: <strong id="dailyLatestDate">â€”</strong></span></div>
+      <div class="daily-toolbar"><span class="daily-toolbar-title">Ventana mÃ³vil</span><label><span>PerÃ­odo</span><select id="dailyWindowFilter"><option value="1">Ãšltimas 24 h</option><option value="7" selected>Ãšltimos 7 dÃ­as</option><option value="15">Ãšltimos 15 dÃ­as</option><option value="30">Ãšltimos 30 dÃ­as</option></select></label><span class="source-tag" id="dailyCoverage">â€”</span><a class="daily-update-link" href="https://github.com/deaeconomiactes/Precipitaciones-Lluvias/actions/workflows/update-daily-rainfall.yml" target="_blank" rel="noopener noreferrer">Actualizar datos diarios</a></div>
+      <section class="card full daily-card"><div class="card-head daily-card-head"><div><h2>SemÃ¡foro por departamento</h2><p>Mapa de calor con departamentos que registraron lluvia en la ventana seleccionada. PasÃ¡ el cursor sobre cada celda para ver el detalle.</p></div><div class="daily-card-actions"><label class="inline-select"><span>Ordenar por lluvia acumulada</span><select id="dailySortFilter"><option value="desc">Mayor a menor</option><option value="asc">Menor a mayor</option></select></label><div class="daily-legend"><span class="daily-normal">Normal</span><span class="daily-yellow">AtenciÃ³n</span><span class="daily-orange">Alerta</span><span class="daily-red">Alerta alta</span></div></div></div><div class="method-note">La referencia compara la misma ventana calendario en los aÃ±os diarios disponibles. No equivale a una normal climatolÃ³gica oficial. La ventana seleccionada se resalta, ordena la lectura y oculta departamentos sin lluvia registrada.</div><div id="dailyHeatmap" class="daily-heatmap"></div></section>
+      <section class="card table-card"><div class="card-head"><div><h2>Detalle para revisiÃ³n</h2><p>Solo departamentos con lluvia registrada en la ventana seleccionada, ordenados por acumulado reciente.</p></div></div><div class="table-wrap"><table class="daily-table"><thead><tr><th>Departamento</th><th>Nivel</th><th>Reciente (mm)</th><th>Referencia reciente (mm)</th><th>Diferencia (mm)</th><th>Exceso (%)</th><th>AÃ±os usados</th></tr></thead><tbody id="dailyTable"></tbody></table></div></section>
+    </section>
+
     <section class="dashboard-panel" id="departmentPanel">
-      <div class="panel-intro"><div><span class="eyebrow">Lectura territorial</span><h2>Análisis por departamento</h2><p>Usá el selector superior para enfocar un departamento y compararlo con el resto.</p></div></div>
+      <div class="panel-intro"><div><span class="eyebrow">Lectura territorial</span><h2>AnÃ¡lisis por departamento</h2><p>UsÃ¡ el selector superior para enfocar un departamento y compararlo con el resto.</p></div></div>
       <section class="chart-grid">
-        <article class="card"><div class="card-head"><div><h2>Perfil mensual</h2><p id="monthlyChartDescription">Promedio del período seleccionado comparado con el promedio histórico.</p></div><span class="source-tag" id="monthlyChartScope">Provincia</span></div><div class="chart-box"><canvas id="monthlyChart"></canvas></div></article>
-        <article class="card"><div class="card-head"><div><h2>Ranking departamental</h2><p>Período seleccionado frente al promedio histórico comparable</p></div></div><div class="chart-box tall"><canvas id="rankingChart"></canvas></div></article>
-        <article class="card full"><div class="card-head"><div><h2>Mapa de calor departamental</h2><p>Intensidad mensual media según los filtros activos</p></div><span class="source-tag">Unidad: milímetros (mm)</span></div><div class="heatmap-wrap" id="heatmap"></div></article>
+        <article class="card"><div class="card-head"><div><h2>Perfil mensual</h2><p id="monthlyChartDescription">Promedio del perÃ­odo seleccionado comparado con el promedio histÃ³rico.</p></div><span class="source-tag" id="monthlyChartScope">Provincia</span></div><div class="chart-box"><canvas id="monthlyChart"></canvas></div></article>
+        <article class="card"><div class="card-head"><div><h2>Ranking departamental</h2><p>PerÃ­odo seleccionado frente al promedio histÃ³rico comparable</p></div></div><div class="chart-box tall"><canvas id="rankingChart"></canvas></div></article>
+        <article class="card full"><div class="card-head"><div><h2>Mapa de calor departamental</h2><p>Intensidad mensual media segÃºn los filtros activos</p></div><span class="source-tag">Unidad: milÃ­metros (mm)</span></div><div class="heatmap-wrap" id="heatmap"></div></article>
       </section>
       <section class="card table-card"><div class="card-head"><div><h2>Detalle departamental</h2><p>Comparación del último mes disponible de cada departamento contra su promedio histórico del mismo mes calendario. La referencia se calcula con la base mensual histórica y no utiliza registros diarios recientes.</p></div><button class="download-button" id="downloadTable">Descargar CSV</button></div><section class="method-callout compact"><strong>Nota metodológica</strong><p>El análisis compara cada departamento contra su propio historial mensual. No se compara contra el promedio provincial y no utiliza la base diaria.</p></section><div class="table-wrap"><table><thead><tr><th>Departamento</th><th>Último mes</th><th>Observado (mm)</th><th>Promedio histórico mensual (mm)</th><th>Diferencia (mm)</th><th>Diferencia (%)</th><th>Categoría</th></tr></thead><tbody id="detailsTable"></tbody></table></div></section>
     </section>
 
     <section class="dashboard-panel" id="temporalPanel">
-      <div class="panel-intro"><div><span class="eyebrow">Comportamiento histórico</span><h2>Evolución temporal</h2><p>Series disponibles a escala mensual y anual.</p></div></div>
+      <div class="panel-intro"><div><span class="eyebrow">Comportamiento histÃ³rico</span><h2>EvoluciÃ³n temporal</h2><p>Series disponibles a escala mensual y anual.</p></div></div>
       <section class="chart-grid">
-        <article class="card wide annual-card"><div class="card-head annual-head"><div><h2>Evolución anual</h2><p>Comparación de la precipitación acumulada entre los años seleccionados.</p></div></div><div class="annual-toolbar"><span class="annual-toolbar-title">Período analizado</span><div class="annual-controls"><label><span>Desde</span><select id="annualFromFilter"></select></label><span class="annual-separator">→</span><label><span>Hasta</span><select id="annualToFilter"></select></label></div></div><div class="chart-box"><canvas id="annualChart"></canvas></div></article>
-        <article class="card full"><div class="card-head climate-head"><div><h2>Clima observado por localidad</h2><p>Los colores identifican variables climáticas; los trazos y símbolos distinguen localidad y año. Seleccioná las variables que querés visualizar.</p></div><div class="climate-controls"><div class="filter-field"><span>Localidades de las estaciones</span><div class="multi-filter station-filter" id="stationFilter"></div></div><span class="source-tag" id="stationCoverage">—</span></div></div><div class="climate-legend" id="climateLegend"></div><div class="chart-box climate"><canvas id="climateChart"></canvas></div></article>
+        <article class="card wide annual-card"><div class="card-head annual-head"><div><h2>EvoluciÃ³n anual</h2><p>ComparaciÃ³n de la precipitaciÃ³n acumulada entre los aÃ±os seleccionados.</p></div></div><div class="annual-toolbar"><span class="annual-toolbar-title">PerÃ­odo analizado</span><div class="annual-controls"><label><span>Desde</span><select id="annualFromFilter"></select></label><span class="annual-separator">â†’</span><label><span>Hasta</span><select id="annualToFilter"></select></label></div></div><div class="chart-box"><canvas id="annualChart"></canvas></div></article>
+        <article class="card full"><div class="card-head climate-head"><div><h2>Clima observado por localidad</h2><p>Los colores identifican variables climÃ¡ticas; los trazos y sÃ­mbolos distinguen localidad y aÃ±o. SeleccionÃ¡ las variables que querÃ©s visualizar.</p></div><div class="climate-controls"><div class="filter-field"><span>Localidades de las estaciones</span><div class="multi-filter station-filter" id="stationFilter"></div></div><span class="source-tag" id="stationCoverage">â€”</span></div></div><div class="climate-legend" id="climateLegend"></div><div class="chart-box climate"><canvas id="climateChart"></canvas></div></article>
       </section>
     </section>
 
     <section class="dashboard-panel" id="dataPanel">
-      <div class="panel-intro"><div><span class="eyebrow">Trazabilidad</span><h2>Metodología y datos</h2><p>Qué puede responder hoy el prototipo y qué necesita para avanzar.</p></div></div>
+      <div class="panel-intro"><div><span class="eyebrow">Trazabilidad</span><h2>MetodologÃ­a y datos</h2><p>QuÃ© puede responder hoy el prototipo y quÃ© necesita para avanzar.</p></div></div>
       <section class="method-grid">
-        <article class="method-card available"><h3>Datos disponibles</h3><ul><li>Lluvia mensual por departamento, 1993–2026, usada para análisis departamental histórico.</li><li>Temperatura, humedad, viento y lluvia diaria de ocho estaciones, usada solo para monitoreo reciente.</li></ul></article>
-        <article class="method-card pending"><h3>Datos pendientes</h3><ul><li>Superficie inundada y hectáreas afectadas.</li><li>Geometrías departamentales para mapas.</li><li>Lluvia reciente departamental de 24 h, 7 y 30 días.</li><li>Variables de vulnerabilidad territorial.</li></ul></article>
-        <article class="method-card"><h3>Procesamiento</h3><ul><li>Nombres departamentales normalizados.</li><li>Filas vacías y años totalmente en cero excluidos.</li><li>Los desvíos departamentales comparan cada departamento contra su propio promedio histórico del mismo mes calendario.</li><li>Sin interpolación ni datos inventados.</li></ul></article>
-        <article class="method-card"><h3>Limitación principal</h3><p>El prototipo permite análisis histórico mensual y monitoreo operativo reciente. No permite afirmar cuántas hectáreas están inundadas, emitir alertas hidrológicas oficiales ni estimar superficie inundada.</p></article>
+        <article class="method-card available"><h3>Datos disponibles</h3><ul><li>Lluvia mensual por departamento, 1993–2026, usada para análisis departamental histórico.</li><li>Registro diario departamental, 2023 a la última carga disponible, usado solo para monitoreo diario reciente.</li><li>Temperatura, humedad, viento y lluvia diaria de ocho estaciones.</li></ul></article>
+        <article class="method-card pending"><h3>Datos pendientes</h3><ul><li>Superficie inundada y hectÃ¡reas afectadas.</li><li>GeometrÃ­as departamentales para mapas.</li><li>Lluvia reciente departamental de 24 h, 7 y 30 dÃ­as.</li><li>Variables de vulnerabilidad territorial.</li></ul></article>
+        <article class="method-card"><h3>Procesamiento</h3><ul><li>Nombres departamentales normalizados.</li><li>Filas vacÃ­as y aÃ±os totalmente en cero excluidos.</li><li>Fechas invÃ¡lidas de estaciones descartadas.</li><li>Sin interpolaciÃ³n ni datos inventados.</li></ul></article>
+        <article class="method-card"><h3>LimitaciÃ³n principal</h3><p>El prototipo permite anÃ¡lisis histÃ³rico y priorizaciÃ³n relativa por lluvia. No permite afirmar cuÃ¡ntas hectÃ¡reas estÃ¡n inundadas ni emitir alertas hidrolÃ³gicas operativas.</p></article>
       </section>
     </section>
   </main>
 
-  <footer><p>Dashboard independiente · Datos exclusivos de Precipitaciones-Lluvias</p><p id="dataNote"></p></footer>
+  <footer><p>Dashboard independiente Â· Datos exclusivos de Precipitaciones-Lluvias</p><p id="dataNote"></p></footer>
   <div class="error-banner" id="errorBanner"></div>
-  <script src="app.js?v=20260618-1"></script>
+  <script src="app.js?v=20260701-1"></script>
 </body>
 </html>

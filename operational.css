@@ -233,7 +233,7 @@ body {
 }
 
 .operational-kpis {
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(6, minmax(0, 1fr));
 }
 
 .availability-strip {
@@ -436,6 +436,10 @@ body {
   margin-bottom: 18px;
 }
 
+.method-callout.compact {
+  margin: 0 0 14px;
+}
+
 .method-callout p {
   color: var(--muted);
   font-size: .74rem;
@@ -474,6 +478,29 @@ body {
   font: 700 .68rem Inter;
   cursor: pointer;
 }
+
+.deviation-very-low,
+.deviation-low,
+.deviation-normal,
+.deviation-high,
+.deviation-very-high,
+.deviation-none {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5px 8px;
+  border-radius: 20px;
+  font-size: .62rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.deviation-very-low { background: #dce8f5; color: #235c8f; }
+.deviation-low { background: #e8f2fa; color: #2d6f9a; }
+.deviation-normal { background: #dcefe5; color: #26704a; }
+.deviation-high { background: #fff1bf; color: #805d00; }
+.deviation-very-high { background: #ffe1c2; color: #934b05; }
+.deviation-none { background: #e8edf0; color: #667782; }
 
 .risk-ranking-table th,
 .risk-ranking-table td {

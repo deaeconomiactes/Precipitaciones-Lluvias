@@ -2,7 +2,7 @@ const MONTHS = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov
 const MONTHS_FULL = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 const COLORS = ['#1677a6','#25a9b5','#7667a8','#d9931a','#c34f59','#3d9a6b','#7b8790','#b46a9b'];
 const ALL_MONTHS = MONTHS.map((_, index) => index);
-const state = { rainfall: [], stations: [], metadata: {}, charts: {}, tableRows: [], filterConfigs: {}, climateMetrics: new Set(['temperature','humidity','wind','rain24Total']) };
+const state = { rainfall: [], stations: [], metadata: {}, charts: {}, tableRows: [], filterConfigs: {}, temporalFiltersExplicit: { years: false, months: false }, climateMetrics: new Set(['temperature','humidity','wind','rain24Total']) };
 const $ = id => document.getElementById(id);
 const format = value => new Intl.NumberFormat('es-AR', { maximumFractionDigits: 1 }).format(value || 0);
 const average = values => values.length ? values.reduce((a,b) => a + b, 0) / values.length : 0;
@@ -82,6 +82,8 @@ function wireControls() {
   Object.keys(state.filterConfigs).forEach(id => {
     $(id).addEventListener('change', event => {
       if (event.target.type !== 'checkbox') return;
+      if (id === 'yearFilter') state.temporalFiltersExplicit.years = true;
+      if (id === 'monthFilter') state.temporalFiltersExplicit.months = true;
       normalizeMultiSelection(id, event.target);
       updateMultiSummary(id);
       render();
@@ -99,6 +101,8 @@ function wireControls() {
     setMultiSelection('yearFilter', [String(latestCompleteYear)]);
     setMultiSelection('monthFilter', ['ALL']);
     setMultiSelection('stationFilter', [state.stations[0].station]);
+    state.temporalFiltersExplicit.years = false;
+    state.temporalFiltersExplicit.months = false;
     $('annualFromFilter').value = state.metadata.yearMin;
     $('annualToFilter').value = state.metadata.yearMax;
     render();
@@ -198,25 +202,104 @@ function monthlyObservations(records, months) {
 function render() {
   const f = filters();
   const rows = filteredRainfall(f);
-  updateKpis(rows, f);
+  updateKpis(f);
   renderAnnual(f);
   renderMonthly(rows, f);
   renderRanking(rows, f);
   renderHeatmap(rows, f);
   renderClimate(f);
-  renderTable(rows, f);
-  renderPriority(f);
+  renderDepartmentDetail(getDepartmentMonthlyDeviationRows(f), f);
 }
 
-function updateKpis(rows, f) {
-  const months = selectedMonths(f);
-  const values = rows.map(row => recordValue(row, months));
-  const grouped = groupTotals(rows, row => row.department, months);
-  const top = Object.entries(grouped).sort((a,b) => b[1] - a[1])[0];
-  $('kpiTotal').textContent = `${format(average(values))} mm`;
-  $('kpiTotalDetail').textContent = f.years === null ? 'promedio por registro seleccionado' : `promedio de ${f.years.length} año(s) seleccionado(s)`;
-  $('kpiTopDepartment').textContent = top ? top[0] : '—';
-  $('kpiTopDepartmentDetail').textContent = top ? `${format(top[1])} mm` : 'sin datos';
+function updateKpis(f) {
+  const summary = monthlySummaryComparison(f);
+  $('kpiReferenceMonth').textContent = summary.period ? `${MONTHS_FULL[summary.period.month]} ${summary.period.year}` : 'Sin dato';
+  $('kpiReferenceDetail').textContent = summary.usesExplicitFilters ? 'según filtros activos' : 'último mes mensual disponible';
+  $('kpiObserved').textContent = formatNullable(summary.observedMm);
+  $('kpiObservedDetail').textContent = summary.singleDepartment ? 'observado del departamento seleccionado' : `promedio departamental observado (${summary.observedCount} depto.)`;
+  $('kpiHistorical').textContent = formatNullable(summary.historicalAverageMm);
+  $('kpiHistoricalDetail').textContent = summary.singleDepartment ? 'histórico del departamento para ese mes' : `promedio histórico departamental (${summary.historicalCount} depto.)`;
+  $('kpiDifference').textContent = formatSignedMm(summary.differenceMm);
+  $('kpiProgress').textContent = formatProgress(summary.progressPct);
+  $('kpiProgressDetail').textContent = Number.isFinite(summary.progressPct) && summary.progressPct >= 100 ? 'avance sobre promedio histórico' : 'del promedio histórico mensual';
+  $('kpiMonthlyCategory').textContent = summary.category;
+}
+
+function monthlySummaryComparison(f) {
+  const departments = state.metadata.departments.filter(department => matchesSelection(department, f.departments));
+  const period = getSummaryReferencePeriod(departments, f);
+  if (!period) {
+    return {
+      period: null,
+      observedMm: null,
+      historicalAverageMm: null,
+      differenceMm: null,
+      progressPct: null,
+      category: 'Sin referencia',
+      observedCount: 0,
+      historicalCount: 0,
+      singleDepartment: departments.length === 1,
+      usesExplicitFilters: state.temporalFiltersExplicit.years || state.temporalFiltersExplicit.months
+    };
+  }
+  const observedEntries = departments
+    .map(department => ({ department, value: monthlyValue(department, period.year, period.month) }))
+    .filter(entry => Number.isFinite(entry.value));
+  const observedValues = observedEntries.map(entry => entry.value);
+  const historicalValues = observedEntries
+    .map(entry => getMonthlyHistoricalAverage(entry.department, period.month))
+    .filter(Number.isFinite);
+  const observedMm = observedValues.length ? average(observedValues) : null;
+  const historicalAverageMm = historicalValues.length ? average(historicalValues) : null;
+  const differenceMm = Number.isFinite(observedMm) && Number.isFinite(historicalAverageMm) ? observedMm - historicalAverageMm : null;
+  const progressPct = Number.isFinite(observedMm) && historicalAverageMm > 0 ? (observedMm / historicalAverageMm) * 100 : null;
+  return {
+    period,
+    observedMm,
+    historicalAverageMm,
+    differenceMm,
+    progressPct,
+    category: classifyHistoricalProgress(progressPct),
+    observedCount: observedValues.length,
+    historicalCount: historicalValues.length,
+    singleDepartment: departments.length === 1,
+    usesExplicitFilters: state.temporalFiltersExplicit.years || state.temporalFiltersExplicit.months
+  };
+}
+
+function getSummaryReferencePeriod(departments, f) {
+  const years = state.temporalFiltersExplicit.years ? f.years : null;
+  const months = state.temporalFiltersExplicit.months ? selectedMonths(f) : ALL_MONTHS;
+  const minimumCoverage = Math.ceil(departments.length * 0.8);
+  const periods = new Map();
+  state.rainfall.forEach(row => {
+    if (!departments.includes(row.department)) return;
+    if (!matchesSelection(row.year, years)) return;
+    row.months.forEach((value, month) => {
+      if (!months.includes(month)) return;
+      if (!Number.isFinite(value)) return;
+      const key = `${row.year}-${month}`;
+      if (!periods.has(key)) periods.set(key, { year: row.year, month, departments: new Set() });
+      periods.get(key).departments.add(row.department);
+    });
+  });
+  return [...periods.values()]
+    .filter(period => period.departments.size >= minimumCoverage)
+    .sort((a, b) => b.year - a.year || b.month - a.month)[0] || null;
+}
+
+function monthlyValue(department, year, month) {
+  const record = state.rainfall.find(row => row.department === department && row.year === year);
+  return record && Number.isFinite(record.months[month]) ? record.months[month] : null;
+}
+
+function classifyHistoricalProgress(progressPct) {
+  if (!Number.isFinite(progressPct)) return 'Sin referencia';
+  if (progressPct < 70) return 'Muy por debajo';
+  if (progressPct < 90) return 'Por debajo';
+  if (progressPct <= 110) return 'En torno al promedio';
+  if (progressPct <= 130) return 'Por encima';
+  return 'Muy por encima';
 }
 
 function renderAnnual(f) {
@@ -395,62 +478,121 @@ function renderClimate(f) {
   });
 }
 
-function renderTable(rows, f) {
-  const months = selectedMonths(f);
-  const grouped = {};
-  rows.forEach(row => { (grouped[row.department] ??= []).push(row); });
-  state.tableRows = Object.entries(grouped).map(([department, records]) => {
-    const observations = monthlyObservations(records, months);
-    const values = observations.map(observation => observation.value);
-    const peak = observations.reduce((best, observation) => observation.value > best.value ? observation : best, { value: -1, month: 0 });
+function getLatestMonthlyPeriodForDepartment(department, f) {
+  const years = state.temporalFiltersExplicit.years ? f.years : null;
+  const months = state.temporalFiltersExplicit.months ? selectedMonths(f) : ALL_MONTHS;
+  return state.rainfall
+    .filter(row => row.department === department && matchesSelection(row.year, years))
+    .reduce((latest, row) => {
+    row.months.forEach((value, month) => {
+      if (!months.includes(month)) return;
+      if (!Number.isFinite(value)) return;
+      if (!latest || row.year > latest.year || (row.year === latest.year && month > latest.month)) {
+        latest = { year: row.year, month, observedMm: value };
+      }
+    });
+    return latest;
+  }, null);
+}
+
+function getMonthlyHistoricalAverage(department, month) {
+  const values = state.rainfall
+    .filter(row => row.department === department && Number.isFinite(row.months[month]))
+    .map(row => row.months[month]);
+  return values.length ? average(values) : null;
+}
+
+function classifyMonthlyDeviation(differencePct) {
+  if (!Number.isFinite(differencePct)) return 'Sin referencia';
+  if (differencePct <= -30) return 'Muy por debajo';
+  if (differencePct <= -10) return 'Por debajo';
+  if (differencePct < 10) return 'Normal';
+  if (differencePct < 30) return 'Por encima';
+  return 'Muy por encima';
+}
+
+function getDepartmentMonthlyDeviationRows(f) {
+  const departments = state.metadata.departments.filter(department => matchesSelection(department, f.departments));
+  return departments.map(department => {
+    const latest = getLatestMonthlyPeriodForDepartment(department, f);
+    const observedMm = latest ? latest.observedMm : null;
+    const historicalAverageMm = latest ? getMonthlyHistoricalAverage(department, latest.month) : null;
+    const differenceMm = Number.isFinite(observedMm) && Number.isFinite(historicalAverageMm) ? observedMm - historicalAverageMm : null;
+    const differencePct = Number.isFinite(differenceMm) && historicalAverageMm > 0 ? (differenceMm / historicalAverageMm) * 100 : null;
     return {
       department,
-      observations: observations.length,
-      total: values.reduce((sum, value) => sum + value, 0),
-      average: average(values),
-      maximum: peak.value,
-      peakMonth: peak.value >= 0 ? MONTHS_FULL[peak.month] : 'Sin datos'
+      latestYear: latest ? latest.year : null,
+      latestMonth: latest ? latest.month : null,
+      observedMm,
+      historicalAverageMm,
+      differenceMm,
+      differencePct,
+      category: classifyMonthlyDeviation(differencePct)
     };
-  });
-  $('detailsTable').innerHTML = state.tableRows.map(row => `<tr><td>${row.department}</td><td>${row.observations}</td><td>${format(row.total)} mm</td><td>${format(row.average)} mm</td><td>${format(row.maximum)} mm</td><td>${row.peakMonth}</td></tr>`).join('');
-}
-
-function priorityData(f) {
-  const months = selectedMonths(f);
-  const rows = state.rainfall.filter(row => matchesSelection(row.year, f.years));
-  const grouped = {};
-  rows.forEach(row => (grouped[row.department] ??= []).push(recordValue(row, months)));
-  const entries = Object.entries(grouped).map(([department, values]) => ({ department, rain: average(values) })).sort((a,b) => b.rain - a.rain);
-  const provincialAverage = average(entries.map(entry => entry.rain));
-  return entries.map((entry, index) => {
-    const differencePct = provincialAverage ? ((entry.rain - provincialAverage) / provincialAverage) * 100 : 0;
-    const level = differencePct > 30 ? 'Crítico' : differencePct > 10 ? 'Alto' : differencePct >= -10 ? 'Medio' : 'Bajo';
-    return { ...entry, differencePct, level, position: index + 1 };
+  }).sort((a, b) => {
+    const absA = Number.isFinite(a.differencePct) ? Math.abs(a.differencePct) : -1;
+    const absB = Number.isFinite(b.differencePct) ? Math.abs(b.differencePct) : -1;
+    return absB - absA || a.department.localeCompare(b.department, 'es');
   });
 }
 
-function renderPriority(f) {
-  const all = priorityData(f);
-  const selected = f.departments === null ? all : all.filter(row => f.departments.includes(row.department));
-  $('kpiPriorityCount').textContent = selected.filter(row => row.level === 'Alto' || row.level === 'Crítico').length;
-  $('riskTable').innerHTML = selected.map(row => `<tr><td><span class="${riskClass(row.level)}">${row.level}</span></td><td>${row.department}</td><td>${signedPercent(row.differencePct)}</td><td>${format(row.rain)} mm</td><td>${row.position} de ${all.length}</td></tr>`).join('');
+function renderDepartmentDetail(rows, f) {
+  state.tableRows = rows;
+  $('detailsTable').innerHTML = rows.map(row => {
+    const period = Number.isInteger(row.latestMonth) && Number.isFinite(row.latestYear) ? `${MONTHS_FULL[row.latestMonth]} ${row.latestYear}` : 'Sin dato';
+    return `<tr><td>${row.department}</td><td>${period}</td><td>${formatNullable(row.observedMm)}</td><td>${formatNullable(row.historicalAverageMm)}</td><td>${formatSignedMm(row.differenceMm)}</td><td>${formatSignedPercent(row.differencePct)}</td><td><span class="${deviationClass(row.category)}">${row.category}</span></td></tr>`;
+  }).join('');
 }
 
-function riskClass(level) {
-  return `risk-${level === 'Crítico' ? 'critical' : level === 'Alto' ? 'high' : level === 'Medio' ? 'medium' : 'low'}`;
+function deviationClass(category) {
+  const classes = {
+    'Muy por debajo': 'deviation-very-low',
+    'Por debajo': 'deviation-low',
+    'Normal': 'deviation-normal',
+    'Por encima': 'deviation-high',
+    'Muy por encima': 'deviation-very-high',
+    'Sin referencia': 'deviation-none'
+  };
+  return classes[category] || 'deviation-none';
 }
 
 function signedPercent(value) {
   return `${value > 0 ? '+' : ''}${format(value)}%`;
 }
 
+function formatNullable(value) {
+  return Number.isFinite(value) ? `${format(value)} mm` : 'Sin dato';
+}
+
+function formatSignedMm(value) {
+  return Number.isFinite(value) ? `${value > 0 ? '+' : ''}${format(value)} mm` : 'No calculable';
+}
+
+function formatSignedPercent(value) {
+  return Number.isFinite(value) ? signedPercent(value) : 'No calculable';
+}
+
+function formatProgress(value) {
+  return Number.isFinite(value) ? `${format(value)}%` : 'No calculable';
+}
+
 function downloadTable() {
-  const headers = ['Departamento','Observaciones_mensuales','Acumulado_periodo_mm','Promedio_mensual_mm','Maximo_mensual_mm','Mes_maximo'];
-  const lines = state.tableRows.map(row => [row.department,row.observations,row.total.toFixed(2),row.average.toFixed(2),row.maximum.toFixed(2),row.peakMonth].join(';'));
+  const headers = ['Departamento','Ultimo_anio','Ultimo_mes','Observado_mm','Promedio_historico_mensual_mm','Diferencia_mm','Diferencia_pct','Categoria'];
+  const csvValue = value => Number.isFinite(value) ? value.toFixed(2) : '';
+  const lines = state.tableRows.map(row => [
+    row.department,
+    Number.isFinite(row.latestYear) ? row.latestYear : '',
+    Number.isInteger(row.latestMonth) ? MONTHS_FULL[row.latestMonth] : '',
+    csvValue(row.observedMm),
+    csvValue(row.historicalAverageMm),
+    csvValue(row.differenceMm),
+    csvValue(row.differencePct),
+    row.category
+  ].join(';'));
   const blob = new Blob(['\ufeff' + [headers.join(';'), ...lines].join('\n')], { type: 'text/csv;charset=utf-8' });
   const link = document.createElement('a');
   link.href = URL.createObjectURL(blob);
-  link.download = 'resumen_departamental.csv';
+  link.download = 'desvios_departamentales_mensuales.csv';
   link.click();
   URL.revokeObjectURL(link.href);
 }

@@ -51,22 +51,26 @@ Genera:
 - Las fechas inválidas de estaciones se descartan y no se interpolan datos faltantes.
 - Los filtros de departamento, año, mes y localidad permiten seleccionar múltiples valores para realizar comparaciones.
 - En el gráfico climático, el color identifica la variable climática y el tipo de línea/símbolo identifica cada combinación de localidad y año. Las variables pueden mostrarse u ocultarse desde la leyenda. Cuando se eligen varios años, se muestran por separado en lugar de promediarlos.
-- En el detalle departamental, el acumulado suma las observaciones mensuales seleccionadas y el promedio se calcula sobre esas observaciones, no sobre totales anuales.
+- En el detalle departamental, la tabla compara el último mes disponible de cada departamento contra su promedio histórico del mismo mes calendario.
+- Los desvíos departamentales comparan cada departamento contra su propio historial mensual. No se comparan contra el promedio provincial.
 - En `Perfil mensual` y `Ranking departamental`, el período seleccionado se contrasta con el promedio histórico comparable del mismo departamento o de la provincia, calculado con la serie mensual completa disponible.
+- En el Resumen provincial, los KPIs mensuales usan un único mes de referencia con cobertura suficiente: al menos 80% de los departamentos seleccionados deben tener dato válido en `data/rainfall.json`. Para todos los departamentos, eso equivale a 20 de 25 departamentos.
+- Los KPIs del Resumen provincial comparan el observado del mes contra el promedio histórico del mismo mes calendario. Cuando se muestran todos los departamentos, se informa el promedio departamental en mm, calculando la referencia histórica sobre los mismos departamentos con observado válido, y no se suman milímetros entre departamentos.
 
 ## Áreas inundadas
 
 Las fuentes actuales no contienen hectáreas inundadas, geometrías ni superficies departamentales. El dashboard muestra una sección preparada, pero no calcula ni presenta estimaciones artificiales.
 
-## Prioridad pluviométrica
+## Desvíos mensuales departamentales
 
-La vista `Prioridad y alertas` utiliza un indicador relativo y transparente:
+La vista `Análisis por departamento` utiliza una comparación histórica departamental:
 
-- Calcula la lluvia promedio de cada departamento para el período seleccionado.
-- Calcula la diferencia porcentual de cada departamento frente al promedio provincial.
-- Clasifica como Bajo los valores menores a −10%, Medio entre −10% y +10%, Alto entre +10% y +30%, y Crítico por encima de +30%.
+- Identifica, para cada departamento, el último año-mes con una observación válida en `data/rainfall.json`.
+- Si se aplican filtros explícitos de año o mes, busca el último registro válido dentro de esos filtros.
+- Compara la lluvia observada contra el promedio histórico de ese mismo departamento y mes calendario.
+- Clasifica el desvío como Muy por debajo, Por debajo, Normal, Por encima, Muy por encima o Sin referencia.
 
-Este indicador sirve para ordenar revisiones territoriales. No representa riesgo de inundación ni una alerta hidrológica oficial porque todavía no incorpora hectáreas inundadas, persistencia reciente ni vulnerabilidad territorial.
+Este indicador sirve para detectar diferencias relevantes contra el historial propio de cada departamento. No representa riesgo de inundación ni una alerta hidrológica oficial porque no incorpora hectáreas inundadas, persistencia reciente ni vulnerabilidad territorial.
 
 ## Archivos del dashboard
 

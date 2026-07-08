@@ -153,7 +153,7 @@ body {
 }
 
 .multi-filter summary::after {
-  content: "âŒ„";
+  content: "⌄";
   position: absolute;
   right: 12px;
   top: 7px;

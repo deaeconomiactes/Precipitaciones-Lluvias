@@ -692,7 +692,7 @@ function signedMm(value) {
 }
 
 function downloadTable() {
-  const headers = ['Departamento','Ultimo_anio','Ultimo_mes','Observado_mm','Promedio_historico_mensual_mm','Diferencia_mm','Diferencia_pct','Categoria'];
+  const headers = ['Departamento','Ultimo_anio','Ultimo_mes','Acumulado_mensual_observado_mm','Promedio_historico_mensual_mm','Diferencia_mm','Diferencia_pct','Categoria'];
   const csvValue = value => Number.isFinite(value) ? value.toFixed(2) : '';
   const lines = state.tableRows.map(row => [
     row.department,

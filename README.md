@@ -90,7 +90,7 @@ El workflow `.github/workflows/update-daily-rainfall.yml` puede actualizar estos
 - Las fechas inválidas de estaciones se descartan y no se interpolan datos faltantes.
 - Los filtros de departamento, año, mes y localidad permiten seleccionar múltiples valores para realizar comparaciones.
 - En el gráfico climático, el color identifica la variable climática y el tipo de línea/símbolo identifica cada combinación de localidad y año. Las variables pueden mostrarse u ocultarse desde la leyenda. Cuando se eligen varios años, se muestran por separado en lugar de promediarlos.
-- En el detalle departamental, la tabla compara el último mes disponible de cada departamento contra su promedio histórico del mismo mes calendario.
+- En el detalle departamental, la tabla compara el acumulado mensual observado del mes de referencia contra el promedio histórico del mismo mes calendario para cada departamento. Cuando el filtro está en `Año completo`, se usa el último mes mensual disponible dentro del año seleccionado; no representa el acumulado anual.
 - Los desvíos departamentales comparan cada departamento contra su propio historial mensual. No se comparan contra el promedio provincial.
 - En `Perfil mensual` y `Ranking departamental`, el período seleccionado se contrasta con el promedio histórico comparable del mismo departamento o de la provincia, calculado con la serie mensual completa disponible.
 - En el Resumen provincial, los KPIs mensuales usan un único mes de referencia con cobertura suficiente: al menos 80% de los departamentos seleccionados deben tener dato válido en `data/rainfall.json`. Para todos los departamentos, eso equivale a 20 de 25 departamentos.
@@ -107,7 +107,7 @@ La vista `Análisis por departamento` utiliza una comparación histórica depart
 
 - Identifica, para cada departamento, el último año-mes con una observación válida en `data/rainfall.json`.
 - Si se aplican filtros explícitos de año o mes, busca el último registro válido dentro de esos filtros.
-- Compara la lluvia observada contra el promedio histórico de ese mismo departamento y mes calendario.
+- Compara el acumulado mensual observado contra el promedio histórico de ese mismo departamento y mes calendario.
 - Clasifica el desvío como Muy por debajo, Por debajo, Normal, Por encima, Muy por encima o Sin referencia.
 
 Este indicador sirve para detectar diferencias relevantes contra el historial propio de cada departamento. No representa riesgo de inundación ni una alerta hidrológica oficial porque no incorpora hectáreas inundadas, persistencia reciente ni vulnerabilidad territorial.

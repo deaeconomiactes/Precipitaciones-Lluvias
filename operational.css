@@ -463,6 +463,10 @@ main {
 
 .method-card.available { border-top-color: #3d9a6b; }
 .method-card.pending { border-top-color: #d9931a; }
+.method-card.guide {
+  grid-column: 1 / -1;
+  border-top-color: var(--blue);
+}
 .method-card h3 { font-size: .9rem; margin-bottom: 10px; }
 .method-card p,
 .method-card li { color: var(--muted); font-size: .75rem; line-height: 1.7; }

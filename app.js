@@ -321,7 +321,7 @@ function renderDaily(f) {
   const records = validDailyRecords(f);
   if (!records.length) {
     $('dailyLatestDate').textContent = '\u2014';
-    $('dailyCoverage').textContent = 'Sin observaciones diarias para los filtros activos';
+    $('dailyCoverage').textContent = 'Sin observaciones diarias vigentes para los filtros activos';
     ['dailyRain24','dailyRain7','dailyRain30','dailyTopDepartment','dailyWetDepartments','dailyMaxRecord'].forEach(id => $(id).textContent = 'Sin dato');
     ['dailyRain24Detail','dailyRain7Detail','dailyRain30Detail','dailyTopDepartmentDetail','dailyWetDepartmentsDetail','dailyMaxRecordDetail'].forEach(id => $(id).textContent = 'sin observaciones');
     $('dailyRankingTable').innerHTML = '';
@@ -342,7 +342,7 @@ function renderDaily(f) {
   const singleDepartment = f.departments?.length === 1;
 
   $('dailyLatestDate').textContent = formatDate(latestDate);
-  $('dailyCoverage').textContent = `${records[0].date} a ${latestDate} - ${records.length} observaciones departamentales`;
+  $('dailyCoverage').textContent = `${records[0].date} a ${latestDate} - ${records.length} observaciones departamentales vigentes`;
   updateDailyKpis(rows, latestDate, topDepartment, maxRecord, selectedWindow, singleDepartment);
   renderDailySeries(records, latestDate, f);
   $('dailyRankingTable').innerHTML = rankingRows.map(row => `
@@ -390,15 +390,15 @@ function updateDailyKpis(rows, latestDate, topDepartment, maxRecord, selectedWin
     const rowsWithData = rows.filter(row => row.observations[days] > 0);
     const value = rowsWithData.length ? (singleDepartment ? rowsWithData[0].windows[days] : average(rowsWithData.map(row => row.windows[days]))) : null;
     $(id).textContent = Number.isFinite(value) ? `${format(value)} mm` : 'Sin dato';
-    $(detailId).textContent = singleDepartment ? 'acumulado del departamento seleccionado' : `promedio departamental (${rowsWithData.length} depto.)`;
+    $(detailId).textContent = singleDepartment ? 'acumulado temporal del departamento seleccionado' : `promedio departamental de acumulados (${rowsWithData.length} depto.)`;
   });
   $('dailyTopDepartment').textContent = topDepartment ? topDepartment.department : 'Sin dato';
-  $('dailyTopDepartmentDetail').textContent = topDepartment ? `${format(topDepartment.windows[selectedWindow])} mm en ${dailyWindowLabel(selectedWindow)}` : `sin lluvia en ${dailyWindowLabel(selectedWindow)}`;
+  $('dailyTopDepartmentDetail').textContent = topDepartment ? `${format(topDepartment.windows[selectedWindow])} mm acumulados en ${dailyWindowLabel(selectedWindow)}` : `sin lluvia mayor a 0 mm en ${dailyWindowLabel(selectedWindow)}`;
   const wetCount = rows.filter(row => row.windows[selectedWindow] > 0).length;
   $('dailyWetDepartments').textContent = `${wetCount}`;
   $('dailyWetDepartmentsDetail').textContent = `con lluvia mayor a 0 mm en ${dailyWindowLabel(selectedWindow)}`;
   $('dailyMaxRecord').textContent = maxRecord ? `${format(maxRecord.rainfallMm)} mm` : 'Sin dato';
-  $('dailyMaxRecordDetail').textContent = maxRecord ? `${maxRecord.department} - ${formatDate(maxRecord.date)}` : `sin registros en ${dailyWindowLabel(selectedWindow)}`;
+  $('dailyMaxRecordDetail').textContent = maxRecord ? `${maxRecord.department} - ${formatDate(maxRecord.date)}` : `sin observaciones válidas en ${dailyWindowLabel(selectedWindow)}`;
 }
 
 function dailyWindowDisplay(row, days) {

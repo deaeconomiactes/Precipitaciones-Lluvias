@@ -417,7 +417,7 @@ function renderDailySeries(records, latestDate, f) {
   });
   $('dailySeriesDescription').textContent = singleDepartment
     ? 'Lluvia diaria del departamento seleccionado en los últimos 30 días con observación.'
-    : 'Promedio departamental diario de los últimos 30 días con observación.';
+    : 'Promedio departamental diario entre departamentos con registro en cada fecha.';
   chart('dailySeriesChart', 'bar', {
     labels: dates.map(formatShortDate),
     datasets: [dataset(singleDepartment ? 'Lluvia diaria departamental' : 'Promedio departamental diario', values, COLORS[0], false, 'mm')]
@@ -448,7 +448,7 @@ function addDays(dateString, offset) {
 }
 
 function dailyWindowLabel(days) {
-  return days === 1 ? '24 h' : `${days} días`;
+  return days === 1 ? 'última fecha disponible' : `${days} días`;
 }
 
 function formatShortDate(value) {

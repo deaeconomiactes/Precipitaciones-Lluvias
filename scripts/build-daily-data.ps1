@@ -57,7 +57,7 @@ function Normalize-Department([string]$value) {
         'sauce' = 'Sauce'
     }
     if ($map.ContainsKey($key)) { return $map[$key] }
-    return (Get-Culture).TextInfo.ToTitleCase($key)
+    return $null
 }
 
 function Get-RowValue($row, [string[]]$names) {
@@ -163,8 +163,8 @@ function Get-RainValue($row) {
     $text = ([string]$raw).Trim() -replace ',', '.'
     $value = 0.0
     if ([double]::TryParse($text, [Globalization.NumberStyles]::Float, [Globalization.CultureInfo]::InvariantCulture, [ref]$value)) {
-        if ($value -gt 1000) { return $null }
-        return [Math]::Max([double]0, [double]$value)
+        if ($value -lt 0 -or $value -gt 1000) { return $null }
+        return [double]$value
     }
     return $null
 }

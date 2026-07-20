@@ -39,7 +39,7 @@ Genera:
 
 - `data/rainfall.json`: lluvia mensual por año y departamento.
 - `data/rainfall-daily.json`: lluvia diaria departamental normalizada.
-- `data/rainfall-daily-summary.json`: indicadores de semáforo pluviométrico para ventanas móviles de 1, 7, 15 y 30 días.
+- `data/rainfall-daily-summary.json`: resumen derivado de la base diaria para ventanas móviles de 1, 7, 15 y 30 días.
 - `data/stations.json`: variables meteorológicas agregadas mensualmente.
 - `data/metadata.json`: cobertura y fuentes.
 
@@ -95,7 +95,8 @@ El workflow `.github/workflows/update-daily-rainfall.yml` puede actualizar estos
 - En `Perfil mensual` y `Ranking departamental`, el período seleccionado se contrasta con el promedio histórico comparable del mismo departamento o de la provincia, calculado con la serie mensual completa disponible.
 - En el Resumen provincial, los KPIs mensuales usan un único mes de referencia con cobertura suficiente: al menos 80% de los departamentos seleccionados deben tener dato válido en `data/rainfall.json`. Para todos los departamentos, eso equivale a 20 de 25 departamentos.
 - Los KPIs del Resumen provincial comparan el observado del mes contra el promedio histórico del mismo mes calendario. Cuando se muestran todos los departamentos, se informa el promedio departamental en mm, calculando la referencia histórica sobre los mismos departamentos con observado válido, y no se suman milímetros entre departamentos.
-- El `Monitoreo diario` mantiene la serie diaria separada de la mensual. El semáforo compara la lluvia reciente contra el promedio histórico disponible para la misma ventana calendario; como la base diaria comienza en 2023, la referencia se muestra como promedio histórico disponible y no como normal climatológica oficial.
+- El `Monitoreo diario` mantiene la serie diaria separada de la mensual y se usa solo para seguimiento operativo reciente. No calcula anomalías históricas ni alertas hidrológicas oficiales.
+- La unidad analítica diaria es una observación por departamento y fecha. Cuando existen varias cargas para un mismo departamento y fecha, se consolida una observación diaria departamental; en ausencia de una marca que indique acumulaciones parciales, se usa el promedio de los valores válidos para evitar inflar la lluvia departamental.
 
 ## Áreas inundadas
 

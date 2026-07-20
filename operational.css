@@ -269,8 +269,15 @@ main {
   color: #8a5b07;
 }
 
-.operational-kpis {
+.operational-kpis,
+.daily-kpi-grid {
   grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+
+.daily-kpi-grid {
+  display: grid;
+  gap: 14px;
+  margin: 0 0 18px;
 }
 
 .availability-strip {
@@ -918,6 +925,11 @@ main {
   text-align: left;
 }
 
+.compact-table {
+  max-height: 360px;
+  overflow: auto;
+}
+
 .risk-ranking-table th,
 .risk-ranking-table td {
   text-align: center;
@@ -1009,6 +1021,7 @@ footer {
   .decision-grid,
   .method-grid,
   .operational-kpis,
+  .daily-kpi-grid,
   .availability-strip {
     grid-template-columns: 1fr;
   }

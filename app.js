@@ -3,7 +3,7 @@ const MONTHS_FULL = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','A
 const COLORS = ['#1677a6','#25a9b5','#7667a8','#d9931a','#c34f59','#3d9a6b','#7b8790','#b46a9b'];
 const ALL_MONTHS = MONTHS.map((_, index) => index);
 const DAILY_WINDOWS = [1, 7, 15, 30];
-const state = { rainfall: [], dailySummary: null, stations: [], metadata: {}, charts: {}, tableRows: [], filterConfigs: {}, temporalFiltersExplicit: { years: false, months: false }, climateMetrics: new Set(['temperature','humidity','wind','rain24Total']) };
+const state = { rainfall: [], dailyRecords: [], stations: [], metadata: {}, charts: {}, tableRows: [], filterConfigs: {}, temporalFiltersExplicit: { years: false, months: false }, climateMetrics: new Set(['temperature','humidity','wind','rain24Total']) };
 const $ = id => document.getElementById(id);
 const format = value => new Intl.NumberFormat('es-AR', { maximumFractionDigits: 1 }).format(value || 0);
 const average = values => values.length ? values.reduce((a,b) => a + b, 0) / values.length : 0;
@@ -12,13 +12,13 @@ document.addEventListener('DOMContentLoaded', init);
 
 async function init() {
   try {
-    const [rainfall, dailySummary, stations, metadata] = await Promise.all(
-      ['rainfall.json','rainfall-daily-summary.json','stations.json','metadata.json'].map(name => fetch(`data/${name}`).then(response => {
+    const [rainfall, dailyRecords, stations, metadata] = await Promise.all(
+      ['rainfall.json','rainfall-daily.json','stations.json','metadata.json'].map(name => fetch(`data/${name}`).then(response => {
         if (!response.ok) throw new Error(`No se pudo cargar ${name}`);
         return response.json();
       }))
     );
-    Object.assign(state, { rainfall, dailySummary, stations, metadata });
+    Object.assign(state, { rainfall, dailyRecords, stations, metadata });
     populateFilters();
     wireControls();
     render();
@@ -306,75 +306,154 @@ function classifyHistoricalProgress(progressPct) {
   return 'Muy por encima';
 }
 
-function dailyRows(f = filters()) {
-  if (!state.dailySummary || !Array.isArray(state.dailySummary.rows)) return [];
-  const windowDays = +$('dailyWindowFilter').value || 7;
-  const sortDirection = $('dailySortFilter')?.value === 'asc' ? 1 : -1;
-  return state.dailySummary.rows
-    .filter(row => row.windowDays === windowDays && row.recentMm > 0 && matchesSelection(row.department, f.departments))
-    .sort((a,b) => sortDirection * (a.recentMm - b.recentMm) || a.department.localeCompare(b.department, 'es'));
+function validDailyRecords(f = filters()) {
+  return state.dailyRecords
+    .filter(record =>
+      record.date &&
+      record.department &&
+      Number.isFinite(record.rainfallMm) &&
+      matchesSelection(record.department, f.departments)
+    )
+    .sort((a, b) => a.date.localeCompare(b.date) || a.department.localeCompare(b.department, 'es'));
 }
 
 function renderDaily(f) {
-  if (!state.dailySummary) return;
-  const rows = dailyRows(f);
-  const windowDays = +$('dailyWindowFilter').value || 7;
-  $('dailyLatestDate').textContent = formatDate(state.dailySummary.dateMax);
-  $('dailyCoverage').textContent = `${state.dailySummary.dateMin} a ${state.dailySummary.dateMax} - ${state.dailySummary.records} registros`;
-  $('dailyHeatmap').innerHTML = dailyMatrix(f, windowDays);
-  $('dailyTable').innerHTML = rows.map(row => `<tr><td>${row.department}</td><td><span class="daily-level daily-${levelCss(row.level)}">${levelLabel(row.level)}</span></td><td>${format(row.recentMm)}</td><td>${format(row.historicalAverageMm)}</td><td>${signedMm(row.differenceMm)}</td><td>${signedPercent(row.differencePct)}</td><td>${row.historicalYears}</td></tr>`).join('');
+  const records = validDailyRecords(f);
+  if (!records.length) {
+    $('dailyLatestDate').textContent = '\u2014';
+    $('dailyCoverage').textContent = 'Sin observaciones diarias para los filtros activos';
+    ['dailyRain24','dailyRain7','dailyRain30','dailyTopDepartment','dailyWetDepartments','dailyMaxRecord'].forEach(id => $(id).textContent = 'Sin dato');
+    ['dailyRain24Detail','dailyRain7Detail','dailyRain30Detail','dailyTopDepartmentDetail','dailyWetDepartmentsDetail','dailyMaxRecordDetail'].forEach(id => $(id).textContent = 'sin observaciones');
+    $('dailyRankingTable').innerHTML = '';
+    $('dailyTable').innerHTML = '<tr><td colspan="5">No hay observaciones diarias para los filtros activos.</td></tr>';
+    chart('dailySeriesChart', 'line', { labels: [], datasets: [] }, lineOptions('mm', 'Lluvia diaria (mm)'));
+    updateDailyQuickStats(f);
+    return;
+  }
+
+  const latestDate = records[records.length - 1].date;
+  const selectedWindow = +$('dailyWindowFilter').value || 7;
+  const rows = dailyOperationalRows(records, latestDate);
+  const selectedRows = rows.filter(row => row.observations[selectedWindow] > 0);
+  const sortDirection = $('dailySortFilter')?.value === 'asc' ? 1 : -1;
+  const rankingRows = [...rows].sort((a, b) => sortDirection * (a.windows[selectedWindow] - b.windows[selectedWindow]) || a.department.localeCompare(b.department, 'es'));
+  const topDepartment = selectedRows.length ? [...selectedRows].sort((a, b) => b.windows[selectedWindow] - a.windows[selectedWindow] || a.department.localeCompare(b.department, 'es'))[0] : null;
+  const maxRecord = dailyMaxRecord(records, latestDate, selectedWindow);
+  const singleDepartment = f.departments?.length === 1;
+
+  $('dailyLatestDate').textContent = formatDate(latestDate);
+  $('dailyCoverage').textContent = `${records[0].date} a ${latestDate} - ${records.length} observaciones departamentales`;
+  updateDailyKpis(rows, latestDate, topDepartment, maxRecord, selectedWindow, singleDepartment);
+  renderDailySeries(records, latestDate, f);
+  $('dailyRankingTable').innerHTML = rankingRows.map(row => `
+    <tr>
+      <td>${row.department}</td>
+      <td>${dailyWindowDisplay(row, 7)}</td>
+      <td>${dailyWindowDisplay(row, 30)}</td>
+      <td>${formatDate(row.lastDate)}</td>
+      <td>${Number.isFinite(row.maxDaily) ? `${format(row.maxDaily)} mm` : 'Sin dato'}</td>
+    </tr>`).join('');
+  $('dailyTable').innerHTML = rankingRows.map(row => `
+    <tr>
+      <td>${row.department}</td>
+      <td>${formatDate(row.lastDate)}</td>
+      <td>${dailyWindowDisplay(row, 1)}</td>
+      <td>${dailyWindowDisplay(row, 7)}</td>
+      <td>${dailyWindowDisplay(row, 30)}</td>
+    </tr>`).join('');
   updateDailyQuickStats(f);
 }
 
-function dailyMatrix(f, selectedWindow) {
-  const activeDepartments = new Set(state.dailySummary.rows
-    .filter(row => row.windowDays === selectedWindow && row.recentMm > 0 && matchesSelection(row.department, f.departments))
-    .map(row => row.department));
-  const rows = state.dailySummary.rows.filter(row => activeDepartments.has(row.department));
-  if (!rows.length) return '<div class="empty-state">No hay lluvia registrada para la ventana y filtros seleccionados.</div>';
-
-  const byDepartment = new Map();
-  rows.forEach(row => {
-    if (!byDepartment.has(row.department)) byDepartment.set(row.department, new Map());
-    byDepartment.get(row.department).set(row.windowDays, row);
+function dailyOperationalRows(records, latestDate) {
+  const departments = [...new Set(records.map(record => record.department))].sort((a, b) => a.localeCompare(b, 'es'));
+  return departments.map(department => {
+    const departmentRecords = records.filter(record => record.department === department);
+    const windows = Object.fromEntries(DAILY_WINDOWS.map(days => [days, dailyWindowTotal(departmentRecords, latestDate, days)]));
+    const observations = Object.fromEntries(DAILY_WINDOWS.map(days => [days, dailyWindowRecords(departmentRecords, latestDate, days).length]));
+    const recentRecords = dailyWindowRecords(departmentRecords, latestDate, 30);
+    const lastRecord = departmentRecords[departmentRecords.length - 1];
+    return {
+      department,
+      lastDate: lastRecord.date,
+      rain24: windows[1],
+      windows,
+      observations,
+      maxDaily: recentRecords.length ? Math.max(...recentRecords.map(record => record.rainfallMm)) : null
+    };
   });
-
-  const departments = [...byDepartment.keys()].sort((a, b) => {
-    const aSelected = byDepartment.get(a).get(selectedWindow);
-    const bSelected = byDepartment.get(b).get(selectedWindow);
-    const sortDirection = $('dailySortFilter')?.value === 'asc' ? 1 : -1;
-    return sortDirection * ((aSelected?.recentMm ?? 0) - (bSelected?.recentMm ?? 0))
-      || a.localeCompare(b, 'es');
-  });
-
-  const header = `<div class="daily-matrix-head daily-matrix-corner">Departamento</div>${DAILY_WINDOWS.map(days => `<div class="daily-matrix-head ${days === selectedWindow ? 'selected' : ''}">${dailyWindowLabel(days)}</div>`).join('')}`;
-  const body = departments.map(department => {
-    const values = byDepartment.get(department);
-    return `<div class="daily-matrix-department">${department}</div>${DAILY_WINDOWS.map(days => dailyMatrixCell(values.get(days), days === selectedWindow)).join('')}`;
-  }).join('');
-
-  return `<div class="daily-matrix">${header}${body}</div>`;
 }
 
-function dailyMatrixCell(row, selected) {
-  if (!row) return '<div class="daily-matrix-cell empty">Sin datos</div>';
-  const tooltip = [
-    row.department,
-    `${dailyWindowLabel(row.windowDays)}`,
-    `Nivel: ${levelLabel(row.level)}`,
-    `Reciente: ${format(row.recentMm)} mm`,
-    `Referencia: ${format(row.historicalAverageMm)} mm`,
-    `Diferencia: ${signedMm(row.differenceMm)} mm`,
-    `Exceso relativo: ${signedPercent(row.differencePct)}`,
-    `Años usados: ${row.historicalYears}`
-  ].join(' | ');
-  return `<div class="daily-matrix-cell ${row.level} ${selected ? 'selected' : ''}" title="${escapeAttr(tooltip)}">
-    <strong>${signedMm(row.differenceMm)}</strong>
-  </div>`;
+function updateDailyKpis(rows, latestDate, topDepartment, maxRecord, selectedWindow, singleDepartment) {
+  [1, 7, 30].forEach(days => {
+    const id = days === 1 ? 'dailyRain24' : `dailyRain${days}`;
+    const detailId = days === 1 ? 'dailyRain24Detail' : `dailyRain${days}Detail`;
+    const rowsWithData = rows.filter(row => row.observations[days] > 0);
+    const value = rowsWithData.length ? (singleDepartment ? rowsWithData[0].windows[days] : average(rowsWithData.map(row => row.windows[days]))) : null;
+    $(id).textContent = Number.isFinite(value) ? `${format(value)} mm` : 'Sin dato';
+    $(detailId).textContent = singleDepartment ? 'acumulado del departamento seleccionado' : `promedio departamental (${rowsWithData.length} depto.)`;
+  });
+  $('dailyTopDepartment').textContent = topDepartment ? topDepartment.department : 'Sin dato';
+  $('dailyTopDepartmentDetail').textContent = topDepartment ? `${format(topDepartment.windows[selectedWindow])} mm en ${dailyWindowLabel(selectedWindow)}` : `sin lluvia en ${dailyWindowLabel(selectedWindow)}`;
+  const wetCount = rows.filter(row => row.windows[selectedWindow] > 0).length;
+  $('dailyWetDepartments').textContent = `${wetCount}`;
+  $('dailyWetDepartmentsDetail').textContent = `con lluvia mayor a 0 mm en ${dailyWindowLabel(selectedWindow)}`;
+  $('dailyMaxRecord').textContent = maxRecord ? `${format(maxRecord.rainfallMm)} mm` : 'Sin dato';
+  $('dailyMaxRecordDetail').textContent = maxRecord ? `${maxRecord.department} - ${formatDate(maxRecord.date)}` : `sin registros en ${dailyWindowLabel(selectedWindow)}`;
+}
+
+function dailyWindowDisplay(row, days) {
+  return row.observations[days] > 0 ? `${format(row.windows[days])} mm` : 'Sin dato';
+}
+
+function renderDailySeries(records, latestDate, f) {
+  const startDate = addDays(latestDate, -29);
+  const seriesRecords = records.filter(record => record.date >= startDate && record.date <= latestDate);
+  const dates = [...new Set(seriesRecords.map(record => record.date))].sort();
+  const singleDepartment = f.departments?.length === 1;
+  const values = dates.map(date => {
+    const dayRecords = seriesRecords.filter(record => record.date === date);
+    if (!dayRecords.length) return null;
+    return singleDepartment ? dayRecords[0].rainfallMm : average(dayRecords.map(record => record.rainfallMm));
+  });
+  $('dailySeriesDescription').textContent = singleDepartment
+    ? 'Lluvia diaria del departamento seleccionado en los últimos 30 días con observación.'
+    : 'Promedio departamental diario de los últimos 30 días con observación.';
+  chart('dailySeriesChart', 'bar', {
+    labels: dates.map(formatShortDate),
+    datasets: [dataset(singleDepartment ? 'Lluvia diaria departamental' : 'Promedio departamental diario', values, COLORS[0], false, 'mm')]
+  }, barOptions('mm', false, false, 'Lluvia diaria (mm)'));
+}
+
+function dailyWindowRecords(records, latestDate, days) {
+  const startDate = addDays(latestDate, 1 - days);
+  return records.filter(record => record.date >= startDate && record.date <= latestDate);
+}
+
+function dailyWindowTotal(records, latestDate, days) {
+  const values = dailyWindowRecords(records, latestDate, days).map(record => record.rainfallMm).filter(Number.isFinite);
+  return values.length ? values.reduce((sum, value) => sum + value, 0) : 0;
+}
+
+function dailyMaxRecord(records, latestDate, days) {
+  const windowRecords = dailyWindowRecords(records, latestDate, days);
+  if (!windowRecords.length) return null;
+  return [...windowRecords].sort((a, b) => b.rainfallMm - a.rainfallMm || b.date.localeCompare(a.date) || a.department.localeCompare(b.department, 'es'))[0];
+}
+
+function addDays(dateString, offset) {
+  const [year, month, day] = dateString.split('-').map(Number);
+  const date = new Date(Date.UTC(year, month - 1, day));
+  date.setUTCDate(date.getUTCDate() + offset);
+  return date.toISOString().slice(0, 10);
 }
 
 function dailyWindowLabel(days) {
   return days === 1 ? '24 h' : `${days} días`;
+}
+
+function formatShortDate(value) {
+  const [year, month, day] = value.split('-').map(Number);
+  return `${String(day).padStart(2, '0')}/${String(month).padStart(2, '0')}`;
 }
 
 function escapeAttr(value) {
@@ -386,24 +465,22 @@ function escapeAttr(value) {
 }
 
 function updateDailyQuickStats(f) {
+  const records = validDailyRecords(f);
+  if (!records.length) {
+    [1, 7, 30].forEach(days => {
+      const id = days === 1 ? 'quickRain24' : `quickRain${days}`;
+      $(id).textContent = 'No disponible';
+    });
+    return;
+  }
+  const latestDate = records[records.length - 1].date;
+  const rows = dailyOperationalRows(records, latestDate);
   [1, 7, 30].forEach(days => {
-    const selected = state.dailySummary.rows.filter(row => row.windowDays === days && matchesSelection(row.department, f.departments));
-    const values = selected.map(row => row.recentMm).filter(Number.isFinite);
+    const rowsWithData = rows.filter(row => row.observations[days] > 0);
     const id = days === 1 ? 'quickRain24' : `quickRain${days}`;
-    $(id).textContent = values.length ? `${format(average(values))} mm` : 'No disponible';
+    const value = rowsWithData.length ? average(rowsWithData.map(row => row.windows[days])) : null;
+    $(id).textContent = Number.isFinite(value) ? `${format(value)} mm` : 'No disponible';
   });
-}
-
-function levelWeight(level) {
-  return { rojo: 4, naranja: 3, amarillo: 2, normal: 1 }[level] || 0;
-}
-
-function levelLabel(level) {
-  return { rojo: 'Alerta alta', naranja: 'Alerta', amarillo: 'Atenci\u00f3n', normal: 'Normal' }[level] || 'Sin datos';
-}
-
-function levelCss(level) {
-  return level === 'rojo' ? 'red' : level === 'naranja' ? 'orange' : level === 'amarillo' ? 'yellow' : 'normal';
 }
 
 function formatDate(value) {

@@ -114,7 +114,7 @@ La vista `Análisis por departamento` utiliza una comparación histórica depart
 - Compara el acumulado mensual observado contra el promedio histórico de ese mismo departamento y mes calendario.
 - Clasifica el desvío como Muy por debajo, Por debajo, Normal, Por encima, Muy por encima o Sin referencia.
 
-Este indicador sirve para detectar diferencias relevantes contra el historial propio de cada departamento. No representa riesgo de inundación ni una alerta hidrológica oficial porque no incorpora hectáreas inundadas, persistencia reciente ni vulnerabilidad territorial.
+Este indicador sirve para detectar diferencias relevantes contra el historial propio de cada departamento. No representa una evaluación hidrológica oficial porque no incorpora hectáreas inundadas, persistencia reciente ni vulnerabilidad territorial.
 
 ## Archivos del dashboard
 

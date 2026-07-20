@@ -72,7 +72,7 @@
         <article class="card map-placeholder"><div class="card-head"><div><h2>Mapa departamental de Corrientes</h2><p>Vista piloto embebida para validar interacción y apariencia. No representa superficie inundada calculada por este dashboard.</p></div><span class="pending-badge">Piloto externo</span></div><div class="pilot-map"><iframe title="Mapa piloto departamental de Corrientes" src="https://geomat-maps.com.ar/mpc/maptiles/mpc-general.php?ori=v84501%22" loading="lazy" referrerpolicy="no-referrer-when-downgrade" allow="geolocation; fullscreen"></iframe><div class="map-note"><strong>Mapa piloto</strong><p>Este visor se usa solo para revisar funcionamiento visual. Los datos de hectáreas inundadas siguen pendientes.</p><a href="https://geomat-maps.com.ar/mpc/maptiles/mpc-general.php?ori=v84501%22" target="_blank" rel="noopener noreferrer">Abrir mapa en una pestaña nueva</a></div></div></article>
       </section>
       <section class="flood-card">
-        <div class="flood-icon">ha</div><div><span class="eyebrow">Información crítica pendiente</span><h2>Superficie inundada por departamento</h2><p>No existen mediciones de hectáreas inundadas, geometrías ni variaciones temporales en las fuentes locales. El módulo queda preparado sin inventar estimaciones.</p></div><strong>— ha</strong>
+        <div class="flood-icon">ha</div><div><span class="eyebrow">Información pendiente</span><h2>Superficie inundada por departamento</h2><p>No existen mediciones de hectáreas inundadas, geometrías ni variaciones temporales en las fuentes locales. El módulo queda preparado sin inventar estimaciones.</p></div><strong>— ha</strong>
       </section>
     </section>
 
@@ -98,7 +98,7 @@
     <section class="dashboard-panel" id="departmentPanel">
       <div class="panel-intro"><div><span class="eyebrow">Lectura territorial</span><h2>Análisis por departamento</h2><p>Usá el selector superior para enfocar un departamento y compararlo con el resto.</p></div></div>
       <section class="chart-grid">
-        <article class="card"><div class="card-head"><div><h2>Perfil mensual</h2><p id="monthlyChartDescription">Promedio del período seleccionado comparado con el promedio histórico.</p></div><span class="source-tag" id="monthlyChartScope">Provincia</span></div><div class="chart-box"><canvas id="monthlyChart"></canvas></div></article>
+        <article class="card"><div class="card-head"><div><h2>Perfil mensual</h2><p id="monthlyChartDescription">Promedio del período seleccionado comparado con el promedio histórico.</p></div><span class="source-tag" id="monthlyChartScope">Todos los departamentos</span></div><div class="chart-box"><canvas id="monthlyChart"></canvas></div></article>
         <article class="card"><div class="card-head"><div><h2>Ranking departamental</h2><p>Período seleccionado frente al promedio histórico comparable</p></div></div><div class="chart-box tall"><canvas id="rankingChart"></canvas></div></article>
         <article class="card full"><div class="card-head"><div><h2>Mapa de calor departamental</h2><p>Intensidad mensual media según los filtros activos</p></div><span class="source-tag">Unidad: milímetros (mm)</span></div><div class="heatmap-wrap" id="heatmap"></div></article>
       </section>

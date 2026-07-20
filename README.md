@@ -39,7 +39,7 @@ Genera:
 
 - `data/rainfall.json`: lluvia mensual por año y departamento.
 - `data/rainfall-daily.json`: lluvia diaria departamental normalizada.
-- `data/rainfall-daily-summary.json`: resumen derivado de la base diaria para ventanas móviles de 1, 7, 15 y 30 días.
+- `data/rainfall-daily-summary.json`: resumen derivado de la base diaria para ventanas móviles de 1, 7, 15 y 30 días. No se usa en la interfaz actual de `Monitoreo diario`, que trabaja directamente con `data/rainfall-daily.json`.
 - `data/stations.json`: variables meteorológicas agregadas mensualmente.
 - `data/metadata.json`: cobertura y fuentes.
 
@@ -76,15 +76,16 @@ $env:DAILY_RAIN_CSV_URLS = "https://docs.google.com/spreadsheets/d/.../export?fo
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\build-daily-data.ps1
 ```
 
-El workflow `.github/workflows/update-daily-rainfall.yml` puede actualizar estos JSON todos los días si el repositorio tiene configurada la variable `DAILY_RAIN_JSON_URL` con una URL JSON de Apps Script, `DAILY_RAIN_CSV_URL` con una URL CSV pública del Google Sheets, o `DAILY_RAIN_CSV_URLS` con varias URLs CSV. Si se configuran `DAILY_RAIN_JSON_URL` y `DAILY_RAIN_CSV_URLS` al mismo tiempo, el generador combina ambas fuentes y evita duplicados exactos por fecha, departamento, municipio y lluvia. Si la fuente automática devuelve una base mucho más chica que la ya publicada, el generador conserva la base existente y actualiza solo la fecha más reciente disponible para evitar pérdidas de histórico. Desde la pestaña `Monitoreo diario`, el botón `Actualizar datos diarios` abre ese workflow para ejecutarlo manualmente con `Run workflow`; requiere permisos de escritura sobre el repositorio.
+El workflow `.github/workflows/update-daily-rainfall.yml` puede actualizar estos JSON todos los días si el repositorio tiene configurada la variable `DAILY_RAIN_JSON_URL` con una URL JSON de Apps Script, `DAILY_RAIN_CSV_URL` con una URL CSV pública del Google Sheets, o `DAILY_RAIN_CSV_URLS` con varias URLs CSV. Si se configuran `DAILY_RAIN_JSON_URL` y `DAILY_RAIN_CSV_URLS` al mismo tiempo, el generador combina ambas fuentes y evita duplicados exactos por fecha, departamento, municipio y lluvia. Si la fuente automática devuelve una base mucho más chica que la ya publicada, el generador conserva la base existente y actualiza solo la fecha más reciente disponible para evitar pérdidas de registros previos. Desde la pestaña `Monitoreo diario`, el botón `Actualizar datos diarios` abre ese workflow para ejecutarlo manualmente con `Run workflow`; requiere permisos de escritura sobre el repositorio.
 
 ## Fuentes y criterios
 
 - `DINAMICA LLUVIAS pruebas.xls`: serie histórica principal.
-- `Registro-de-lluvias/plantilla_registro_lluvias.csv`, Apps Script o Google Sheets publicado como CSV: registros diarios departamentales usados para el monitoreo reciente.
+- `Registro-de-lluvias/plantilla_registro_lluvias.csv`, Apps Script o Google Sheets publicado como CSV: registros diarios departamentales usados exclusivamente para seguimiento operativo reciente.
 - `Temperatura/*.xls`: temperatura, humedad relativa, viento y lluvia registrada en períodos de 24 horas (`Rn24` en las planillas originales). El dashboard suma estos registros para mostrar la lluvia acumulada de cada mes.
 - Se normalizan variantes básicas de nombres departamentales.
-- En la base diaria, si existe más de un registro para el mismo departamento y fecha, se calcula un promedio departamental diario antes de generar las ventanas de 1, 7, 15 y 30 días.
+- Para el análisis diario, la unidad de observación es departamento-fecha. Cuando existen varias cargas para un mismo departamento y fecha, se consolida una única observación diaria departamental.
+- En ausencia de una marca que indique acumulaciones parciales complementarias, se utiliza el promedio de los valores válidos para evitar inflar la lluvia departamental.
 - Se excluyen filas vacías y registros departamentales cuyo año completo suma cero.
 - Los ceros mensuales se conservan.
 - Las fechas inválidas de estaciones se descartan y no se interpolan datos faltantes.
@@ -95,8 +96,10 @@ El workflow `.github/workflows/update-daily-rainfall.yml` puede actualizar estos
 - En `Perfil mensual` y `Ranking departamental`, el período seleccionado se contrasta con el promedio histórico comparable del mismo departamento o de la provincia, calculado con la serie mensual completa disponible.
 - En el Resumen provincial, los KPIs mensuales usan un único mes de referencia con cobertura suficiente: al menos 80% de los departamentos seleccionados deben tener dato válido en `data/rainfall.json`. Para todos los departamentos, eso equivale a 20 de 25 departamentos.
 - Los KPIs del Resumen provincial comparan el observado del mes contra el promedio histórico del mismo mes calendario. Cuando se muestran todos los departamentos, se informa el promedio departamental en mm, calculando la referencia histórica sobre los mismos departamentos con observado válido, y no se suman milímetros entre departamentos.
-- El `Monitoreo diario` mantiene la serie diaria separada de la mensual y se usa solo para seguimiento operativo reciente. No calcula anomalías históricas ni alertas hidrológicas oficiales.
-- La unidad analítica diaria es una observación por departamento y fecha. Cuando existen varias cargas para un mismo departamento y fecha, se consolida una observación diaria departamental; en ausencia de una marca que indique acumulaciones parciales, se usa el promedio de los valores válidos para evitar inflar la lluvia departamental.
+- El `Monitoreo diario` mantiene la serie diaria separada de la mensual y se usa solo para seguimiento operativo reciente. La base diaria tiene cobertura temporal limitada.
+- Los registros diarios no se usan para calcular normales históricas, anomalías climáticas robustas ni alertas hidrológicas oficiales.
+- Un registro con 0 mm representa una observación válida sin lluvia. `Sin dato` indica ausencia de registro válido en la ventana consultada.
+- El número de observaciones analíticas puede diferir del número de filas cargadas en el sistema de registros, porque este tablero consolida los registros por departamento y fecha.
 
 ## Áreas inundadas
 

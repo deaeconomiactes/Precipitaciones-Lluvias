@@ -35491,17 +35491,10 @@
   },
   {
     "date": "2026-07-18",
-    "department": "Sauce",
-    "rainfallMm": 44.0,
-    "lat": -30.0736,
-    "lng": -58.7731
-  },
-  {
-    "date": "2026-07-18",
-    "department": "Monte Caseros",
-    "rainfallMm": 51.17,
-    "lat": -30.6183,
-    "lng": -57.9708
+    "department": "Curuzu Cuatia",
+    "rainfallMm": 152.5,
+    "lat": -29.7917,
+    "lng": -58.0561
   },
   {
     "date": "2026-07-18",
@@ -35512,17 +35505,10 @@
   },
   {
     "date": "2026-07-18",
-    "department": "San Martin",
-    "rainfallMm": 38.8,
-    "lat": -29.1744,
-    "lng": -56.6433
-  },
-  {
-    "date": "2026-07-18",
-    "department": "Paso de los Libres",
-    "rainfallMm": 47.0,
-    "lat": -29.7122,
-    "lng": -57.0869
+    "department": "Goya",
+    "rainfallMm": 78.0,
+    "lat": -29.1442,
+    "lng": -59.2635
   },
   {
     "date": "2026-07-18",
@@ -35533,6 +35519,27 @@
   },
   {
     "date": "2026-07-18",
+    "department": "Monte Caseros",
+    "rainfallMm": 51.17,
+    "lat": -30.6183,
+    "lng": -57.9708
+  },
+  {
+    "date": "2026-07-18",
+    "department": "Paso de los Libres",
+    "rainfallMm": 47.0,
+    "lat": -29.7122,
+    "lng": -57.0869
+  },
+  {
+    "date": "2026-07-18",
+    "department": "San Martin",
+    "rainfallMm": 38.8,
+    "lat": -29.1744,
+    "lng": -56.6433
+  },
+  {
+    "date": "2026-07-18",
     "department": "San Miguel",
     "rainfallMm": 2.0,
     "lat": -27.9861,
@@ -35540,16 +35547,16 @@
   },
   {
     "date": "2026-07-18",
-    "department": "Goya",
-    "rainfallMm": 78.0,
-    "lat": -29.1442,
-    "lng": -59.2635
+    "department": "Sauce",
+    "rainfallMm": 44.0,
+    "lat": -30.0736,
+    "lng": -58.7731
   },
   {
-    "date": "2026-07-18",
-    "department": "Curuzu Cuatia",
-    "rainfallMm": 152.5,
-    "lat": -29.7917,
-    "lng": -58.0561
+    "date": "2026-07-20",
+    "department": "Capital",
+    "rainfallMm": 28.0,
+    "lat": -27.4692,
+    "lng": -58.8306
   }
 ]

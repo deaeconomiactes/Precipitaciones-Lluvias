@@ -1,6 +1,6 @@
-﻿# Dashboard de Precipitaciones y Clima de Corrientes
+﻿# Registro y Seguimiento de Precipitaciones
 
-Aplicación web estática e independiente presentada como prototipo de **Sala de Situación Hídrica y Climática de Corrientes**. Organiza precipitaciones departamentales y variables de estaciones meteorológicas para facilitar una lectura territorial. Usa únicamente los archivos `.xls` incluidos en esta carpeta.
+Aplicación web estática e independiente del **Departamento de Economía Agraria** como herramienta de apoyo a la gestión. Organiza precipitaciones departamentales y variables de estaciones meteorológicas para facilitar una lectura territorial. Usa únicamente los archivos `.xls` incluidos en esta carpeta.
 
 ## Ejecutar
 

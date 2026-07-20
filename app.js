@@ -344,7 +344,7 @@ function renderDaily(f) {
   $('dailyLatestDate').textContent = formatDate(latestDate);
   $('dailyCoverage').textContent = `${records[0].date} a ${latestDate} - ${records.length} observaciones departamentales vigentes`;
   updateDailyKpis(rows, latestDate, topDepartment, maxRecord, selectedWindow, singleDepartment);
-  renderDailySeries(records, latestDate, f);
+  renderDailySeries(records, latestDate, f, selectedWindow);
   $('dailyRankingTable').innerHTML = rankingRows.map(row => `
     <tr>
       <td>${row.department}</td>
@@ -405,10 +405,11 @@ function dailyWindowDisplay(row, days) {
   return row.observations[days] > 0 ? `${format(row.windows[days])} mm` : 'Sin dato';
 }
 
-function renderDailySeries(records, latestDate, f) {
-  const startDate = addDays(latestDate, -29);
+function renderDailySeries(records, latestDate, f, selectedWindow) {
+  const windowDays = Number.isFinite(selectedWindow) && selectedWindow > 0 ? selectedWindow : 30;
+  const startDate = addDays(latestDate, 1 - windowDays);
   const seriesRecords = records.filter(record => record.date >= startDate && record.date <= latestDate);
-  const dates = [...new Set(seriesRecords.map(record => record.date))].sort();
+  const dates = Array.from({ length: windowDays }, (_, index) => addDays(startDate, index));
   const singleDepartment = f.departments?.length === 1;
   const values = dates.map(date => {
     const dayRecords = seriesRecords.filter(record => record.date === date);
@@ -416,8 +417,8 @@ function renderDailySeries(records, latestDate, f) {
     return singleDepartment ? dayRecords[0].rainfallMm : average(dayRecords.map(record => record.rainfallMm));
   });
   $('dailySeriesDescription').textContent = singleDepartment
-    ? 'Lluvia diaria del departamento seleccionado en los últimos 30 días con observación.'
-    : 'Promedio departamental diario entre departamentos con registro en cada fecha.';
+    ? 'Lluvia diaria del departamento seleccionado. Los días sin observación se muestran como sin dato y no se imputan como 0 mm.'
+    : 'Promedio departamental diario entre departamentos con registro. Los días sin observación se muestran como sin dato y no se imputan como 0 mm.';
   chart('dailySeriesChart', 'bar', {
     labels: dates.map(formatShortDate),
     datasets: [dataset(singleDepartment ? 'Lluvia diaria departamental' : 'Promedio departamental diario', values, COLORS[0], false, 'mm')]

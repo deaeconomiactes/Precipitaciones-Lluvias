@@ -650,8 +650,9 @@ function renderMonthly(rows, f) {
       borderWidth: 2.5,
       pointRadius: 3
     });
+    datasets.push(...monthlyRangeDatasets('Rango histórico mensual min-máx', months, null, '#9aa8a6'));
     $('monthlyChartScope').textContent = 'Todos los departamentos';
-    $('monthlyChartDescription').textContent = 'Promedio departamental del período seleccionado comparado con el promedio histórico departamental.';
+    $('monthlyChartDescription').textContent = 'Promedio departamental del período seleccionado comparado con promedio y rango histórico mensual.';
   } else {
     datasets = f.departments.flatMap((department, index) => {
       const departmentRows = rows.filter(row => row.department === department);
@@ -669,13 +670,48 @@ function renderMonthly(rows, f) {
           borderDash: [7, 4],
           borderWidth: 2.5,
           pointRadius: 3
-        }
+        },
+        ...monthlyRangeDatasets(`${department} - rango histórico mensual`, months, department, COLORS[index % COLORS.length])
       ];
     });
     $('monthlyChartScope').textContent = `${f.departments.length} seleccionado(s)`;
-    $('monthlyChartDescription').textContent = 'Cada departamento se compara contra su propio promedio histórico mensual.';
+    $('monthlyChartDescription').textContent = 'Cada departamento se compara contra su propio promedio y rango histórico mensual.';
   }
-  chart('monthlyChart', 'bar', { labels, datasets }, barOptions('mm', false, true, 'Precipitación mensual (mm)'));
+  const options = barOptions('mm', false, true, 'Precipitación mensual (mm)');
+  options.interaction = { mode: 'index', intersect: false };
+  chart('monthlyChart', 'bar', { labels, datasets }, options);
+}
+
+function monthlyRangeDatasets(labelPrefix, months, department, color) {
+  return [
+    {
+      ...dataset(`${labelPrefix} - mínimo`, months.map(month => monthlyHistoricalStats(department, month).min), color, false, 'mm'),
+      type: 'line',
+      backgroundColor: 'transparent',
+      borderDash: [3, 4],
+      borderWidth: 1.8,
+      pointRadius: 2
+    },
+    {
+      ...dataset(`${labelPrefix} - máximo`, months.map(month => monthlyHistoricalStats(department, month).max), color, false, 'mm'),
+      type: 'line',
+      backgroundColor: 'transparent',
+      borderDash: [3, 4],
+      borderWidth: 1.8,
+      pointRadius: 2
+    }
+  ];
+}
+
+function monthlyHistoricalStats(department, month) {
+  const values = state.rainfall
+    .filter(row => (department === null || row.department === department) && Number.isFinite(row.months[month]))
+    .map(row => row.months[month]);
+  return {
+    min: values.length ? Math.min(...values) : null,
+    max: values.length ? Math.max(...values) : null,
+    average: values.length ? average(values) : null
+  };
 }
 
 function renderRanking(rows, f) {
@@ -928,6 +964,7 @@ function axis(unit = '', title = '') {
 
 function tooltipLabel(context, fallbackUnit = '') {
   const unit = context.dataset.unit || fallbackUnit;
+  if (!Number.isFinite(context.raw)) return `${context.dataset.label}: Sin dato`;
   return `${context.dataset.label}: ${format(context.raw)}${unit ? ` ${unit}` : ''}`;
 }
 

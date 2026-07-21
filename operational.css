@@ -553,6 +553,15 @@ main {
   box-shadow: 0 10px 24px rgba(22,61,56,.07);
 }
 
+.daily-controls-sticky {
+  position: sticky;
+  top: 58px;
+  z-index: 24;
+  background: rgba(251,253,251,.94);
+  backdrop-filter: blur(14px);
+  box-shadow: 0 12px 28px rgba(22,61,56,.12);
+}
+
 .daily-toolbar-title {
   color: var(--blue);
   font-size: .68rem;
@@ -951,6 +960,10 @@ footer {
   .daily-toolbar {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .daily-controls-sticky {
+    top: 118px;
   }
 
   .daily-toolbar label,

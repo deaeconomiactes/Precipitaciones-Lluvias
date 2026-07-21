@@ -637,20 +637,24 @@ function renderMonthly(rows, f) {
   const labels = months.map(month => MONTHS[month]);
   let datasets;
   if (f.departments === null) {
-    datasets = [dataset('Promedio departamental', months.map(month =>
+    datasets = [{
+      ...dataset('Período seleccionado', months.map(month =>
       average(rows.map(row => row.months[month]).filter(Number.isFinite))
-    ), COLORS[1], false, 'mm')];
+      ), COLORS[1], false, 'mm'),
+      order: 4
+    }];
     datasets.push({
-      ...dataset('Promedio histórico departamental', months.map(month =>
+      ...dataset('Promedio histórico mensual', months.map(month =>
         average(state.rainfall.map(row => row.months[month]).filter(Number.isFinite))
       ), '#6f8794', false, 'mm'),
       type: 'line',
       backgroundColor: 'transparent',
       borderDash: [7, 4],
       borderWidth: 2.5,
-      pointRadius: 3
+      pointRadius: 3,
+      order: 2
     });
-    datasets.push(...monthlyRangeDatasets('Rango histórico mensual min-máx', months, null, '#9aa8a6'));
+    datasets.push(...monthlyRangeDatasets(months, null));
     $('monthlyChartScope').textContent = 'Todos los departamentos';
     $('monthlyChartDescription').textContent = 'Promedio departamental del período seleccionado comparado con promedio y rango histórico mensual.';
   } else {
@@ -658,9 +662,12 @@ function renderMonthly(rows, f) {
       const departmentRows = rows.filter(row => row.department === department);
       const historicalRows = state.rainfall.filter(row => row.department === department);
       return [
-        dataset(`${department} - período seleccionado`, months.map(month =>
+        {
+          ...dataset(`${department} - período seleccionado`, months.map(month =>
           average(departmentRows.map(row => row.months[month]).filter(Number.isFinite))
-        ), COLORS[index % COLORS.length], false, 'mm'),
+          ), COLORS[index % COLORS.length], false, 'mm'),
+          order: 4
+        },
         {
           ...dataset(`${department} - promedio histórico`, months.map(month =>
             average(historicalRows.map(row => row.months[month]).filter(Number.isFinite))
@@ -669,9 +676,10 @@ function renderMonthly(rows, f) {
           backgroundColor: 'transparent',
           borderDash: [7, 4],
           borderWidth: 2.5,
-          pointRadius: 3
+          pointRadius: 3,
+          order: 2
         },
-        ...monthlyRangeDatasets(`${department} - rango histórico mensual`, months, department, COLORS[index % COLORS.length])
+        ...monthlyRangeDatasets(months, department)
       ];
     });
     $('monthlyChartScope').textContent = `${f.departments.length} seleccionado(s)`;
@@ -682,23 +690,29 @@ function renderMonthly(rows, f) {
   chart('monthlyChart', 'bar', { labels, datasets }, options);
 }
 
-function monthlyRangeDatasets(labelPrefix, months, department, color) {
+function monthlyRangeDatasets(months, department) {
   return [
     {
-      ...dataset(`${labelPrefix} - mínimo`, months.map(month => monthlyHistoricalStats(department, month).min), color, false, 'mm'),
+      ...dataset('Mínimo histórico mensual', months.map(month => monthlyHistoricalStats(department, month).min), '#0b6f8d', false, 'mm'),
       type: 'line',
       backgroundColor: 'transparent',
-      borderDash: [3, 4],
-      borderWidth: 1.8,
-      pointRadius: 2
+      borderDash: [5, 4],
+      borderWidth: 3,
+      pointRadius: 3,
+      pointHoverRadius: 5,
+      spanGaps: true,
+      order: 1
     },
     {
-      ...dataset(`${labelPrefix} - máximo`, months.map(month => monthlyHistoricalStats(department, month).max), color, false, 'mm'),
+      ...dataset('Máximo histórico mensual', months.map(month => monthlyHistoricalStats(department, month).max), '#b94b55', false, 'mm'),
       type: 'line',
       backgroundColor: 'transparent',
-      borderDash: [3, 4],
-      borderWidth: 1.8,
-      pointRadius: 2
+      borderDash: [5, 4],
+      borderWidth: 3,
+      pointRadius: 3,
+      pointHoverRadius: 5,
+      spanGaps: true,
+      order: 1
     }
   ];
 }

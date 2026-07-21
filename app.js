@@ -428,8 +428,8 @@ function renderDailyReferenceTable(f, selectedWindow) {
       <td>${row.department}</td>
       <td>${Number.isFinite(row.observedMm) ? `${format(row.observedMm)} mm` : 'Sin dato'}</td>
       <td>${Number.isFinite(row.referenceMm) ? `${format(row.referenceMm)} mm` : 'Sin referencia suficiente'}</td>
-      <td>${Number.isFinite(row.differenceMm) ? `${formatSigned(row.differenceMm)} mm` : 'Sin referencia suficiente'}</td>
-      <td>${Number.isFinite(row.differencePct) ? `${formatSigned(row.differencePct)}%` : 'Sin referencia suficiente'}</td>
+      <td>${dailyReferenceDifferenceDisplay(row)}</td>
+      <td>${dailyReferencePctDisplay(row)}</td>
       <td>${row.comparableYears.length ? row.comparableYears.join(', ') : 'Sin referencia suficiente'}</td>
       <td>${row.category}</td>
     </tr>`).join('');
@@ -460,8 +460,9 @@ function dailyReferenceRow(records, department, latestDate, selectedWindow) {
     referenceMm,
     differenceMm,
     differencePct,
+    observedAvailable: observed.observations > 0,
     comparableYears,
-    category: dailyReferenceCategory(comparableYears.length, referenceMm, differencePct)
+    category: dailyReferenceCategory(observed.observations > 0, comparableYears.length, referenceMm, differencePct)
   };
 }
 
@@ -490,8 +491,23 @@ function replaceYear(dateString, year) {
   return date.toISOString().slice(0, 10);
 }
 
-function dailyReferenceCategory(comparableYears, referenceMm, differencePct) {
-  if (comparableYears < 2 || !Number.isFinite(referenceMm) || !Number.isFinite(differencePct)) return 'Sin referencia suficiente';
+function dailyReferenceDifferenceDisplay(row) {
+  if (!row.observedAvailable) return 'Sin dato observado';
+  if (row.comparableYears.length < 2 || !Number.isFinite(row.referenceMm)) return 'Sin referencia suficiente';
+  return Number.isFinite(row.differenceMm) ? `${formatSigned(row.differenceMm)} mm` : 'Sin referencia suficiente';
+}
+
+function dailyReferencePctDisplay(row) {
+  if (!row.observedAvailable) return 'Sin dato observado';
+  if (row.comparableYears.length < 2 || !Number.isFinite(row.referenceMm)) return 'Sin referencia suficiente';
+  if (row.referenceMm === 0) return 'Referencia igual a 0';
+  return Number.isFinite(row.differencePct) ? `${formatSigned(row.differencePct)}%` : 'No calculable';
+}
+
+function dailyReferenceCategory(observedAvailable, comparableYears, referenceMm, differencePct) {
+  if (!observedAvailable) return 'Sin dato observado';
+  if (comparableYears < 2 || !Number.isFinite(referenceMm)) return 'Sin referencia suficiente';
+  if (referenceMm === 0 || !Number.isFinite(differencePct)) return 'No calculable';
   if (differencePct <= -30) return 'Muy por debajo';
   if (differencePct <= -10) return 'Por debajo';
   if (differencePct < 10) return 'En torno a la referencia';

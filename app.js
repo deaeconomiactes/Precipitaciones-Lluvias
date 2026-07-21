@@ -638,9 +638,9 @@ function renderMonthly(rows, f) {
   let datasets;
   if (f.departments === null) {
     datasets = [{
-      ...dataset('Período seleccionado', months.map(month =>
+      ...dataset('Acumulado mensual observado', months.map(month =>
       average(rows.map(row => row.months[month]).filter(Number.isFinite))
-      ), COLORS[1], false, 'mm'),
+      ), '#17a2d4', false, 'mm'),
       order: 4
     }];
     datasets.push({
@@ -656,22 +656,22 @@ function renderMonthly(rows, f) {
     });
     datasets.push(...monthlyRangeDatasets(months, null));
     $('monthlyChartScope').textContent = 'Todos los departamentos';
-    $('monthlyChartDescription').textContent = 'Promedio departamental del período seleccionado comparado con promedio y rango histórico mensual.';
+    $('monthlyChartDescription').textContent = 'Acumulado mensual observado frente al promedio y rango histórico del mismo mes calendario.';
   } else {
     datasets = f.departments.flatMap((department, index) => {
       const departmentRows = rows.filter(row => row.department === department);
       const historicalRows = state.rainfall.filter(row => row.department === department);
       return [
         {
-          ...dataset(`${department} - período seleccionado`, months.map(month =>
+          ...dataset(`${department} - acumulado mensual observado`, months.map(month =>
           average(departmentRows.map(row => row.months[month]).filter(Number.isFinite))
-          ), COLORS[index % COLORS.length], false, 'mm'),
+          ), '#17a2d4', false, 'mm'),
           order: 4
         },
         {
-          ...dataset(`${department} - promedio histórico`, months.map(month =>
+          ...dataset(`${department} - promedio histórico mensual`, months.map(month =>
             average(historicalRows.map(row => row.months[month]).filter(Number.isFinite))
-          ), COLORS[index % COLORS.length], false, 'mm'),
+          ), '#6f8794', false, 'mm'),
           type: 'line',
           backgroundColor: 'transparent',
           borderDash: [7, 4],
@@ -683,7 +683,7 @@ function renderMonthly(rows, f) {
       ];
     });
     $('monthlyChartScope').textContent = `${f.departments.length} seleccionado(s)`;
-    $('monthlyChartDescription').textContent = 'Cada departamento se compara contra su propio promedio y rango histórico mensual.';
+    $('monthlyChartDescription').textContent = 'Acumulado mensual observado frente al promedio y rango histórico del mismo mes calendario.';
   }
   const options = barOptions('mm', false, true, 'Precipitación mensual (mm)');
   options.interaction = { mode: 'index', intersect: false };
@@ -693,7 +693,7 @@ function renderMonthly(rows, f) {
 function monthlyRangeDatasets(months, department) {
   return [
     {
-      ...dataset('Mínimo histórico mensual', months.map(month => monthlyHistoricalStats(department, month).min), '#0b6f8d', false, 'mm'),
+      ...dataset('Mínimo histórico mensual', months.map(month => monthlyHistoricalStats(department, month).min), '#2e7d5b', false, 'mm'),
       type: 'line',
       backgroundColor: 'transparent',
       borderDash: [5, 4],
@@ -704,7 +704,7 @@ function monthlyRangeDatasets(months, department) {
       order: 1
     },
     {
-      ...dataset('Máximo histórico mensual', months.map(month => monthlyHistoricalStats(department, month).max), '#b94b55', false, 'mm'),
+      ...dataset('Máximo histórico mensual', months.map(month => monthlyHistoricalStats(department, month).max), '#c34f59', false, 'mm'),
       type: 'line',
       backgroundColor: 'transparent',
       borderDash: [5, 4],

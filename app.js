@@ -791,16 +791,18 @@ function renderMonthly(rows, f) {
       const historicalRows = monthlyRows().filter(row => row.department === department);
       return [
         {
-          ...dataset(`${department} - acumulado mensual observado`, months.map(month =>
+          ...dataset('Acumulado observado', months.map(month =>
           averageFinite(departmentRows.map(row => row.months[month]))
           ), '#17a2d4', false, 'mm'),
+          tooltipScope: department,
           sourceInfo: months.map(month => monthlyObservationSourceLabel(departmentRows, month)),
           order: 4
         },
         {
-          ...dataset(`${department} - promedio histórico mensual`, months.map(month =>
+          ...dataset('Promedio histórico', months.map(month =>
             averageFinite(historicalRows.map(row => row.months[month]))
           ), '#6f8794', false, 'mm'),
+          tooltipScope: department,
           type: 'line',
           backgroundColor: 'transparent',
           borderDash: [7, 4],
@@ -822,7 +824,8 @@ function renderMonthly(rows, f) {
 function monthlyRangeDatasets(months, department) {
   return [
     {
-      ...dataset('Mínimo histórico mensual', months.map(month => monthlyHistoricalStats(department, month).min), '#2e7d5b', false, 'mm'),
+      ...dataset('Mínimo histórico', months.map(month => monthlyHistoricalStats(department, month).min), '#2e7d5b', false, 'mm'),
+      tooltipScope: department,
       type: 'line',
       backgroundColor: 'transparent',
       borderDash: [5, 4],
@@ -833,7 +836,8 @@ function monthlyRangeDatasets(months, department) {
       order: 1
     },
     {
-      ...dataset('Máximo histórico mensual', months.map(month => monthlyHistoricalStats(department, month).max), '#c34f59', false, 'mm'),
+      ...dataset('Máximo histórico', months.map(month => monthlyHistoricalStats(department, month).max), '#c34f59', false, 'mm'),
+      tooltipScope: department,
       type: 'line',
       backgroundColor: 'transparent',
       borderDash: [5, 4],
@@ -1114,9 +1118,10 @@ function axis(unit = '', title = '') {
 
 function tooltipLabel(context, fallbackUnit = '') {
   const unit = context.dataset.unit || fallbackUnit;
-  if (!Number.isFinite(context.raw)) return `${context.dataset.label}: Sin dato`;
+  const label = context.dataset.tooltipScope ? `${context.dataset.tooltipScope} - ${context.dataset.label}` : context.dataset.label;
+  if (!Number.isFinite(context.raw)) return `${label}: Sin dato`;
   const sourceInfo = context.dataset.sourceInfo?.[context.dataIndex];
-  return `${context.dataset.label}: ${format(context.raw)}${unit ? ` ${unit}` : ''}${sourceInfo ? ` (${sourceInfo})` : ''}`;
+  return `${label}: ${format(context.raw)}${unit ? ` ${unit}` : ''}${sourceInfo ? ` (${sourceInfo})` : ''}`;
 }
 
 function lineOptions(unit = '', axisTitle = '') {

@@ -3,10 +3,14 @@ const MONTHS_FULL = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','A
 const COLORS = ['#1677a6','#25a9b5','#7667a8','#d9931a','#c34f59','#3d9a6b','#7b8790','#b46a9b'];
 const ALL_MONTHS = MONTHS.map((_, index) => index);
 const DAILY_WINDOWS = [1, 7, 15, 30];
-const state = { rainfall: [], dailyRecords: [], stations: [], metadata: {}, charts: {}, tableRows: [], filterConfigs: {}, temporalFiltersExplicit: { years: false, months: false }, climateMetrics: new Set(['temperature','humidity','wind','rain24Total']) };
+const state = { rainfall: [], monthlyRainfall: [], monthlySourceStats: {}, dailyRecords: [], stations: [], metadata: {}, charts: {}, tableRows: [], filterConfigs: {}, temporalFiltersExplicit: { years: false, months: false }, climateMetrics: new Set(['temperature','humidity','wind','rain24Total']) };
 const $ = id => document.getElementById(id);
 const format = value => new Intl.NumberFormat('es-AR', { maximumFractionDigits: 1 }).format(value || 0);
 const average = values => values.length ? values.reduce((a,b) => a + b, 0) / values.length : 0;
+const averageFinite = values => {
+  const finiteValues = values.filter(Number.isFinite);
+  return finiteValues.length ? average(finiteValues) : null;
+};
 
 document.addEventListener('DOMContentLoaded', init);
 
@@ -19,6 +23,7 @@ async function init() {
       }))
     );
     Object.assign(state, { rainfall, dailyRecords, stations, metadata });
+    state.monthlySourceStats = buildCombinedMonthlyRainfall();
     populateFilters();
     wireControls();
     render();
@@ -26,7 +31,7 @@ async function init() {
     $('headerDepartments').textContent = metadata.departments.length;
     $('headerUpdated').textContent = new Date(metadata.generatedAt).toLocaleDateString('es-AR');
     $('latestDataYear').textContent = metadata.yearMax;
-    $('dataNote').textContent = `Fuente principal: ${metadata.rainfallSource}`;
+    $('dataNote').textContent = `Fuente mensual principal: ${metadata.rainfallSource}. Base mensual combinada: ${state.monthlySourceStats.addedDepartmentMonths} departamento-mes derivados desde registros diarios vigentes.`;
   } catch (error) {
     $('errorBanner').style.display = 'block';
     $('errorBanner').textContent = `${error.message}. Ejecuta el dashboard mediante un servidor HTTP local.`;
@@ -37,8 +42,9 @@ async function init() {
 }
 
 function populateFilters() {
-  const years = [...new Set(state.rainfall.map(row => row.year))].sort((a,b) => b - a);
-  const latestCompleteYear = state.metadata.yearMax - 1;
+  const years = [...new Set(monthlyRows().map(row => row.year))].sort((a,b) => b - a);
+  const maxMonthlyYear = years.length ? Math.max(...years) : state.metadata.yearMax;
+  const latestCompleteYear = maxMonthlyYear - 1;
   createMultiFilter('departmentFilter', state.metadata.departments.map(value => ({ value, label: value })), {
     allLabel: 'Todos los departamentos',
     defaultValues: ['ALL']
@@ -59,7 +65,127 @@ function populateFilters() {
   fillSelect('annualFromFilter', [...years].reverse());
   fillSelect('annualToFilter', [...years].reverse());
   $('annualFromFilter').value = state.metadata.yearMin;
-  $('annualToFilter').value = state.metadata.yearMax;
+  $('annualToFilter').value = maxMonthlyYear;
+}
+
+function monthlyRows() {
+  return state.monthlyRainfall.length ? state.monthlyRainfall : state.rainfall;
+}
+
+function buildCombinedMonthlyRainfall() {
+  const rowsByKey = new Map();
+  state.rainfall.forEach(row => {
+    const months = [...row.months];
+    const monthSources = months.map(value => Number.isFinite(value) ? 'monthly' : null);
+    rowsByKey.set(monthlyRowKey(row.department, row.year), {
+      ...row,
+      months,
+      monthSources,
+      dailyDerivedMeta: Array.from({ length: 12 }, () => null)
+    });
+  });
+
+  const derived = deriveMonthlyFromDailyRecords(state.dailyRecords);
+  let added = 0;
+  let preservedMonthly = 0;
+  derived.forEach(entry => {
+    const key = monthlyRowKey(entry.department, entry.year);
+    let row = rowsByKey.get(key);
+    if (!row) {
+      row = {
+        department: entry.department,
+        year: entry.year,
+        months: Array(12).fill(null),
+        monthSources: Array(12).fill(null),
+        dailyDerivedMeta: Array.from({ length: 12 }, () => null)
+      };
+      rowsByKey.set(key, row);
+    }
+    if (Number.isFinite(row.months[entry.month])) {
+      preservedMonthly += 1;
+      return;
+    }
+    row.months[entry.month] = entry.rainfallMm;
+    row.monthSources[entry.month] = 'daily_derived';
+    row.dailyDerivedMeta[entry.month] = {
+      daysWithRecords: entry.daysWithRecords,
+      daysInMonth: entry.daysInMonth,
+      source: 'daily_derived'
+    };
+    added += 1;
+  });
+
+  const combinedRows = [...rowsByKey.values()].map(row => {
+    const values = row.months.filter(Number.isFinite);
+    return {
+      ...row,
+      total: values.length ? values.reduce((sum, value) => sum + value, 0) : null,
+      average: values.length ? average(values) : null
+    };
+  }).sort((a, b) => a.department.localeCompare(b.department, 'es') || a.year - b.year);
+
+  state.monthlyRainfall = combinedRows;
+  return {
+    originalMonthlyRows: state.rainfall.length,
+    combinedMonthlyRows: combinedRows.length,
+    derivedDepartmentMonths: derived.length,
+    addedDepartmentMonths: added,
+    preservedMonthlyDepartmentMonths: preservedMonthly
+  };
+}
+
+function deriveMonthlyFromDailyRecords(records) {
+  const groups = new Map();
+  records.forEach(record => {
+    if (!record.date || !record.department) return;
+    const rainfallMm = Number(record.rainfallMm);
+    if (!Number.isFinite(rainfallMm) || rainfallMm < 0) return;
+    const [year, monthNumber] = record.date.split('-').map(Number);
+    if (!Number.isInteger(year) || !Number.isInteger(monthNumber) || monthNumber < 1 || monthNumber > 12) return;
+    const month = monthNumber - 1;
+    const key = `${record.department}|${year}|${month}`;
+    if (!groups.has(key)) {
+      groups.set(key, {
+        department: record.department,
+        year,
+        month,
+        rainfallMm: 0,
+        dates: new Set()
+      });
+    }
+    const group = groups.get(key);
+    group.rainfallMm += rainfallMm;
+    group.dates.add(record.date);
+  });
+  return [...groups.values()].map(group => ({
+    department: group.department,
+    year: group.year,
+    month: group.month,
+    rainfallMm: group.rainfallMm,
+    daysWithRecords: group.dates.size,
+    daysInMonth: daysInMonth(group.year, group.month)
+  }));
+}
+
+function daysInMonth(year, monthIndex) {
+  return new Date(Date.UTC(year, monthIndex + 1, 0)).getUTCDate();
+}
+
+function monthlyRowKey(department, year) {
+  return `${department}|${year}`;
+}
+
+function monthlyObservationSourceLabel(rows, month) {
+  const rowsWithValue = rows.filter(row => Number.isFinite(row.months[month]));
+  if (!rowsWithValue.length) return null;
+  const derivedRows = rowsWithValue.filter(row => row.monthSources?.[month] === 'daily_derived');
+  if (!derivedRows.length) return 'fuente mensual';
+  const source = derivedRows.length === rowsWithValue.length ? 'diaria mensualizada' : 'mensual + diaria mensualizada';
+  if (derivedRows.length === 1) {
+    const meta = derivedRows[0].dailyDerivedMeta?.[month];
+    if (meta) return `${source}; ${meta.daysWithRecords}/${meta.daysInMonth} días con registro`;
+  }
+  return `${source}; ${derivedRows.length} observación(es) mensualizada(s)`;
 }
 
 function createMultiFilter(id, options, config) {
@@ -185,7 +311,7 @@ function matchesSelection(value, selected) {
 }
 
 function filteredRainfall(f = filters()) {
-  return state.rainfall.filter(row => matchesSelection(row.department, f.departments) && matchesSelection(row.year, f.years));
+  return monthlyRows().filter(row => matchesSelection(row.department, f.departments) && matchesSelection(row.year, f.years));
 }
 
 function selectedMonths(f) {
@@ -193,7 +319,8 @@ function selectedMonths(f) {
 }
 
 function recordValue(record, months) {
-  return months.reduce((sum, month) => sum + (Number.isFinite(record.months[month]) ? record.months[month] : 0), 0);
+  const values = months.map(month => record.months[month]).filter(Number.isFinite);
+  return values.length ? values.reduce((sum, value) => sum + value, 0) : null;
 }
 
 function monthlyObservations(records, months) {
@@ -276,7 +403,7 @@ function getSummaryReferencePeriod(departments, f) {
   const months = state.temporalFiltersExplicit.months ? selectedMonths(f) : ALL_MONTHS;
   const minimumCoverage = Math.ceil(departments.length * 0.8);
   const periods = new Map();
-  state.rainfall.forEach(row => {
+  monthlyRows().forEach(row => {
     if (!departments.includes(row.department)) return;
     if (!matchesSelection(row.year, years)) return;
     row.months.forEach((value, month) => {
@@ -293,7 +420,7 @@ function getSummaryReferencePeriod(departments, f) {
 }
 
 function monthlyValue(department, year, month) {
-  const record = state.rainfall.find(row => row.department === department && row.year === year);
+  const record = monthlyRows().find(row => row.department === department && row.year === year);
   return record && Number.isFinite(record.months[month]) ? record.months[month] : null;
 }
 
@@ -611,7 +738,7 @@ function formatDate(value) {
 function renderAnnual(f) {
   const from = +$('annualFromFilter').value;
   const to = +$('annualToFilter').value;
-  const rows = state.rainfall.filter(row =>
+  const rows = monthlyRows().filter(row =>
     matchesSelection(row.department, f.departments) &&
     matchesSelection(row.year, f.years) &&
     row.year >= from && row.year <= to
@@ -621,12 +748,12 @@ function renderAnnual(f) {
   let datasets;
   if (f.departments === null) {
     datasets = [dataset('Promedio departamental', labels.map(year =>
-      average(rows.filter(row => row.year === year).map(row => recordValue(row, months)))
+      averageFinite(rows.filter(row => row.year === year).map(row => recordValue(row, months)))
     ), COLORS[0], true, 'mm')];
   } else {
     datasets = f.departments.map((department, index) => dataset(department, labels.map(year => {
       const records = rows.filter(row => row.year === year && row.department === department);
-      return records.length ? average(records.map(row => recordValue(row, months))) : null;
+      return records.length ? averageFinite(records.map(row => recordValue(row, months))) : null;
     }), COLORS[index % COLORS.length], false, 'mm'));
   }
   chart('annualChart', 'line', { labels, datasets }, lineOptions('mm', 'Precipitaci\u00f3n acumulada (mm)'));
@@ -639,13 +766,14 @@ function renderMonthly(rows, f) {
   if (f.departments === null) {
     datasets = [{
       ...dataset('Acumulado mensual observado', months.map(month =>
-      average(rows.map(row => row.months[month]).filter(Number.isFinite))
+      averageFinite(rows.map(row => row.months[month]))
       ), '#17a2d4', false, 'mm'),
+      sourceInfo: months.map(month => monthlyObservationSourceLabel(rows, month)),
       order: 4
     }];
     datasets.push({
       ...dataset('Promedio histórico mensual', months.map(month =>
-        average(state.rainfall.map(row => row.months[month]).filter(Number.isFinite))
+        averageFinite(monthlyRows().map(row => row.months[month]))
       ), '#6f8794', false, 'mm'),
       type: 'line',
       backgroundColor: 'transparent',
@@ -660,17 +788,18 @@ function renderMonthly(rows, f) {
   } else {
     datasets = f.departments.flatMap((department, index) => {
       const departmentRows = rows.filter(row => row.department === department);
-      const historicalRows = state.rainfall.filter(row => row.department === department);
+      const historicalRows = monthlyRows().filter(row => row.department === department);
       return [
         {
           ...dataset(`${department} - acumulado mensual observado`, months.map(month =>
-          average(departmentRows.map(row => row.months[month]).filter(Number.isFinite))
+          averageFinite(departmentRows.map(row => row.months[month]))
           ), '#17a2d4', false, 'mm'),
+          sourceInfo: months.map(month => monthlyObservationSourceLabel(departmentRows, month)),
           order: 4
         },
         {
           ...dataset(`${department} - promedio histórico mensual`, months.map(month =>
-            average(historicalRows.map(row => row.months[month]).filter(Number.isFinite))
+            averageFinite(historicalRows.map(row => row.months[month]))
           ), '#6f8794', false, 'mm'),
           type: 'line',
           backgroundColor: 'transparent',
@@ -718,7 +847,7 @@ function monthlyRangeDatasets(months, department) {
 }
 
 function monthlyHistoricalStats(department, month) {
-  const values = state.rainfall
+  const values = monthlyRows()
     .filter(row => (department === null || row.department === department) && Number.isFinite(row.months[month]))
     .map(row => row.months[month]);
   return {
@@ -731,13 +860,16 @@ function monthlyHistoricalStats(department, month) {
 function renderRanking(rows, f) {
   const months = selectedMonths(f);
   const grouped = {};
-  rows.forEach(row => { (grouped[row.department] ??= []).push(recordValue(row, months)); });
+  rows.forEach(row => {
+    const value = recordValue(row, months);
+    if (Number.isFinite(value)) (grouped[row.department] ??= []).push(value);
+  });
   const entries = Object.entries(grouped).map(([department, values]) => {
-    const historicalRows = state.rainfall.filter(row => row.department === department);
+    const historicalRows = monthlyRows().filter(row => row.department === department);
     return {
       department,
-      selected: average(values),
-      historical: average(historicalRows.map(row => recordValue(row, months)))
+      selected: averageFinite(values),
+      historical: averageFinite(historicalRows.map(row => recordValue(row, months)))
     };
   })
     .sort((a,b) => b.selected - a.selected)
@@ -754,15 +886,18 @@ function renderHeatmap(rows, f) {
   const months = selectedMonths(f);
   const departments = [...new Set(rows.map(row => row.department))].sort();
   const matrix = departments.map(department => months.map(month =>
-    average(rows.filter(row => row.department === department).map(row => row.months[month]).filter(Number.isFinite))
+    averageFinite(rows.filter(row => row.department === department).map(row => row.months[month]))
   ));
-  const max = Math.max(1, ...matrix.flat());
+  const finiteValues = matrix.flat().filter(Number.isFinite);
+  const max = Math.max(1, ...finiteValues);
   let html = '<div class="heatmap-grid"><div></div>' + months.map(month => `<div class="heat-cell heat-head">${MONTHS[month]}</div>`).join('');
   departments.forEach((department, rowIndex) => {
     html += `<div class="heat-label">${department}</div>` + months.map((month, monthIndex) => {
       const value = matrix[rowIndex][monthIndex];
-      const alpha = .08 + .85 * (value / max);
-      return `<div class="heat-cell" title="${department} - ${MONTHS_FULL[month]}: ${format(value)} mm" style="background:rgba(34,211,238,${alpha})">${format(value)}</div>`;
+      const alpha = Number.isFinite(value) ? .08 + .85 * (value / max) : 0;
+      const displayValue = Number.isFinite(value) ? format(value) : 'Sin dato';
+      const titleValue = Number.isFinite(value) ? `${format(value)} mm` : 'Sin dato';
+      return `<div class="heat-cell" title="${department} - ${MONTHS_FULL[month]}: ${titleValue}" style="background:rgba(34,211,238,${alpha})">${displayValue}</div>`;
     }).join('');
   });
   $('heatmap').innerHTML = html + '</div>';
@@ -837,7 +972,7 @@ function renderClimate(f) {
 function getLatestMonthlyPeriodForDepartment(department, f) {
   const years = state.temporalFiltersExplicit.years ? f.years : null;
   const months = state.temporalFiltersExplicit.months ? selectedMonths(f) : ALL_MONTHS;
-  return state.rainfall
+  return monthlyRows()
     .filter(row => row.department === department && matchesSelection(row.year, years))
     .reduce((latest, row) => {
     row.months.forEach((value, month) => {
@@ -852,7 +987,7 @@ function getLatestMonthlyPeriodForDepartment(department, f) {
 }
 
 function getMonthlyHistoricalAverage(department, month) {
-  const values = state.rainfall
+  const values = monthlyRows()
     .filter(row => row.department === department && Number.isFinite(row.months[month]))
     .map(row => row.months[month]);
   return values.length ? average(values) : null;
@@ -961,7 +1096,8 @@ function downloadTable() {
 function groupTotals(rows, key, months) {
   return rows.reduce((output, row) => {
     const group = key(row);
-    output[group] = (output[group] || 0) + recordValue(row, months);
+    const value = recordValue(row, months);
+    if (Number.isFinite(value)) output[group] = (output[group] || 0) + value;
     return output;
   }, {});
 }
@@ -979,7 +1115,8 @@ function axis(unit = '', title = '') {
 function tooltipLabel(context, fallbackUnit = '') {
   const unit = context.dataset.unit || fallbackUnit;
   if (!Number.isFinite(context.raw)) return `${context.dataset.label}: Sin dato`;
-  return `${context.dataset.label}: ${format(context.raw)}${unit ? ` ${unit}` : ''}`;
+  const sourceInfo = context.dataset.sourceInfo?.[context.dataIndex];
+  return `${context.dataset.label}: ${format(context.raw)}${unit ? ` ${unit}` : ''}${sourceInfo ? ` (${sourceInfo})` : ''}`;
 }
 
 function lineOptions(unit = '', axisTitle = '') {

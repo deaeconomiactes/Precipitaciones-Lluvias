@@ -478,7 +478,7 @@ function renderDaily(f) {
       <td>${dailyWindowDisplay(row, 7)}</td>
       <td>${dailyWindowDisplay(row, 30)}</td>
       <td>${formatDate(row.lastDate)}</td>
-      <td>${Number.isFinite(row.maxDaily) ? `${format(row.maxDaily)} mm` : 'Sin dato'}</td>
+      <td>${formatTableRainfall(row.maxDaily)}</td>
     </tr>`).join('');
   $('dailyTable').innerHTML = rankingRows.map(row => `
     <tr>
@@ -529,7 +529,7 @@ function updateDailyKpis(rows, latestDate, topDepartment, maxRecord, selectedWin
 }
 
 function dailyWindowDisplay(row, days) {
-  return row.observations[days] > 0 ? `${format(row.windows[days])} mm` : 'Sin dato';
+  return row.observations[days] > 0 ? `${format(row.windows[days])} mm` : formatTableRainfall(null);
 }
 
 function renderDailySeries(records, latestDate, f, selectedWindow) {
@@ -859,8 +859,8 @@ function renderHeatmap(rows, f) {
     html += `<div class="heat-label">${department}</div>` + months.map((month, monthIndex) => {
       const value = matrix[rowIndex][monthIndex];
       const alpha = Number.isFinite(value) ? .08 + .85 * (value / max) : 0;
-      const displayValue = Number.isFinite(value) ? format(value) : 'Sin dato';
-      const titleValue = Number.isFinite(value) ? `${format(value)} mm` : 'Sin dato';
+      const displayValue = Number.isFinite(value) ? format(value) : '0 mm';
+      const titleValue = formatTableRainfall(value);
       return `<div class="heat-cell" title="${department} - ${MONTHS_FULL[month]}: ${titleValue}" style="background:rgba(34,211,238,${alpha})">${displayValue}</div>`;
     }).join('');
   });
@@ -995,7 +995,7 @@ function renderDepartmentDetail(rows, f) {
   state.tableRows = rows;
   $('detailsTable').innerHTML = rows.map(row => {
     const period = Number.isInteger(row.latestMonth) && Number.isFinite(row.latestYear) ? `${MONTHS_FULL[row.latestMonth]} ${row.latestYear}` : 'Sin dato';
-    return `<tr><td>${row.department}</td><td>${period}</td><td>${formatNullable(row.observedMm)}</td><td>${formatNullable(row.historicalAverageMm)}</td><td>${formatSignedMm(row.differenceMm)}</td><td>${formatSignedPercent(row.differencePct)}</td><td><span class="${deviationClass(row.category)}">${row.category}</span></td></tr>`;
+    return `<tr><td>${row.department}</td><td>${period}</td><td>${formatTableRainfall(row.observedMm)}</td><td>${formatTableRainfall(row.historicalAverageMm)}</td><td>${formatSignedMm(row.differenceMm)}</td><td>${formatSignedPercent(row.differencePct)}</td><td><span class="${deviationClass(row.category)}">${row.category}</span></td></tr>`;
   }).join('');
 }
 
@@ -1017,6 +1017,10 @@ function signedPercent(value) {
 
 function formatNullable(value) {
   return Number.isFinite(value) ? `${format(value)} mm` : 'Sin dato';
+}
+
+function formatTableRainfall(value) {
+  return Number.isFinite(value) ? `${format(value)} mm` : '0 mm';
 }
 
 function formatSignedMm(value) {

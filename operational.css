@@ -1011,3 +1011,43 @@ footer {
     width: 100%;
   }
 }
+.department-chart-grid {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 24px;
+}
+
+.department-chart-card {
+  width: 100%;
+}
+
+.department-profile-chart {
+  height: 430px;
+}
+
+.department-ranking-chart {
+  height: 520px;
+}
+
+@media (max-width: 800px) {
+  .department-chart-grid {
+    gap: 18px;
+  }
+
+  .department-profile-chart {
+    height: 380px;
+  }
+
+  .department-ranking-chart {
+    height: 480px;
+  }
+}
+
+@media (max-width: 480px) {
+  .department-profile-chart {
+    height: 350px;
+  }
+
+  .department-ranking-chart {
+    height: 450px;
+  }
+}

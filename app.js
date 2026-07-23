@@ -452,7 +452,6 @@ function renderDaily(f) {
     ['dailyRain24','dailyRain7','dailyRain30','dailyTopDepartment','dailyWetDepartments','dailyMaxRecord'].forEach(id => $(id).textContent = 'Sin dato');
     ['dailyRain24Detail','dailyRain7Detail','dailyRain30Detail','dailyTopDepartmentDetail','dailyWetDepartmentsDetail','dailyMaxRecordDetail'].forEach(id => $(id).textContent = 'sin observaciones');
     $('dailyRankingTable').innerHTML = '';
-    $('dailyReferenceTable').innerHTML = '<tr><td colspan="7">No hay observaciones diarias para los filtros activos.</td></tr>';
     $('dailyTable').innerHTML = '<tr><td colspan="5">No hay observaciones diarias para los filtros activos.</td></tr>';
     chart('dailySeriesChart', 'line', { labels: [], datasets: [] }, lineOptions('mm', 'Lluvia diaria (mm)'));
     updateDailyQuickStats(f);
@@ -473,7 +472,6 @@ function renderDaily(f) {
   $('dailyCoverage').textContent = `${records[0].date} a ${latestDate} - ${records.length} observaciones departamentales vigentes`;
   updateDailyKpis(rows, latestDate, topDepartment, maxRecord, selectedWindow, singleDepartment);
   renderDailySeries(records, latestDate, f, selectedWindow);
-  renderDailyReferenceTable(f, selectedWindow);
   $('dailyRankingTable').innerHTML = rankingRows.map(row => `
     <tr>
       <td>${row.department}</td>
@@ -532,122 +530,6 @@ function updateDailyKpis(rows, latestDate, topDepartment, maxRecord, selectedWin
 
 function dailyWindowDisplay(row, days) {
   return row.observations[days] > 0 ? `${format(row.windows[days])} mm` : 'Sin dato';
-}
-
-function renderDailyReferenceTable(f, selectedWindow) {
-  const allRecords = validDailyRecords({ ...f, departments: null });
-  const latestDate = allRecords.length ? allRecords[allRecords.length - 1].date : null;
-  const departments = f.departments === null
-    ? [...new Set(allRecords.map(record => record.department))].sort((a, b) => a.localeCompare(b, 'es'))
-    : f.departments;
-  if (!latestDate || !departments?.length) {
-    $('dailyReferenceTable').innerHTML = '<tr><td colspan="7">No hay observaciones diarias para los filtros activos.</td></tr>';
-    return;
-  }
-
-  const rows = departments.map(department => dailyReferenceRow(allRecords, department, latestDate, selectedWindow));
-  const sortedRows = rows.sort((a, b) =>
-    (Number.isFinite(b.observedMm) ? b.observedMm : -Infinity) - (Number.isFinite(a.observedMm) ? a.observedMm : -Infinity) ||
-    a.department.localeCompare(b.department, 'es')
-  );
-  $('dailyReferenceTable').innerHTML = sortedRows.map(row => `
-    <tr>
-      <td>${row.department}</td>
-      <td>${Number.isFinite(row.observedMm) ? `${format(row.observedMm)} mm` : 'Sin dato'}</td>
-      <td>${Number.isFinite(row.referenceMm) ? `${format(row.referenceMm)} mm` : 'Sin referencia suficiente'}</td>
-      <td>${dailyReferenceDifferenceDisplay(row)}</td>
-      <td>${dailyReferencePctDisplay(row)}</td>
-      <td>${row.comparableYears.length ? row.comparableYears.join(', ') : 'Sin referencia suficiente'}</td>
-      <td>${row.category}</td>
-    </tr>`).join('');
-}
-
-function dailyReferenceRow(records, department, latestDate, selectedWindow) {
-  const windowDays = Number.isFinite(selectedWindow) && selectedWindow > 0 ? selectedWindow : 7;
-  const currentStart = addDays(latestDate, 1 - windowDays);
-  const observed = dailyWindowSumForRange(records, department, currentStart, latestDate);
-  const latestYear = +latestDate.slice(0, 4);
-  const availableYears = [...new Set(records
-    .filter(record => record.department === department)
-    .map(record => +record.date.slice(0, 4))
-    .filter(year => year < latestYear))]
-    .sort((a, b) => a - b);
-  const comparable = availableYears
-    .map(year => equivalentDailyWindow(records, department, latestDate, windowDays, year))
-    .filter(window => window.observations > 0);
-  const comparableYears = comparable.map(window => window.year);
-  const referenceMm = comparable.length >= 2 ? average(comparable.map(window => window.totalMm)) : null;
-  const differenceMm = Number.isFinite(referenceMm) && Number.isFinite(observed.totalMm) ? observed.totalMm - referenceMm : null;
-  const differencePct = Number.isFinite(referenceMm) && referenceMm > 0 && Number.isFinite(observed.totalMm)
-    ? ((observed.totalMm / referenceMm) - 1) * 100
-    : null;
-  return {
-    department,
-    observedMm: observed.observations > 0 ? observed.totalMm : null,
-    referenceMm,
-    differenceMm,
-    differencePct,
-    observedAvailable: observed.observations > 0,
-    comparableYears,
-    category: dailyReferenceCategory(observed.observations > 0, comparableYears.length, referenceMm, differencePct)
-  };
-}
-
-function equivalentDailyWindow(records, department, currentEnd, windowDays, year) {
-  const end = replaceYear(currentEnd, year);
-  if (!end) return { year, totalMm: null, observations: 0 };
-  const start = addDays(end, 1 - windowDays);
-  return { year, ...dailyWindowSumForRange(records, department, start, end) };
-}
-
-function dailyWindowSumForRange(records, department, startDate, endDate) {
-  const values = records
-    .filter(record => record.department === department && record.date >= startDate && record.date <= endDate)
-    .map(record => record.rainfallMm)
-    .filter(Number.isFinite);
-  return {
-    totalMm: values.length ? values.reduce((sum, value) => sum + value, 0) : null,
-    observations: values.length
-  };
-}
-
-function replaceYear(dateString, year) {
-  const [, month, day] = dateString.split('-').map(Number);
-  const date = new Date(Date.UTC(year, month - 1, day));
-  if (date.getUTCFullYear() !== year || date.getUTCMonth() !== month - 1 || date.getUTCDate() !== day) return null;
-  return date.toISOString().slice(0, 10);
-}
-
-function dailyReferenceDifferenceDisplay(row) {
-  if (!row.observedAvailable) return 'Sin dato observado';
-  if (row.comparableYears.length < 2 || !Number.isFinite(row.referenceMm)) return 'Sin referencia suficiente';
-  return Number.isFinite(row.differenceMm) ? `${formatSigned(row.differenceMm)} mm` : 'Sin referencia suficiente';
-}
-
-function dailyReferencePctDisplay(row) {
-  if (!row.observedAvailable) return 'Sin dato observado';
-  if (row.comparableYears.length < 2 || !Number.isFinite(row.referenceMm)) return 'Sin referencia suficiente';
-  if (row.referenceMm === 0) return 'Referencia igual a 0';
-  return Number.isFinite(row.differencePct) ? `${formatSigned(row.differencePct)}%` : 'No calculable';
-}
-
-function dailyReferenceCategory(observedAvailable, comparableYears, referenceMm, differencePct) {
-  if (!observedAvailable) return 'Sin dato observado';
-  if (comparableYears < 2 || !Number.isFinite(referenceMm)) return 'Sin referencia suficiente';
-  if (referenceMm === 0 || !Number.isFinite(differencePct)) return 'No calculable';
-  if (differencePct <= -30) return 'Muy por debajo';
-  if (differencePct <= -10) return 'Por debajo';
-  if (differencePct < 10) return 'En torno a la referencia';
-  if (differencePct < 30) return 'Por encima';
-  return 'Muy por encima';
-}
-
-function formatSigned(value) {
-  if (!Number.isFinite(value)) return 'Sin dato';
-  const formatted = format(Math.abs(value));
-  if (value > 0) return `+${formatted}`;
-  if (value < 0) return `-${formatted}`;
-  return formatted;
 }
 
 function renderDailySeries(records, latestDate, f, selectedWindow) {
@@ -818,6 +700,9 @@ function renderMonthly(rows, f) {
   }
   const options = barOptions('mm', false, true, 'Precipitación mensual (mm)');
   options.interaction = { mode: 'index', intersect: false };
+  options.layout = { padding: { top: 8, right: 18, bottom: 4, left: 10 } };
+  options.plugins.legend.position = 'top';
+  options.plugins.legend.labels.padding = 16;
   chart('monthlyChart', 'bar', { labels, datasets }, options);
 }
 
@@ -884,7 +769,10 @@ function renderRanking(rows, f) {
       dataset('Período seleccionado', entries.map(entry => entry.selected), COLORS[0], false, 'mm'),
       dataset('Promedio histórico', entries.map(entry => entry.historical), '#7b8790', false, 'mm')
     ]
-  }, barOptions('mm', true, true, 'Precipitación comparable (mm)'));
+  }, {
+    ...barOptions('mm', true, true, 'Precipitación comparable (mm)'),
+    layout: { padding: { top: 8, right: 24, bottom: 8, left: 12 } }
+  });
 }
 function renderHeatmap(rows, f) {
   const months = selectedMonths(f);

@@ -859,7 +859,7 @@ function renderHeatmap(rows, f) {
     html += `<div class="heat-label">${department}</div>` + months.map((month, monthIndex) => {
       const value = matrix[rowIndex][monthIndex];
       const alpha = Number.isFinite(value) ? .08 + .85 * (value / max) : 0;
-      const displayValue = Number.isFinite(value) ? format(value) : '0 mm';
+      const displayValue = Number.isFinite(value) ? format(value) : '0';
       const titleValue = formatTableRainfall(value);
       return `<div class="heat-cell" title="${department} - ${MONTHS_FULL[month]}: ${titleValue}" style="background:rgba(34,211,238,${alpha})">${displayValue}</div>`;
     }).join('');
@@ -1020,7 +1020,7 @@ function formatNullable(value) {
 }
 
 function formatTableRainfall(value) {
-  return Number.isFinite(value) ? `${format(value)} mm` : '0 mm';
+  return Number.isFinite(value) ? `${format(value)} mm` : '0';
 }
 
 function formatSignedMm(value) {

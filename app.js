@@ -647,7 +647,7 @@ function renderMonthly(rows, f) {
   let datasets;
   if (f.departments === null) {
     datasets = [{
-      ...dataset('Acumulado mensual observado', months.map(month =>
+      ...dataset('Promedio departamental mensual observado', months.map(month =>
       averageFinite(rows.map(row => row.months[month]))
       ), '#17a2d4', false, 'mm'),
       sourceInfo: months.map(month => monthlyObservationSourceLabel(rows, month)),
@@ -666,17 +666,16 @@ function renderMonthly(rows, f) {
     });
     datasets.push(...monthlyRangeDatasets(months, null));
     $('monthlyChartScope').textContent = 'Todos los departamentos';
-    $('monthlyChartDescription').textContent = 'Acumulado mensual observado frente al promedio y rango histórico del mismo mes calendario.';
+    $('monthlyChartDescription').textContent = 'Promedio departamental mensual observado frente al promedio y rango histórico del mismo mes calendario.';
   } else {
     datasets = f.departments.flatMap((department, index) => {
       const departmentRows = rows.filter(row => row.department === department);
       const historicalRows = monthlyRows().filter(row => row.department === department);
       return [
         {
-          ...dataset('Acumulado observado', months.map(month =>
+          ...dataset(`${department} - acumulado mensual observado`, months.map(month =>
           averageFinite(departmentRows.map(row => row.months[month]))
           ), '#17a2d4', false, 'mm'),
-          tooltipScope: department,
           sourceInfo: months.map(month => monthlyObservationSourceLabel(departmentRows, month)),
           order: 4
         },

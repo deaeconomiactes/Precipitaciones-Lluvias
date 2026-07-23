@@ -746,32 +746,105 @@ function monthlyHistoricalStats(department, month) {
 }
 
 function renderRanking(rows, f) {
-  const months = selectedMonths(f);
-  const grouped = {};
-  rows.forEach(row => {
-    const value = recordValue(row, months);
-    if (Number.isFinite(value)) (grouped[row.department] ??= []).push(value);
-  });
-  const entries = Object.entries(grouped).map(([department, values]) => {
-    const historicalRows = monthlyRows().filter(row => row.department === department);
-    return {
-      department,
-      selected: averageFinite(values),
-      historical: averageFinite(historicalRows.map(row => recordValue(row, months)))
-    };
-  })
+  const requestedMonths = selectedMonths(f);
+  const departments = [...new Set(rows.map(row => row.department))];
+  const allYearsSelected = f.years === null;
+  const entries = departments.map(department => rankingComparableEntry(department, rows, requestedMonths, f.years))
+    .filter(entry => Number.isFinite(entry.selected))
     .sort((a,b) => b.selected - a.selected)
     .slice(0, 15);
+  const datasets = allYearsSelected
+    ? [rankingDataset('Promedio histórico comparable', entries.map(entry => entry.historical), '#7b8790', entries)]
+    : [
+      rankingDataset('Acumulado período seleccionado', entries.map(entry => entry.selected), COLORS[0], entries),
+      rankingDataset('Promedio histórico comparable', entries.map(entry => entry.historical), '#7b8790', entries)
+    ];
+  const options = barOptions('mm', true, true, 'Precipitación acumulada comparable (mm)');
+  options.layout = { padding: { top: 8, right: 24, bottom: 8, left: 12 } };
+  options.plugins.tooltip = {
+    filter: context => context.datasetIndex === 0,
+    callbacks: {
+      title: contexts => contexts[0]?.label || '',
+      label: context => rankingTooltipLines(context.dataset.rankingMeta?.[context.dataIndex], allYearsSelected)
+    }
+  };
   chart('rankingChart', 'bar', {
     labels: entries.map(entry => entry.department),
-    datasets: [
-      dataset('Período seleccionado', entries.map(entry => entry.selected), COLORS[0], false, 'mm'),
-      dataset('Promedio histórico', entries.map(entry => entry.historical), '#7b8790', false, 'mm')
-    ]
-  }, {
-    ...barOptions('mm', true, true, 'Precipitación comparable (mm)'),
-    layout: { padding: { top: 8, right: 24, bottom: 8, left: 12 } }
-  });
+    datasets
+  }, options);
+}
+
+function rankingComparableEntry(department, filteredRows, requestedMonths, selectedYears) {
+  const departmentRows = filteredRows.filter(row => row.department === department);
+  const historicalRows = monthlyRows().filter(row => row.department === department);
+  if (selectedYears === null) {
+    const completeValues = historicalRows
+      .filter(row => requestedMonths.every(month => Number.isFinite(row.months[month])))
+      .map(row => requestedMonths.reduce((sum, month) => sum + row.months[month], 0));
+    const historical = averageFinite(completeValues);
+    return {
+      department,
+      selected: historical,
+      historical,
+      monthsLabel: requestedMonths.map(month => MONTHS[month]).join(', '),
+      historicalYears: completeValues.length,
+      differenceMm: 0,
+      differencePct: 0
+    };
+  }
+
+  const comparisons = departmentRows.map(row => {
+    const includedMonths = requestedMonths.filter(month => Number.isFinite(row.months[month]));
+    if (!includedMonths.length) return null;
+    const observed = includedMonths.reduce((sum, month) => sum + row.months[month], 0);
+    const comparableHistorical = historicalRows
+      .filter(historicalRow => !selectedYears.includes(historicalRow.year))
+      .filter(historicalRow => includedMonths.every(month => Number.isFinite(historicalRow.months[month])))
+      .map(historicalRow => includedMonths.reduce((sum, month) => sum + historicalRow.months[month], 0));
+    return {
+      year: row.year,
+      includedMonths,
+      observed,
+      historical: averageFinite(comparableHistorical),
+      historicalYears: comparableHistorical.length
+    };
+  }).filter(Boolean);
+  const selected = averageFinite(comparisons.map(comparison => comparison.observed));
+  const historical = averageFinite(comparisons.map(comparison => comparison.historical));
+  const monthSets = [...new Set(comparisons.map(comparison => comparison.includedMonths.join(',')))];
+  const monthsLabel = monthSets.length === 1
+    ? comparisons[0].includedMonths.map(month => MONTHS[month]).join(', ')
+    : comparisons.map(comparison => `${comparison.year}: ${comparison.includedMonths.map(month => MONTHS[month]).join(', ')}`).join(' | ');
+  const differenceMm = Number.isFinite(selected) && Number.isFinite(historical) ? selected - historical : null;
+  const differencePct = Number.isFinite(differenceMm) && historical > 0 ? (differenceMm / historical) * 100 : null;
+  return {
+    department,
+    selected,
+    historical,
+    monthsLabel,
+    historicalYears: Math.min(...comparisons.map(comparison => comparison.historicalYears)),
+    differenceMm,
+    differencePct
+  };
+}
+
+function rankingDataset(label, values, color, entries) {
+  return {
+    ...dataset(label, values, color, false, 'mm'),
+    rankingMeta: entries
+  };
+}
+
+function rankingTooltipLines(entry, allYearsSelected) {
+  if (!entry) return ['Sin dato'];
+  const observedLabel = allYearsSelected ? 'Promedio observado del período' : 'Acumulado observado del período';
+  return [
+    `Meses incluidos: ${entry.monthsLabel || 'Sin dato'}`,
+    `${observedLabel}: ${formatNullable(entry.selected)}`,
+    `Promedio histórico comparable: ${formatNullable(entry.historical)}`,
+    `Diferencia: ${formatSignedMm(entry.differenceMm)}`,
+    `Diferencia porcentual: ${formatSignedPercent(entry.differencePct)}`
+  ];
 }
 function renderHeatmap(rows, f) {
   const months = selectedMonths(f);

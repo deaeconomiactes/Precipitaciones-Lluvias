@@ -26,6 +26,7 @@ async function init() {
     state.monthlySourceStats = buildCombinedMonthlyRainfall();
     populateFilters();
     wireControls();
+    setupStickyFilters();
     render();
     $('headerCoverage').textContent = `${metadata.yearMin}-${metadata.yearMax}`;
     $('headerDepartments').textContent = metadata.departments.length;
@@ -39,6 +40,17 @@ async function init() {
   } finally {
     $('loading').classList.add('hidden');
   }
+}
+
+function setupStickyFilters() {
+  const sectionNav = document.querySelector('.section-nav');
+  if (!sectionNav) return;
+  const updateOffset = () => {
+    document.documentElement.style.setProperty('--section-nav-height', `${sectionNav.offsetHeight}px`);
+  };
+  updateOffset();
+  window.addEventListener('resize', updateOffset, { passive: true });
+  if ('ResizeObserver' in window) new ResizeObserver(updateOffset).observe(sectionNav);
 }
 
 function populateFilters() {

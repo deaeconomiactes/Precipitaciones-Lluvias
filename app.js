@@ -44,26 +44,31 @@ async function init() {
 
 function setupStickyFilters() {
   const sectionNav = document.querySelector('.section-nav');
-  if (!sectionNav) return;
+  const globalFilters = document.querySelector('.global-filters-sticky');
+  if (!sectionNav || !globalFilters) return;
   const updateOffset = () => {
     document.documentElement.style.setProperty('--section-nav-height', `${sectionNav.offsetHeight}px`);
+    document.documentElement.style.setProperty('--global-filters-height', `${globalFilters.offsetHeight}px`);
   };
   updateOffset();
   window.addEventListener('resize', updateOffset, { passive: true });
-  if ('ResizeObserver' in window) new ResizeObserver(updateOffset).observe(sectionNav);
+  if ('ResizeObserver' in window) {
+    const stickyObserver = new ResizeObserver(updateOffset);
+    stickyObserver.observe(sectionNav);
+    stickyObserver.observe(globalFilters);
+  }
 }
 
 function populateFilters() {
   const years = [...new Set(monthlyRows().map(row => row.year))].sort((a,b) => b - a);
-  const maxMonthlyYear = years.length ? Math.max(...years) : state.metadata.yearMax;
-  const latestCompleteYear = maxMonthlyYear - 1;
+  const maxMonthlyYear = latestCombinedMonthlyYear();
   createMultiFilter('departmentFilter', state.metadata.departments.map(value => ({ value, label: value })), {
     allLabel: 'Todos los departamentos',
     defaultValues: ['ALL']
   });
   createMultiFilter('yearFilter', years.map(value => ({ value: String(value), label: String(value) })), {
     allLabel: 'Todos los a\u00f1os',
-    defaultValues: years.includes(latestCompleteYear) ? [String(latestCompleteYear)] : ['ALL']
+    defaultValues: years.includes(maxMonthlyYear) ? [String(maxMonthlyYear)] : ['ALL']
   });
   createMultiFilter('monthFilter', MONTHS_FULL.map((label, value) => ({ value: String(value), label })), {
     allLabel: 'A\u00f1o completo',
@@ -82,6 +87,11 @@ function populateFilters() {
 
 function monthlyRows() {
   return state.monthlyRainfall.length ? state.monthlyRainfall : state.rainfall;
+}
+
+function latestCombinedMonthlyYear() {
+  const years = monthlyRows().map(row => row.year).filter(Number.isFinite);
+  return years.length ? Math.max(...years) : state.metadata.yearMax;
 }
 
 function buildCombinedMonthlyRainfall() {
@@ -236,10 +246,11 @@ function wireControls() {
   }));
   $('dailyWindowFilter').addEventListener('change', () => renderDaily(filters()));
   $('dailySortFilter').addEventListener('change', () => renderDaily(filters()));
+  $('dailyMatrixSortFilter').addEventListener('change', () => renderDaily(filters()));
   $('resetFilters').addEventListener('click', () => {
-    const latestCompleteYear = state.metadata.yearMax - 1;
+    const latestAvailableYear = latestCombinedMonthlyYear();
     setMultiSelection('departmentFilter', ['ALL']);
-    setMultiSelection('yearFilter', [String(latestCompleteYear)]);
+    setMultiSelection('yearFilter', [String(latestAvailableYear)]);
     setMultiSelection('monthFilter', ['ALL']);
     setMultiSelection('stationFilter', [state.stations[0].station]);
     state.temporalFiltersExplicit.years = false;
@@ -476,6 +487,7 @@ function renderDaily(f) {
   const selectedRows = rows.filter(row => row.observations[selectedWindow] > 0);
   const sortDirection = $('dailySortFilter')?.value === 'asc' ? 1 : -1;
   const rankingRows = [...rows].sort((a, b) => sortDirection * (a.windows[selectedWindow] - b.windows[selectedWindow]) || a.department.localeCompare(b.department, 'es'));
+  const matrixRows = sortDailyMatrixRows(rows, $('dailyMatrixSortFilter')?.value || '7');
   const topDepartment = selectedRows.length ? [...selectedRows].sort((a, b) => b.windows[selectedWindow] - a.windows[selectedWindow] || a.department.localeCompare(b.department, 'es'))[0] : null;
   const maxRecord = dailyMaxRecord(records, latestDate, selectedWindow);
   const singleDepartment = f.departments?.length === 1;
@@ -492,7 +504,7 @@ function renderDaily(f) {
       <td>${formatDate(row.lastDate)}</td>
       <td>${formatTableRainfall(row.maxDaily)}</td>
     </tr>`).join('');
-  $('dailyTable').innerHTML = rankingRows.map(row => `
+  $('dailyTable').innerHTML = matrixRows.map(row => `
     <tr>
       <td>${row.department}</td>
       <td>${formatDate(row.lastDate)}</td>
@@ -542,6 +554,28 @@ function updateDailyKpis(rows, latestDate, topDepartment, maxRecord, selectedWin
 
 function dailyWindowDisplay(row, days) {
   return row.observations[days] > 0 ? `${format(row.windows[days])} mm` : formatTableRainfall(null);
+}
+
+function sortDailyMatrixRows(rows, criterion) {
+  const alphabetical = (a, b) => a.department.localeCompare(b.department, 'es');
+  if (criterion === 'department') return [...rows].sort(alphabetical);
+  if (criterion === 'date') {
+    return [...rows].sort((a, b) => {
+      const aHasDate = Boolean(a.lastDate);
+      const bHasDate = Boolean(b.lastDate);
+      if (aHasDate !== bHasDate) return aHasDate ? -1 : 1;
+      if (aHasDate && a.lastDate !== b.lastDate) return b.lastDate.localeCompare(a.lastDate);
+      return alphabetical(a, b);
+    });
+  }
+  const days = criterion === '30' ? 30 : 7;
+  return [...rows].sort((a, b) => {
+    const aHasData = a.observations[days] > 0;
+    const bHasData = b.observations[days] > 0;
+    if (aHasData !== bHasData) return aHasData ? -1 : 1;
+    if (aHasData && a.windows[days] !== b.windows[days]) return b.windows[days] - a.windows[days];
+    return alphabetical(a, b);
+  });
 }
 
 function renderDailySeries(records, latestDate, f, selectedWindow) {

@@ -565,8 +565,8 @@ main {
 
 .daily-controls-sticky {
   position: sticky;
-  top: 58px;
-  z-index: 24;
+  top: calc(var(--section-nav-height, 57px) + var(--global-filters-height, 88px) + 8px);
+  z-index: 40;
   background: rgba(251,253,251,.94);
   backdrop-filter: blur(14px);
   box-shadow: 0 12px 28px rgba(22,61,56,.12);
@@ -972,8 +972,27 @@ footer {
     flex-direction: column;
   }
 
+  .daily-toolbar > * {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .daily-toolbar .source-tag {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  #dailyPanel .chart-box {
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  #dailyPanel .chart-box canvas {
+    max-width: 100% !important;
+  }
+
   .daily-controls-sticky {
-    top: 118px;
+    top: calc(var(--section-nav-height, 115px) + var(--global-filters-height, 281px) + 8px);
   }
 
   .daily-toolbar label,

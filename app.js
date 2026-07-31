@@ -16,8 +16,9 @@ document.addEventListener('DOMContentLoaded', init);
 
 async function init() {
   try {
+    const dataVersion = Date.now();
     const [rainfall, dailyRecords, stations, metadata] = await Promise.all(
-      ['rainfall.json','rainfall-daily.json','stations.json','metadata.json'].map(name => fetch(`data/${name}`).then(response => {
+      ['rainfall.json','rainfall-daily.json','stations.json','metadata.json'].map(name => fetch(`data/${name}?v=${dataVersion}`, { cache: 'no-store' }).then(response => {
         if (!response.ok) throw new Error(`No se pudo cargar ${name}`);
         return response.json();
       }))

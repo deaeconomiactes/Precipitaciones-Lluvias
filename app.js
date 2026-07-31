@@ -3,6 +3,7 @@ const MONTHS_FULL = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','A
 const COLORS = ['#1677a6','#25a9b5','#7667a8','#d9931a','#c34f59','#3d9a6b','#7b8790','#b46a9b'];
 const ALL_MONTHS = MONTHS.map((_, index) => index);
 const DAILY_WINDOWS = [1, 7, 15, 30];
+const CACHE_VERSION = '20260731-2';
 const state = { rainfall: [], monthlyRainfall: [], monthlySourceStats: {}, dailyRecords: [], stations: [], metadata: {}, charts: {}, tableRows: [], filterConfigs: {}, temporalFiltersExplicit: { years: false, months: false }, climateMetrics: new Set(['temperature','humidity','wind','rain24Total']) };
 const $ = id => document.getElementById(id);
 const format = value => new Intl.NumberFormat('es-AR', { maximumFractionDigits: 1 }).format(value || 0);
@@ -16,9 +17,8 @@ document.addEventListener('DOMContentLoaded', init);
 
 async function init() {
   try {
-    const dataVersion = Date.now();
     const [rainfall, dailyRecords, stations, metadata] = await Promise.all(
-      ['rainfall.json','rainfall-daily.json','stations.json','metadata.json'].map(name => fetch(`data/${name}?v=${dataVersion}`, { cache: 'no-store' }).then(response => {
+      ['rainfall.json','rainfall-daily.json','stations.json','metadata.json'].map(name => fetch(`data/${name}?v=${CACHE_VERSION}`, { cache: 'no-store' }).then(response => {
         if (!response.ok) throw new Error(`No se pudo cargar ${name}`);
         return response.json();
       }))

@@ -4319,13 +4319,6 @@
     "lng": -58.8306
   },
   {
-    "date": "2026-07-29",
-    "department": "Curuzu Cuatia",
-    "rainfallMm": 3.0,
-    "lat": -29.7917,
-    "lng": -58.0561
-  },
-  {
     "date": "2024-04-13",
     "department": "Concepcion",
     "rainfallMm": 9.2,
@@ -14107,7 +14100,7 @@
   {
     "date": "2026-07-27",
     "department": "Curuzu Cuatia",
-    "rainfallMm": 31.0,
+    "rainfallMm": 18.0,
     "lat": -29.7917,
     "lng": -58.0561
   },
@@ -23252,13 +23245,6 @@
     "rainfallMm": 2.5,
     "lat": -30.6183,
     "lng": -57.9708
-  },
-  {
-    "date": "2026-07-28",
-    "department": "Curuzu Cuatia",
-    "rainfallMm": 22.0,
-    "lat": -29.7917,
-    "lng": -58.0561
   },
   {
     "date": "2023-03-31",

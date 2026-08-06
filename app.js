@@ -3,7 +3,7 @@ const MONTHS_FULL = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','A
 const COLORS = ['#1677a6','#25a9b5','#7667a8','#d9931a','#c34f59','#3d9a6b','#7b8790','#b46a9b'];
 const ALL_MONTHS = MONTHS.map((_, index) => index);
 const DAILY_WINDOWS = [1, 7, 15, 30];
-const CACHE_VERSION = '20260731-2';
+const CACHE_VERSION = '20260806-1';
 const state = { rainfall: [], monthlyRainfall: [], monthlySourceStats: {}, dailyRecords: [], stations: [], metadata: {}, charts: {}, tableRows: [], filterConfigs: {}, temporalFiltersExplicit: { years: false, months: false }, climateMetrics: new Set(['temperature','humidity','wind','rain24Total']) };
 const $ = id => document.getElementById(id);
 const format = value => new Intl.NumberFormat('es-AR', { maximumFractionDigits: 1 }).format(value || 0);
@@ -248,6 +248,7 @@ function wireControls() {
   $('dailyWindowFilter').addEventListener('change', () => renderDaily(filters()));
   $('dailySortFilter').addEventListener('change', () => renderDaily(filters()));
   $('dailyMatrixSortFilter').addEventListener('change', () => renderDaily(filters()));
+  $('departmentDetailSortFilter').addEventListener('change', () => renderDepartmentDetail(getDepartmentMonthlyDeviationRows(filters()), filters()));
   $('resetFilters').addEventListener('click', () => {
     const latestAvailableYear = latestCombinedMonthlyYear();
     setMultiSelection('departmentFilter', ['ALL']);
@@ -981,8 +982,8 @@ function renderClimate(f) {
 }
 
 function getLatestMonthlyPeriodForDepartment(department, f) {
-  const years = state.temporalFiltersExplicit.years ? f.years : null;
-  const months = state.temporalFiltersExplicit.months ? selectedMonths(f) : ALL_MONTHS;
+  const years = f.years;
+  const months = selectedMonths(f);
   return monthlyRows()
     .filter(row => row.department === department && matchesSelection(row.year, years))
     .reduce((latest, row) => {
@@ -1008,7 +1009,7 @@ function classifyMonthlyDeviation(differencePct) {
   if (!Number.isFinite(differencePct)) return 'Sin referencia';
   if (differencePct <= -30) return 'Muy por debajo';
   if (differencePct <= -10) return 'Por debajo';
-  if (differencePct < 10) return 'Normal';
+  if (differencePct < 10) return 'En torno al promedio';
   if (differencePct < 30) return 'Por encima';
   return 'Muy por encima';
 }
@@ -1031,19 +1032,59 @@ function getDepartmentMonthlyDeviationRows(f) {
       differencePct,
       category: classifyMonthlyDeviation(differencePct)
     };
-  }).sort((a, b) => {
-    const absA = Number.isFinite(a.differencePct) ? Math.abs(a.differencePct) : -1;
-    const absB = Number.isFinite(b.differencePct) ? Math.abs(b.differencePct) : -1;
-    return absB - absA || a.department.localeCompare(b.department, 'es');
-  });
+  }).filter(row => Number.isFinite(row.observedMm));
 }
 
 function renderDepartmentDetail(rows, f) {
-  state.tableRows = rows;
-  $('detailsTable').innerHTML = rows.map(row => {
+  const sortedRows = sortDepartmentDetailRows(rows, $('departmentDetailSortFilter')?.value || 'absolute-deviation');
+  state.tableRows = sortedRows;
+  updateDepartmentDetailMethodology(f);
+  $('detailsTable').innerHTML = sortedRows.length ? sortedRows.map(row => {
     const period = Number.isInteger(row.latestMonth) && Number.isFinite(row.latestYear) ? `${MONTHS_FULL[row.latestMonth]} ${row.latestYear}` : 'Sin dato';
     return `<tr><td>${row.department}</td><td>${period}</td><td>${formatTableRainfall(row.observedMm)}</td><td>${formatTableRainfall(row.historicalAverageMm)}</td><td>${formatSignedMm(row.differenceMm)}</td><td>${formatSignedPercent(row.differencePct)}</td><td><span class="${deviationClass(row.category)}">${row.category}</span></td></tr>`;
-  }).join('');
+  }).join('') : '<tr><td colspan="7">No hay registros válidos para el período seleccionado.</td></tr>';
+}
+
+function sortDepartmentDetailRows(rows, criterion) {
+  const compareFinite = (a, b, direction) => {
+    const aFinite = Number.isFinite(a);
+    const bFinite = Number.isFinite(b);
+    if (aFinite !== bFinite) return aFinite ? -1 : 1;
+    return aFinite ? direction * (a - b) : 0;
+  };
+  const categoryOrder = new Map([
+    ['Muy por encima', 0],
+    ['Por encima', 1],
+    ['En torno al promedio', 2],
+    ['Normal', 2],
+    ['Por debajo', 3],
+    ['Muy por debajo', 4],
+    ['Sin referencia', 5]
+  ]);
+  const compare = (a, b) => {
+    if (criterion === 'observed-desc') return compareFinite(a.observedMm, b.observedMm, -1);
+    if (criterion === 'observed-asc') return compareFinite(a.observedMm, b.observedMm, 1);
+    if (criterion === 'difference-positive') return compareFinite(a.differenceMm, b.differenceMm, -1);
+    if (criterion === 'difference-negative') return compareFinite(a.differenceMm, b.differenceMm, 1);
+    if (criterion === 'category') return (categoryOrder.get(a.category) ?? 99) - (categoryOrder.get(b.category) ?? 99);
+    if (criterion === 'latest') return b.latestYear - a.latestYear || b.latestMonth - a.latestMonth;
+    if (criterion === 'department') return a.department.localeCompare(b.department, 'es');
+    const deviationA = Number.isFinite(a.differencePct) ? Math.abs(a.differencePct) : (Number.isFinite(a.differenceMm) ? Math.abs(a.differenceMm) : null);
+    const deviationB = Number.isFinite(b.differencePct) ? Math.abs(b.differencePct) : (Number.isFinite(b.differenceMm) ? Math.abs(b.differenceMm) : null);
+    return compareFinite(deviationA, deviationB, -1);
+  };
+  return [...rows].sort((a, b) => compare(a, b) || a.department.localeCompare(b.department, 'es'));
+}
+
+function updateDepartmentDetailMethodology(f) {
+  const note = $('departmentDetailMethodology');
+  if (!note) return;
+  if (f.years === null) {
+    note.textContent = 'Con “Todos los años”, la tabla muestra el último registro mensual disponible de cada departamento en toda la base.';
+    return;
+  }
+  const yearLabel = [...f.years].sort((a, b) => a - b).join(', ');
+  note.textContent = `La tabla muestra, para cada departamento, el último registro mensual disponible dentro del año seleccionado (${yearLabel}). Cuando se elige “Año completo”, no representa acumulados anuales: compara el mes de referencia de cada departamento contra su promedio histórico del mismo mes calendario. Los departamentos sin registros en el año seleccionado no se incluyen en la tabla principal.`;
 }
 
 function deviationClass(category) {
@@ -1051,6 +1092,7 @@ function deviationClass(category) {
     'Muy por debajo': 'deviation-very-low',
     'Por debajo': 'deviation-low',
     'Normal': 'deviation-normal',
+    'En torno al promedio': 'deviation-normal',
     'Por encima': 'deviation-high',
     'Muy por encima': 'deviation-very-high',
     'Sin referencia': 'deviation-none'

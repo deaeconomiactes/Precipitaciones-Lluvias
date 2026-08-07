@@ -1,9 +1,9 @@
 {
-  "generatedAt": "2026-08-06T11:59:02",
+  "generatedAt": "2026-08-07T10:45:09",
   "source": "Apps Script JSON",
   "dateMin": "2023-01-01",
   "dateMax": "2026-08-05",
-  "records": 4745,
+  "records": 4756,
   "departments": [
     "Bella Vista",
     "Beron de Astrada",
@@ -977,10 +977,10 @@
       "windowDays": 30,
       "analysisDate": "2026-08-05",
       "department": "Itati",
-      "recentMm": 0.0,
+      "recentMm": 53.6,
       "historicalAverageMm": 16.2,
-      "differenceMm": -16.2,
-      "differencePct": -100.0,
+      "differenceMm": 37.4,
+      "differencePct": 230.86,
       "level": "normal",
       "historicalYears": 3
     },

@@ -57,6 +57,15 @@ Cada ejecución informa, por archivo:
 
 También informa totales históricos, operativos y combinados, solapamientos resueltos a favor de la base operativa y rango final. `--dry-run` ejecuta estas verificaciones sin escribir archivos.
 
-## Preparacion para referencias historicas
+## Referencia historica diaria en el tablero
 
-`app.js` incluye funciones para calcular acumulados, cobertura de días y referencias de la misma ventana calendario en años anteriores. La estructura devuelve años comparables, mínimo, máximo y promedio, manteniendo visible la cobertura y sin completar días ausentes con cero.
+La solapa `Monitoreo diario` presenta tres tarjetas para ventanas de 7, 15 y 30 días. Cada tarjeta compara el acumulado reciente con el promedio de la misma ventana calendario en años anteriores.
+
+- El año observado actual no integra su propia referencia.
+- Se exige al menos 70% de cobertura: 5/7, 11/15 o 21/30 días.
+- Los ceros explícitos cuentan como días observados; las fechas ausentes no se completan.
+- Se requieren al menos tres años comparables.
+- Para un departamento se muestra su propia comparación.
+- Para selecciones múltiples se promedian los acumulados departamentales comparables; no se suman milímetros como total provincial.
+
+Las categorías son `Muy por debajo`, `Por debajo`, `En torno al promedio`, `Por encima`, `Muy por encima` y `Referencia insuficiente`. La lectura es descriptiva y no sustituye una evaluación oficial.

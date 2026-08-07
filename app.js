@@ -3,7 +3,9 @@ const MONTHS_FULL = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','A
 const COLORS = ['#1677a6','#25a9b5','#7667a8','#d9931a','#c34f59','#3d9a6b','#7b8790','#b46a9b'];
 const ALL_MONTHS = MONTHS.map((_, index) => index);
 const DAILY_WINDOWS = [1, 7, 15, 30];
-const CACHE_VERSION = '20260807-1';
+const DAILY_REFERENCE_WINDOWS = [7, 15, 30];
+const MINIMUM_COMPARABLE_YEARS = 3;
+const CACHE_VERSION = '20260807-2';
 const state = { rainfall: [], monthlyRainfall: [], monthlySourceStats: {}, operationalDailyRecords: [], dailyRecords: [], dailyDataSource: 'operational', stations: [], metadata: {}, charts: {}, tableRows: [], filterConfigs: {}, temporalFiltersExplicit: { years: false, months: false }, climateMetrics: new Set(['temperature','humidity','wind','rain24Total']) };
 const $ = id => document.getElementById(id);
 const format = value => new Intl.NumberFormat('es-AR', { maximumFractionDigits: 1 }).format(value || 0);
@@ -501,6 +503,7 @@ function renderDaily(f) {
     ['dailyRain24Detail','dailyRain7Detail','dailyRain30Detail','dailyTopDepartmentDetail','dailyWetDepartmentsDetail','dailyMaxRecordDetail'].forEach(id => $(id).textContent = 'sin observaciones');
     $('dailyRankingTable').innerHTML = '';
     $('dailyTable').innerHTML = '<tr><td colspan="5">No hay observaciones diarias para los filtros activos.</td></tr>';
+    renderDailyHistoricalSignals([], null, f);
     chart('dailySeriesChart', 'line', { labels: [], datasets: [] }, lineOptions('mm', 'Lluvia diaria (mm)'));
     updateDailyQuickStats(f);
     return;
@@ -521,6 +524,7 @@ function renderDaily(f) {
   const sourceLabel = state.dailyDataSource === 'combined' ? 'base diaria combinada' : 'base diaria operativa de respaldo';
   $('dailyCoverage').textContent = `${records[0].date} a ${latestDate} - ${records.length} observaciones departamentales (${sourceLabel})`;
   updateDailyKpis(rows, latestDate, topDepartment, maxRecord, selectedWindow, singleDepartment);
+  renderDailyHistoricalSignals(records, latestDate, f);
   renderDailySeries(records, latestDate, f, selectedWindow);
   $('dailyRankingTable').innerHTML = rankingRows.map(row => `
     <tr>
@@ -639,8 +643,8 @@ function dailyWindowCoverage(records, latestDate, days) {
   return { daysWithRecords: dates.size, daysInWindow: days };
 }
 
-// Estructura preparada para futuras referencias historicas de una misma
-// ventana calendario. No imputa dias sin registro como 0 mm.
+// Referencia de la misma ventana calendario. Solo conserva años con al menos
+// 70% de cobertura y no completa fechas ausentes con 0 mm.
 function dailyHistoricalWindowReference(records, department, referenceDate, days) {
   const [referenceYear, month, day] = referenceDate.split('-').map(Number);
   const departmentRecords = records.filter(record => record.department === department);
@@ -651,11 +655,12 @@ function dailyHistoricalWindowReference(records, department, referenceDate, days
     const endDate = isoDateOrNull(year, month, day);
     if (!endDate) return [];
     const windowRecords = dailyWindowRecords(departmentRecords, endDate, days);
-    if (!windowRecords.length) return [];
+    const coverage = dailyWindowCoverage(departmentRecords, endDate, days);
+    if (coverage.daysWithRecords < Math.ceil(days * 0.7)) return [];
     return [{
       year,
       accumulatedMm: windowRecords.reduce((sum, record) => sum + record.rainfallMm, 0),
-      ...dailyWindowCoverage(departmentRecords, endDate, days)
+      ...coverage
     }];
   });
   const values = comparable.map(item => item.accumulatedMm);
@@ -669,6 +674,183 @@ function dailyHistoricalWindowReference(records, department, referenceDate, days
     maximumMm: values.length ? Math.max(...values) : null,
     averageMm: values.length ? average(values) : null
   };
+}
+
+function renderDailyHistoricalSignals(records, latestDate, f) {
+  const container = $('dailyHistoricalSignals');
+  const scope = $('dailyReferenceScope');
+  if (!container || !scope) return;
+  const departments = [...new Set(records.map(record => record.department))].sort((a, b) => a.localeCompare(b, 'es'));
+  const selectedDepartments = f.departments?.length ? f.departments.filter(department => departments.includes(department)) : departments;
+  const sourceLabel = state.dailyDataSource === 'combined' ? 'base diaria combinada' : 'base diaria operativa de respaldo';
+
+  if (!latestDate || !selectedDepartments.length) {
+    scope.textContent = 'Sin observaciones para los filtros activos';
+    container.innerHTML = DAILY_REFERENCE_WINDOWS.map(days => dailyReferenceCard({
+      days,
+      periodStart: null,
+      periodEnd: null,
+      category: 'Referencia insuficiente',
+      categoryKey: 'insufficient',
+      observedMm: null,
+      historicalAverageMm: null,
+      differenceMm: null,
+      differencePct: null,
+      historicalMinimumMm: null,
+      historicalMaximumMm: null,
+      yearsComparable: [],
+      observedDays: 0,
+      possibleObservedDays: days,
+      departmentsComparable: 0,
+      departmentsRequested: selectedDepartments.length,
+      singleDepartment: selectedDepartments.length === 1,
+      sourceLabel
+    })).join('');
+    return;
+  }
+
+  const signals = DAILY_REFERENCE_WINDOWS.map(days => dailyReferenceSignal(records, selectedDepartments, latestDate, days, sourceLabel));
+  const maximumComparableDepartments = Math.max(...signals.map(signal => signal.departmentsComparable));
+  scope.textContent = selectedDepartments.length === 1
+    ? selectedDepartments[0]
+    : `Promedio departamental · hasta ${maximumComparableDepartments} de ${selectedDepartments.length} deptos.`;
+  container.innerHTML = signals.map(dailyReferenceCard).join('');
+}
+
+function dailyReferenceSignal(records, departments, latestDate, days, sourceLabel) {
+  const periodStart = addDays(latestDate, 1 - days);
+  const departmentStats = departments.map(department => {
+    const departmentRecords = records.filter(record => record.department === department);
+    const observedRecords = dailyWindowRecords(departmentRecords, latestDate, days);
+    const observedDates = new Set(observedRecords.map(record => record.date));
+    const reference = dailyHistoricalWindowReference(records, department, latestDate, days);
+    return {
+      department,
+      observedMm: observedRecords.reduce((sum, record) => sum + record.rainfallMm, 0),
+      observedDays: observedDates.size,
+      reference
+    };
+  });
+  const comparable = departmentStats.filter(item =>
+    item.observedDays > 0 &&
+    item.reference.yearsComparable.length >= MINIMUM_COMPARABLE_YEARS &&
+    Number.isFinite(item.reference.averageMm) &&
+    item.reference.averageMm > 0
+  );
+  const observedMm = comparable.length ? average(comparable.map(item => item.observedMm)) : null;
+  const historicalAverageMm = comparable.length ? average(comparable.map(item => item.reference.averageMm)) : null;
+  const differenceMm = Number.isFinite(observedMm) && Number.isFinite(historicalAverageMm) ? observedMm - historicalAverageMm : null;
+  const differencePct = Number.isFinite(differenceMm) && historicalAverageMm > 0 ? differenceMm / historicalAverageMm * 100 : null;
+  const yearsComparable = [...new Set(comparable.flatMap(item => item.reference.yearsComparable))].sort((a, b) => a - b);
+  const historicalMinimumMm = comparable.length ? average(comparable.map(item => item.reference.minimumMm)) : null;
+  const historicalMaximumMm = comparable.length ? average(comparable.map(item => item.reference.maximumMm)) : null;
+  const category = classifyDailyReference(differencePct, yearsComparable.length, comparable.length);
+
+  return {
+    days,
+    periodStart,
+    periodEnd: latestDate,
+    category: category.label,
+    categoryKey: category.key,
+    observedMm,
+    historicalAverageMm,
+    differenceMm,
+    differencePct,
+    historicalMinimumMm,
+    historicalMaximumMm,
+    yearsComparable,
+    observedDays: comparable.reduce((sum, item) => sum + item.observedDays, 0),
+    possibleObservedDays: days * comparable.length,
+    departmentsComparable: comparable.length,
+    departmentsRequested: departments.length,
+    singleDepartment: departments.length === 1,
+    sourceLabel
+  };
+}
+
+function classifyDailyReference(differencePct, yearsComparable, departmentsComparable) {
+  if (!Number.isFinite(differencePct) || yearsComparable < MINIMUM_COMPARABLE_YEARS || departmentsComparable < 1) {
+    return { label: 'Referencia insuficiente', key: 'insufficient' };
+  }
+  if (differencePct <= -50) return { label: 'Muy por debajo', key: 'very-low' };
+  if (differencePct <= -20) return { label: 'Por debajo', key: 'low' };
+  if (differencePct < 20) return { label: 'En torno al promedio', key: 'near' };
+  if (differencePct < 50) return { label: 'Por encima', key: 'high' };
+  return { label: 'Muy por encima', key: 'very-high' };
+}
+
+function dailyReferenceCard(signal) {
+  const observed = formatReferenceRainfall(signal.observedMm);
+  const historical = formatReferenceRainfall(signal.historicalAverageMm);
+  const differencePct = formatSignedPercentage(signal.differencePct);
+  const differenceMm = formatSignedRainfall(signal.differenceMm);
+  const minimum = formatReferenceRainfall(signal.historicalMinimumMm);
+  const maximum = formatReferenceRainfall(signal.historicalMaximumMm);
+  const period = signal.periodStart && signal.periodEnd ? `${formatDate(signal.periodStart)} al ${formatDate(signal.periodEnd)}` : 'Sin período disponible';
+  const coverage = signal.possibleObservedDays > 0 ? `${signal.observedDays}/${signal.possibleObservedDays}` : '0/0';
+  const coverageUnit = signal.singleDepartment ? 'días' : 'días-departamento';
+  const departmentDetail = signal.singleDepartment
+    ? 'Departamento seleccionado'
+    : `${signal.departmentsComparable} de ${signal.departmentsRequested} departamentos comparables`;
+  const title = [
+    `Período observado: ${period}`,
+    `Acumulado observado: ${observed}`,
+    `Promedio histórico: ${historical}`,
+    `Diferencia: ${differenceMm}`,
+    `Diferencia porcentual: ${differencePct}`,
+    `Mínimo histórico: ${minimum}`,
+    `Máximo histórico: ${maximum}`,
+    `Años comparables: ${signal.yearsComparable.length}`,
+    `Cobertura observada: ${coverage} ${coverageUnit}`,
+    `Fuente: ${signal.sourceLabel}`
+  ].join('\n');
+
+  return `
+    <article class="daily-reference-card reference-${signal.categoryKey}" title="${escapeAttr(title)}">
+      <div class="daily-reference-card-top">
+        <span class="daily-reference-window">Últimos ${signal.days} días</span>
+        <span class="daily-reference-category">${signal.category}</span>
+      </div>
+      <div class="daily-reference-main">
+        <strong>${observed}</strong>
+        <span>acumulado observado</span>
+      </div>
+      <div class="daily-reference-comparison">
+        <div><span>Promedio histórico</span><strong>${historical}</strong></div>
+        <div><span>Diferencia</span><strong>${differencePct}</strong></div>
+      </div>
+      <div class="daily-reference-meta">
+        <span><b>${signal.yearsComparable.length}</b> años comparables</span>
+        <span><b>${coverage}</b> ${coverageUnit}</span>
+      </div>
+      <p class="daily-reference-scope">${departmentDetail}</p>
+      <details class="daily-reference-details">
+        <summary>Ver detalle</summary>
+        <dl>
+          <div><dt>Período observado</dt><dd>${period}</dd></div>
+          <div><dt>Diferencia</dt><dd>${differenceMm} · ${differencePct}</dd></div>
+          <div><dt>Rango histórico</dt><dd>${minimum} a ${maximum}</dd></div>
+          <div><dt>Cobertura</dt><dd>${coverage} ${coverageUnit}</dd></div>
+          <div><dt>Fuente</dt><dd>${signal.sourceLabel}</dd></div>
+        </dl>
+      </details>
+    </article>`;
+}
+
+function formatReferenceRainfall(value) {
+  return Number.isFinite(value) ? `${format(value)} mm` : '—';
+}
+
+function formatSignedRainfall(value) {
+  if (!Number.isFinite(value)) return '—';
+  const prefix = value > 0 ? '+' : '';
+  return `${prefix}${format(value)} mm`;
+}
+
+function formatSignedPercentage(value) {
+  if (!Number.isFinite(value)) return '—';
+  const prefix = value > 0 ? '+' : '';
+  return `${prefix}${format(value)}%`;
 }
 
 function isoDateOrNull(year, month, day) {

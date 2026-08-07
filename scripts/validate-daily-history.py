@@ -55,6 +55,30 @@ def window_signature(records: list[dict[str, Any]], end: date, days: int) -> dic
     }
 
 
+def historical_windows(
+    records: list[dict[str, Any]],
+    department: str,
+    observed_end: date,
+    days: int,
+) -> list[tuple[int, float, int]]:
+    department_records = [record for record in records if record["department"] == department]
+    years = sorted({date.fromisoformat(record["date"]).year for record in department_records if date.fromisoformat(record["date"]).year < observed_end.year})
+    minimum_coverage = math.ceil(days * 0.7)
+    comparable: list[tuple[int, float, int]] = []
+    for year in years:
+        try:
+            historical_end = observed_end.replace(year=year)
+        except ValueError:
+            continue
+        signature = window_signature(department_records, historical_end, days).get(department)
+        if signature is None:
+            continue
+        accumulated, coverage = signature
+        if coverage >= minimum_coverage:
+            comparable.append((year, accumulated, coverage))
+    return comparable
+
+
 def main() -> int:
     historical = load("rainfall-daily-history.json")
     operational = load("rainfall-daily.json")
@@ -90,12 +114,33 @@ def main() -> int:
         if operational_signature != combined_signature:
             raise AssertionError(f"La ventana reciente de {days} dias cambio al combinar las bases")
 
+    departments = sorted({record["department"] for record in combined})
+    for days, required_coverage in ((7, 5), (15, 11), (30, 21)):
+        references = {
+            department: historical_windows(combined, department, latest_operational_date, days)
+            for department in departments
+        }
+        if any(year >= latest_operational_date.year for values in references.values() for year, _, _ in values):
+            raise AssertionError(f"La referencia de {days} dias incluyo el año observado")
+        if any(coverage < required_coverage for values in references.values() for _, _, coverage in values):
+            raise AssertionError(f"La referencia de {days} dias no respeto la cobertura minima")
+        if not any(len(values) >= 3 for values in references.values()):
+            raise AssertionError(f"No hay departamentos con al menos 3 años comparables en {days} dias")
+
+    explicit_zero = next(record for record in historical if record["rainfallMm"] == 0)
+    zero_date = date.fromisoformat(explicit_zero["date"])
+    zero_signature = window_signature([explicit_zero], zero_date, 1)[explicit_zero["department"]]
+    if zero_signature != (0, 1):
+        raise AssertionError("Un 0 mm explicito no fue contado como dia observado")
+
     overlap_count = len(set(historical_by_key) & set(operational_by_key))
     zero_count = sum(record["rainfallMm"] == 0 for record in historical)
     print(f"Historico: {len(historical)} registros, {zero_count} ceros, años 2015-2025.")
     print(f"Operativo: {len(operational)} registros; ultima fecha {latest_operational_date.isoformat()}.")
     print(f"Combinado: {len(combined)} registros; {overlap_count} solapamientos con prioridad operativa.")
     print("Ventanas recientes de 1, 7, 15 y 30 dias: sin cambios respecto de la base operativa.")
+    print("Referencias de 7, 15 y 30 dias: año actual excluido y cobertura minima validada.")
+    print("Los 0 mm explicitos cuentan como dias observados; no se crearon fechas faltantes.")
     print("Validacion diaria completada sin errores.")
     return 0
 

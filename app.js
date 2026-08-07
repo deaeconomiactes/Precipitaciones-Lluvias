@@ -494,8 +494,24 @@ function validDailyRecords(f = filters()) {
     .sort((a, b) => a.date.localeCompare(b.date) || a.department.localeCompare(b.department, 'es'));
 }
 
+// La referencia histórica diaria tiene un alcance temporal propio: siempre usa
+// toda la base combinada (o su respaldo operativo) y solo responde al filtro de
+// Departamento. Año y Mes pertenecen al análisis mensual y no recortan esta base.
+function validDailyReferenceRecords(f = filters()) {
+  return state.dailyRecords
+    .filter(record =>
+      record.date &&
+      record.department &&
+      Number.isFinite(record.rainfallMm) &&
+      matchesSelection(record.department, f.departments)
+    )
+    .sort((a, b) => a.date.localeCompare(b.date) || a.department.localeCompare(b.department, 'es'));
+}
+
 function renderDaily(f) {
   const records = validDailyRecords(f);
+  const referenceRecords = validDailyReferenceRecords(f);
+  const referenceLatestDate = referenceRecords.length ? referenceRecords[referenceRecords.length - 1].date : null;
   if (!records.length) {
     $('dailyLatestDate').textContent = '\u2014';
     $('dailyCoverage').textContent = 'Sin observaciones diarias para los filtros activos';
@@ -503,7 +519,7 @@ function renderDaily(f) {
     ['dailyRain24Detail','dailyRain7Detail','dailyRain30Detail','dailyTopDepartmentDetail','dailyWetDepartmentsDetail','dailyMaxRecordDetail'].forEach(id => $(id).textContent = 'sin observaciones');
     $('dailyRankingTable').innerHTML = '';
     $('dailyTable').innerHTML = '<tr><td colspan="5">No hay observaciones diarias para los filtros activos.</td></tr>';
-    renderDailyHistoricalSignals([], null, f);
+    renderDailyHistoricalSignals(referenceRecords, referenceLatestDate, f);
     chart('dailySeriesChart', 'line', { labels: [], datasets: [] }, lineOptions('mm', 'Lluvia diaria (mm)'));
     updateDailyQuickStats(f);
     return;
@@ -524,7 +540,7 @@ function renderDaily(f) {
   const sourceLabel = state.dailyDataSource === 'combined' ? 'base diaria combinada' : 'base diaria operativa de respaldo';
   $('dailyCoverage').textContent = `${records[0].date} a ${latestDate} - ${records.length} observaciones departamentales (${sourceLabel})`;
   updateDailyKpis(rows, latestDate, topDepartment, maxRecord, selectedWindow, singleDepartment);
-  renderDailyHistoricalSignals(records, latestDate, f);
+  renderDailyHistoricalSignals(referenceRecords, referenceLatestDate, f);
   renderDailySeries(records, latestDate, f, selectedWindow);
   $('dailyRankingTable').innerHTML = rankingRows.map(row => `
     <tr>

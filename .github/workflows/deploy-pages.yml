@@ -34,7 +34,7 @@ jobs:
           set -euo pipefail
           mkdir -p _site/data
           cp index.html app.js styles.css climate-controls.css operational.css _site/
-          cp data/rainfall.json data/rainfall-daily.json data/rainfall-daily-summary.json data/stations.json data/metadata.json _site/data/
+          cp data/rainfall.json data/rainfall-daily.json data/rainfall-daily-history.json data/rainfall-daily-combined.json data/rainfall-daily-summary.json data/stations.json data/metadata.json _site/data/
           touch _site/.nojekyll
 
       - name: Verify private files are excluded
@@ -45,7 +45,9 @@ jobs:
             echo "Private or internal files found in the public artifact."
             exit 1
           fi
-          find _site -type f -maxdepth 3 -print
+          test -s _site/data/rainfall-daily-history.json
+          test -s _site/data/rainfall-daily-combined.json
+          find _site -maxdepth 3 -type f -print
 
       - name: Upload public dashboard only
         uses: actions/upload-pages-artifact@v3

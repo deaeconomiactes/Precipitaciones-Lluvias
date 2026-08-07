@@ -3,8 +3,8 @@ const MONTHS_FULL = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','A
 const COLORS = ['#1677a6','#25a9b5','#7667a8','#d9931a','#c34f59','#3d9a6b','#7b8790','#b46a9b'];
 const ALL_MONTHS = MONTHS.map((_, index) => index);
 const DAILY_WINDOWS = [1, 7, 15, 30];
-const CACHE_VERSION = '20260806-1';
-const state = { rainfall: [], monthlyRainfall: [], monthlySourceStats: {}, dailyRecords: [], stations: [], metadata: {}, charts: {}, tableRows: [], filterConfigs: {}, temporalFiltersExplicit: { years: false, months: false }, climateMetrics: new Set(['temperature','humidity','wind','rain24Total']) };
+const CACHE_VERSION = '20260807-1';
+const state = { rainfall: [], monthlyRainfall: [], monthlySourceStats: {}, operationalDailyRecords: [], dailyRecords: [], dailyDataSource: 'operational', stations: [], metadata: {}, charts: {}, tableRows: [], filterConfigs: {}, temporalFiltersExplicit: { years: false, months: false }, climateMetrics: new Set(['temperature','humidity','wind','rain24Total']) };
 const $ = id => document.getElementById(id);
 const format = value => new Intl.NumberFormat('es-AR', { maximumFractionDigits: 1 }).format(value || 0);
 const average = values => values.length ? values.reduce((a,b) => a + b, 0) / values.length : 0;
@@ -17,13 +17,27 @@ document.addEventListener('DOMContentLoaded', init);
 
 async function init() {
   try {
-    const [rainfall, dailyRecords, stations, metadata] = await Promise.all(
-      ['rainfall.json','rainfall-daily.json','stations.json','metadata.json'].map(name => fetch(`data/${name}?v=${CACHE_VERSION}`, { cache: 'no-store' }).then(response => {
-        if (!response.ok) throw new Error(`No se pudo cargar ${name}`);
-        return response.json();
-      }))
-    );
-    Object.assign(state, { rainfall, dailyRecords, stations, metadata });
+    const [rainfall, operationalDailyRecords, combinedDailyResult, stations, metadata] = await Promise.all([
+      fetchDataFile('rainfall.json'),
+      fetchDataFile('rainfall-daily.json'),
+      fetchDataFile('rainfall-daily-combined.json')
+        .then(records => ({ records, source: 'combined' }))
+        .catch(error => {
+          console.warn(`${error.message}. Se usara rainfall-daily.json como respaldo.`);
+          return null;
+        }),
+      fetchDataFile('stations.json'),
+      fetchDataFile('metadata.json')
+    ]);
+    const dailyRecords = combinedDailyResult?.records || operationalDailyRecords;
+    Object.assign(state, {
+      rainfall,
+      operationalDailyRecords,
+      dailyRecords,
+      dailyDataSource: combinedDailyResult?.source || 'operational',
+      stations,
+      metadata
+    });
     state.monthlySourceStats = buildCombinedMonthlyRainfall();
     populateFilters();
     wireControls();
@@ -41,6 +55,13 @@ async function init() {
   } finally {
     $('loading').classList.add('hidden');
   }
+}
+
+function fetchDataFile(name) {
+  return fetch(`data/${name}?v=${CACHE_VERSION}`, { cache: 'no-store' }).then(response => {
+    if (!response.ok) throw new Error(`No se pudo cargar ${name}`);
+    return response.json();
+  });
 }
 
 function setupStickyFilters() {
@@ -108,7 +129,9 @@ function buildCombinedMonthlyRainfall() {
     });
   });
 
-  const derived = deriveMonthlyFromDailyRecords(state.dailyRecords);
+  // La metodologia mensual validada sigue usando exclusivamente la base
+  // operativa. El historico Excel se incorpora solo al analisis diario.
+  const derived = deriveMonthlyFromDailyRecords(state.operationalDailyRecords);
   let added = 0;
   let preservedMonthly = 0;
   derived.forEach(entry => {
@@ -473,7 +496,7 @@ function renderDaily(f) {
   const records = validDailyRecords(f);
   if (!records.length) {
     $('dailyLatestDate').textContent = '\u2014';
-    $('dailyCoverage').textContent = 'Sin observaciones diarias vigentes para los filtros activos';
+    $('dailyCoverage').textContent = 'Sin observaciones diarias para los filtros activos';
     ['dailyRain24','dailyRain7','dailyRain30','dailyTopDepartment','dailyWetDepartments','dailyMaxRecord'].forEach(id => $(id).textContent = 'Sin dato');
     ['dailyRain24Detail','dailyRain7Detail','dailyRain30Detail','dailyTopDepartmentDetail','dailyWetDepartmentsDetail','dailyMaxRecordDetail'].forEach(id => $(id).textContent = 'sin observaciones');
     $('dailyRankingTable').innerHTML = '';
@@ -495,7 +518,8 @@ function renderDaily(f) {
   const singleDepartment = f.departments?.length === 1;
 
   $('dailyLatestDate').textContent = formatDate(latestDate);
-  $('dailyCoverage').textContent = `${records[0].date} a ${latestDate} - ${records.length} observaciones departamentales vigentes`;
+  const sourceLabel = state.dailyDataSource === 'combined' ? 'base diaria combinada' : 'base diaria operativa de respaldo';
+  $('dailyCoverage').textContent = `${records[0].date} a ${latestDate} - ${records.length} observaciones departamentales (${sourceLabel})`;
   updateDailyKpis(rows, latestDate, topDepartment, maxRecord, selectedWindow, singleDepartment);
   renderDailySeries(records, latestDate, f, selectedWindow);
   $('dailyRankingTable').innerHTML = rankingRows.map(row => `
@@ -608,6 +632,49 @@ function dailyWindowRecords(records, latestDate, days) {
 function dailyWindowTotal(records, latestDate, days) {
   const values = dailyWindowRecords(records, latestDate, days).map(record => record.rainfallMm).filter(Number.isFinite);
   return values.length ? values.reduce((sum, value) => sum + value, 0) : 0;
+}
+
+function dailyWindowCoverage(records, latestDate, days) {
+  const dates = new Set(dailyWindowRecords(records, latestDate, days).map(record => record.date));
+  return { daysWithRecords: dates.size, daysInWindow: days };
+}
+
+// Estructura preparada para futuras referencias historicas de una misma
+// ventana calendario. No imputa dias sin registro como 0 mm.
+function dailyHistoricalWindowReference(records, department, referenceDate, days) {
+  const [referenceYear, month, day] = referenceDate.split('-').map(Number);
+  const departmentRecords = records.filter(record => record.department === department);
+  const years = [...new Set(departmentRecords.map(record => Number(record.date.slice(0, 4))))]
+    .filter(year => Number.isInteger(year) && year < referenceYear)
+    .sort((a, b) => a - b);
+  const comparable = years.flatMap(year => {
+    const endDate = isoDateOrNull(year, month, day);
+    if (!endDate) return [];
+    const windowRecords = dailyWindowRecords(departmentRecords, endDate, days);
+    if (!windowRecords.length) return [];
+    return [{
+      year,
+      accumulatedMm: windowRecords.reduce((sum, record) => sum + record.rainfallMm, 0),
+      ...dailyWindowCoverage(departmentRecords, endDate, days)
+    }];
+  });
+  const values = comparable.map(item => item.accumulatedMm);
+  return {
+    department,
+    referenceDate,
+    windowDays: days,
+    yearsComparable: comparable.map(item => item.year),
+    comparable,
+    minimumMm: values.length ? Math.min(...values) : null,
+    maximumMm: values.length ? Math.max(...values) : null,
+    averageMm: values.length ? average(values) : null
+  };
+}
+
+function isoDateOrNull(year, month, day) {
+  const candidate = new Date(Date.UTC(year, month - 1, day));
+  if (candidate.getUTCFullYear() !== year || candidate.getUTCMonth() !== month - 1 || candidate.getUTCDate() !== day) return null;
+  return candidate.toISOString().slice(0, 10);
 }
 
 function dailyMaxRecord(records, latestDate, days) {

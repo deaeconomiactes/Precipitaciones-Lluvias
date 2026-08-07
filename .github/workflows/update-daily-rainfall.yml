@@ -38,36 +38,48 @@ jobs:
         shell: pwsh
         run: ./scripts/build-daily-data.ps1
 
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: scripts/requirements-daily-history.txt
+
+      - name: Install historical Excel readers
+        run: python -m pip install -r scripts/requirements-daily-history.txt
+
+      - name: Import and combine historical daily rainfall
+        run: python scripts/import-daily-history.py
+
+      - name: Validate historical and combined daily rainfall
+        run: python scripts/validate-daily-history.py
+
       - name: Commit updated daily data
-        if: ${{ env.DAILY_RAIN_JSON_URL != '' || env.DAILY_RAIN_CSV_URL != '' || env.DAILY_RAIN_CSV_URLS != '' }}
         run: |
           set -euo pipefail
-          if git diff --quiet -- data/rainfall-daily.json data/rainfall-daily-summary.json; then
+          if git diff --quiet -- data/rainfall-daily.json data/rainfall-daily-summary.json data/rainfall-daily-history.json data/rainfall-daily-combined.json; then
             echo "No daily data changes."
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/rainfall-daily.json data/rainfall-daily-summary.json
+          git add data/rainfall-daily.json data/rainfall-daily-summary.json data/rainfall-daily-history.json data/rainfall-daily-combined.json
           git commit -m "Update daily rainfall data"
           git push
 
       - name: Configure GitHub Pages
-        if: ${{ env.DAILY_RAIN_JSON_URL != '' || env.DAILY_RAIN_CSV_URL != '' || env.DAILY_RAIN_CSV_URLS != '' }}
         uses: actions/configure-pages@v5
 
       - name: Build public site from allowlist
-        if: ${{ env.DAILY_RAIN_JSON_URL != '' || env.DAILY_RAIN_CSV_URL != '' || env.DAILY_RAIN_CSV_URLS != '' }}
         shell: bash
         run: |
           set -euo pipefail
           mkdir -p _site/data
           cp index.html app.js styles.css climate-controls.css operational.css _site/
-          cp data/rainfall.json data/rainfall-daily.json data/rainfall-daily-summary.json data/stations.json data/metadata.json _site/data/
+          cp data/rainfall.json data/rainfall-daily.json data/rainfall-daily-history.json data/rainfall-daily-combined.json data/rainfall-daily-summary.json data/stations.json data/metadata.json _site/data/
           touch _site/.nojekyll
 
       - name: Verify private files are excluded
-        if: ${{ env.DAILY_RAIN_JSON_URL != '' || env.DAILY_RAIN_CSV_URL != '' || env.DAILY_RAIN_CSV_URLS != '' }}
         shell: bash
         run: |
           set -euo pipefail
@@ -78,12 +90,10 @@ jobs:
           find _site -maxdepth 3 -type f -print
 
       - name: Upload public dashboard only
-        if: ${{ env.DAILY_RAIN_JSON_URL != '' || env.DAILY_RAIN_CSV_URL != '' || env.DAILY_RAIN_CSV_URLS != '' }}
         uses: actions/upload-pages-artifact@v3
         with:
           path: _site
 
       - name: Deploy GitHub Pages
         id: deployment
-        if: ${{ env.DAILY_RAIN_JSON_URL != '' || env.DAILY_RAIN_CSV_URL != '' || env.DAILY_RAIN_CSV_URLS != '' }}
         uses: actions/deploy-pages@v4

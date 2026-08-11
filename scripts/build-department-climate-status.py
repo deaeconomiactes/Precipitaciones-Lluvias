@@ -146,6 +146,8 @@ def classify_monthly(difference_pct: float | None) -> str:
 def window_status(
     observations: dict[date, float], reference_date: date, days: int
 ) -> tuple[float | None, str]:
+    # Ventana inclusiva y acumulativa: [referencia - (dias - 1), referencia].
+    # Solo suma observaciones existentes; los dias faltantes no se imputan como 0 mm.
     start = reference_date - timedelta(days=days - 1)
     values = [
         rainfall

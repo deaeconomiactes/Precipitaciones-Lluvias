@@ -1035,6 +1035,8 @@ function renderDailySeries(records, latestDate, f, selectedWindow) {
   }, barOptions('mm', false, false, 'Lluvia diaria (mm)'));
 }
 
+// Ventana inclusiva y acumulativa: [fecha de referencia - (dias - 1), fecha de referencia].
+// Solo se incluyen observaciones existentes; los dias faltantes no se imputan como 0 mm.
 function dailyWindowRecords(records, latestDate, days) {
   const startDate = addDays(latestDate, 1 - days);
   return records.filter(record => record.date >= startDate && record.date <= latestDate);

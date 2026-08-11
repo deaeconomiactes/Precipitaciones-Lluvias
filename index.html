@@ -12,7 +12,7 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="climate-controls.css?v=20260612-4">
-  <link rel="stylesheet" href="operational.css?v=20260811-3">
+  <link rel="stylesheet" href="operational.css?v=20260811-4">
 </head>
 <body>
   <div class="loading" id="loading"><div class="spinner"></div><p>Preparando datos climáticos...</p></div>
@@ -76,7 +76,7 @@
             <span class="source-tag">Referencia descriptiva</span>
           </div>
           <div class="climate-map-toolbar" aria-label="Controles del mapa climático">
-            <label><span>Modo de visualización</span><select id="climateMapMode"><option value="departments" selected>Departamentos</option><option value="stations" disabled>Estaciones — próximamente</option><option value="mixed" disabled>Mixto — próximamente</option></select></label>
+            <label><span>Modo de visualización</span><select id="climateMapMode"><option value="departments" selected>Departamentos</option><option value="stations" disabled>Estaciones (próximamente)</option><option value="mixed" disabled>Mixto (próximamente)</option></select></label>
             <label><span>Variable del mapa</span><select id="climateMapVariable"><option value="rainLastDateMm">Lluvia última fecha</option><option value="rain7dMm" selected>Acumulado 7 días</option><option value="rain15dMm">Acumulado 15 días</option><option value="rain30dMm">Acumulado 30 días</option><option value="monthlyDifferencePct">Desvío mensual vs histórico</option><option value="monthlyCategory">Categoría mensual</option></select></label>
             <span class="climate-map-reference" id="climateMapReference">Cargando información territorial…</span>
           </div>
@@ -107,7 +107,7 @@
               </dl>
             </aside>
           </div>
-          <section class="method-callout compact climate-map-method"><strong>Nota metodológica</strong><p>Los valores por departamento son indicadores territoriales agregados. No representan mediciones puntuales, superficie inundada calculada, hectáreas afectadas ni daño productivo.</p><p>Los acumulados corresponden a cada departamento y no se suman como total provincial. Un registro explícito de 0 mm es válido; los días sin registro no se imputan como 0.</p></section>
+          <section class="method-callout compact climate-map-method"><strong>Nota metodológica</strong><p>Los valores por departamento son indicadores territoriales agregados. No representan mediciones puntuales, superficie inundada calculada, hectáreas afectadas ni daño productivo. La información es descriptiva y depende de la cobertura de datos disponible.</p><p>Los acumulados corresponden a cada departamento y no se suman como total provincial. Un registro explícito de 0 mm es válido; los días sin registro no se imputan como 0.</p></section>
         </article>
       </section>
       <section class="flood-card">
@@ -193,6 +193,6 @@
   <footer><p>Dashboard independiente · Datos exclusivos de Precipitaciones-Lluvias</p><p id="dataNote"></p></footer>
   <div class="error-banner" id="errorBanner"></div>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="app.js?v=20260811-3"></script>
+  <script src="app.js?v=20260811-4"></script>
 </body>
 </html>

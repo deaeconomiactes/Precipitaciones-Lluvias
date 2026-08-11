@@ -42,6 +42,9 @@ Genera:
 - `data/rainfall-daily-history.json`: registros diarios históricos 2015-2025 normalizados desde los Excel de `cesarkali-40/Registro-de-lluvias`.
 - `data/rainfall-daily-combined.json`: unión histórica-operativa por departamento-fecha; ante solapamientos conserva la observación operativa vigente.
 - `data/rainfall-daily-summary.json`: resumen derivado de la base operativa para ventanas móviles de 1, 7, 15 y 30 días. La interfaz actual calcula sus ventanas directamente desde la base combinada, con respaldo operativo.
+- `data/department-climate-status.json`: indicadores diarios y mensuales por departamento consumidos por el mapa interactivo.
+- `data/geo/corrientes-departamentos.geojson`: polígonos normalizados de los 25 departamentos de Corrientes, obtenidos de la API oficial GeoRef Argentina (geometrías basadas en IGN).
+- `data/stations-climate-status.json`: contrato inicial de la futura capa puntual; puede estar vacío o no existir sin impedir la carga del mapa departamental.
 - `data/stations.json`: variables meteorológicas agregadas mensualmente.
 - `data/metadata.json`: cobertura y fuentes.
 
@@ -62,6 +65,19 @@ Para usar una copia local del repositorio fuente sin descargar los libros:
 
 ```powershell
 python .\scripts\import-daily-history.py --source-dir "C:\ruta\Registro-de-lluvias"
+```
+
+Para regenerar los indicadores del mapa y validar su correspondencia con las fuentes actuales:
+
+```powershell
+python .\scripts\build-department-climate-status.py
+python .\scripts\build-department-climate-status.py --check
+```
+
+Para actualizar el GeoJSON desde GeoRef Argentina:
+
+```powershell
+python .\scripts\fetch-corrientes-geojson.py
 ```
 
 El modo `--dry-run` inspecciona y valida sin escribir JSON. El detalle de formatos, normalizaciones y supuestos está en `docs/integracion-historica-diaria.md`.
@@ -93,13 +109,14 @@ $env:DAILY_RAIN_CSV_URLS = "https://docs.google.com/spreadsheets/d/.../export?fo
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\build-daily-data.ps1
 ```
 
-El workflow `.github/workflows/update-daily-rainfall.yml` actualiza primero la base operativa cuando está configurada alguna de las variables `DAILY_RAIN_JSON_URL`, `DAILY_RAIN_CSV_URL` o `DAILY_RAIN_CSV_URLS`. Después importa siempre los Excel históricos, regenera las bases histórica y combinada y publica el tablero. Si no hay diferencias, informa que no existen cambios y finaliza sin intentar un commit vacío. Desde la pestaña `Monitoreo diario`, el enlace `Abrir flujo de actualización` abre ese workflow en GitHub Actions; la ejecución manual requiere permisos de escritura sobre el repositorio.
+El workflow `.github/workflows/update-daily-rainfall.yml` actualiza primero la base operativa cuando está configurada alguna de las variables `DAILY_RAIN_JSON_URL`, `DAILY_RAIN_CSV_URL` o `DAILY_RAIN_CSV_URLS`. Después importa los Excel históricos, regenera las bases histórica y combinada, actualiza los indicadores departamentales del mapa y publica el tablero. Si no hay diferencias, informa que no existen cambios y finaliza sin intentar un commit vacío. Desde la pestaña `Monitoreo diario`, el enlace `Abrir flujo de actualización` abre ese workflow en GitHub Actions; la ejecución manual requiere permisos de escritura sobre el repositorio.
 
 ## Fuentes y criterios
 
 - `DINAMICA LLUVIAS pruebas.xls`: serie histórica principal.
 - `Registro-de-lluvias/plantilla_registro_lluvias.csv`, Apps Script o Google Sheets publicado como CSV: registros diarios departamentales vigentes usados para seguimiento operativo y para construir acumulados mensualizados cuando falta una carga mensual específica.
 - Excel `2015.xls` a `2025.xlsx` de `cesarkali-40/Registro-de-lluvias`: referencia histórica diaria usada por el monitoreo y las ventanas diarias; no reemplaza `data/rainfall.json` ni cambia la metodología mensual.
+- API GeoRef Argentina: límites departamentales WGS84 basados en IGN. El dashboard usa una copia GeoJSON local y normalizada para evitar depender de la API durante la visualización.
 - `Temperatura/*.xls`: temperatura, humedad relativa, viento y lluvia registrada en períodos de 24 horas (`Rn24` en las planillas originales). El dashboard suma estos registros para mostrar la lluvia acumulada de cada mes.
 - Se normalizan variantes básicas de nombres departamentales.
 - Para el análisis diario, la unidad de observación es departamento-fecha. Cuando existen varias cargas para un mismo departamento y fecha, se consolida una única observación diaria departamental.

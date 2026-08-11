@@ -9,9 +9,10 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="climate-controls.css?v=20260612-4">
-  <link rel="stylesheet" href="operational.css?v=20260811-1">
+  <link rel="stylesheet" href="operational.css?v=20260811-2">
 </head>
 <body>
   <div class="loading" id="loading"><div class="spinner"></div><p>Preparando datos climáticos...</p></div>
@@ -69,7 +70,45 @@
         <div><span>Superficie inundada</span><strong>No disponible</strong></div>
       </section>
       <section class="decision-grid">
-        <article class="card map-placeholder"><div class="card-head"><div><h2>Mapa departamental de Corrientes</h2><p>Vista piloto embebida para validar interacción y apariencia. No representa superficie inundada calculada, hectáreas afectadas ni daño productivo.</p></div><span class="pending-badge">Piloto externo</span></div><div class="pilot-map"><iframe title="Mapa piloto departamental de Corrientes" src="https://geomat-maps.com.ar/mpc/maptiles/mpc-general.php?ori=v84501%22" loading="lazy" referrerpolicy="no-referrer-when-downgrade" allow="geolocation; fullscreen"></iframe><div class="map-note"><strong>Mapa piloto</strong><p>Referencia territorial piloto. No mide superficie inundada, hectáreas afectadas ni daño productivo.</p><a href="https://geomat-maps.com.ar/mpc/maptiles/mpc-general.php?ori=v84501%22" target="_blank" rel="noopener noreferrer">Abrir mapa en una pestaña nueva</a></div></div></article>
+        <article class="card climate-map-card">
+          <div class="card-head climate-map-heading">
+            <div><h2>Mapa climático interactivo de Corrientes</h2><p>Visualización territorial de registros de lluvia por departamento. Las capas externas y estaciones puntuales se incorporarán progresivamente.</p></div>
+            <span class="source-tag">Referencia descriptiva</span>
+          </div>
+          <div class="climate-map-toolbar" aria-label="Controles del mapa climático">
+            <label><span>Modo de visualización</span><select id="climateMapMode"><option value="departments" selected>Departamentos</option><option value="stations" disabled>Estaciones — próximamente</option><option value="mixed" disabled>Mixto — próximamente</option></select></label>
+            <label><span>Variable del mapa</span><select id="climateMapVariable"><option value="rainLastDateMm">Lluvia última fecha</option><option value="rain7dMm" selected>Acumulado 7 días</option><option value="rain15dMm">Acumulado 15 días</option><option value="rain30dMm">Acumulado 30 días</option><option value="monthlyDifferencePct">Desvío mensual vs histórico</option><option value="monthlyCategory">Categoría mensual</option></select></label>
+            <span class="climate-map-reference" id="climateMapReference">Cargando información territorial…</span>
+          </div>
+          <div class="climate-map-layout">
+            <div class="climate-map-visual">
+              <div id="climateMap" role="application" aria-label="Mapa interactivo de lluvia por departamento de Corrientes"></div>
+              <div class="climate-map-legend" id="climateMapLegend" aria-label="Leyenda del mapa"></div>
+              <div class="climate-map-message" id="climateMapMessage" hidden></div>
+            </div>
+            <aside class="climate-map-detail" aria-live="polite">
+              <span class="eyebrow">Detalle territorial</span>
+              <h3 id="mapDetailDepartment">Seleccioná un departamento</h3>
+              <dl class="climate-detail-list">
+                <div><dt>Última fecha diaria</dt><dd id="mapDetailDailyDate">Sin dato</dd></div>
+                <div><dt>Lluvia última fecha</dt><dd id="mapDetailLastRain">Sin dato</dd></div>
+                <div><dt>Acumulado 7 días</dt><dd id="mapDetailRain7">Sin dato</dd></div>
+                <div><dt>Acumulado 15 días</dt><dd id="mapDetailRain15">Sin dato</dd></div>
+                <div><dt>Acumulado 30 días</dt><dd id="mapDetailRain30">Sin dato</dd></div>
+                <div class="climate-detail-wide"><dt>Cobertura 7 / 15 / 30 días</dt><dd id="mapDetailCoverage">Sin dato</dd></div>
+                <div class="climate-detail-wide"><dt>Último mes disponible</dt><dd id="mapDetailMonthlyReference">Sin dato</dd></div>
+                <div><dt>Observado mensual</dt><dd id="mapDetailMonthlyObserved">Sin dato</dd></div>
+                <div><dt>Promedio histórico mensual</dt><dd id="mapDetailMonthlyHistorical">Sin dato</dd></div>
+                <div><dt>Diferencia</dt><dd id="mapDetailMonthlyDifference">Sin dato</dd></div>
+                <div><dt>Diferencia porcentual</dt><dd id="mapDetailMonthlyDifferencePct">Sin dato</dd></div>
+                <div class="climate-detail-wide"><dt>Categoría descriptiva</dt><dd id="mapDetailMonthlyCategory">Sin dato</dd></div>
+                <div class="climate-detail-wide"><dt>Fuente</dt><dd id="mapDetailSource">Sin dato</dd></div>
+                <div class="climate-detail-wide"><dt>Fecha de actualización</dt><dd id="mapDetailUpdated">Sin dato</dd></div>
+              </dl>
+            </aside>
+          </div>
+          <section class="method-callout compact climate-map-method"><strong>Nota metodológica</strong><p>El mapa no representa superficie inundada calculada, hectáreas afectadas ni daño productivo. La información es descriptiva y depende de la cobertura de datos disponible.</p><p>Los acumulados corresponden a cada departamento y no se suman como total provincial. Un registro explícito de 0 mm es válido; los días sin registro no se imputan como 0.</p></section>
+        </article>
       </section>
       <section class="flood-card">
         <div class="flood-icon">ha</div><div><span class="eyebrow">Información pendiente</span><h2>Superficie inundada por departamento</h2><p>No existen mediciones de hectáreas inundadas, geometrías ni variaciones temporales en las fuentes locales. El módulo queda preparado sin inventar estimaciones.</p></div><strong>— ha</strong>
@@ -144,7 +183,7 @@
       <section class="method-grid">
         <article class="method-card guide"><h3>Guía rápida de lectura</h3><p><strong>Resumen provincial:</strong> muestra una lectura sintética del mes de referencia. Compara la lluvia observada del mes contra el promedio histórico del mismo mes calendario. Cuando se muestran todos los departamentos, se informa un promedio departamental en mm; no se suman milímetros entre departamentos.</p><p><strong>Monitoreo diario:</strong> utiliza la base diaria histórica y operativa combinada. La unidad de análisis es departamento-fecha y la observación operativa prevalece cuando ambas fuentes coinciden.</p><p><strong>Análisis por departamento:</strong> compara cada departamento contra su propio promedio histórico mensual. El valor observado corresponde al acumulado mensual del mes de referencia, no al acumulado anual cuando el filtro está en “Año completo”.</p><p><strong>Evolución temporal:</strong> permite observar la trayectoria mensual y anual de la precipitación con la base mensual combinada. Los años con carga parcial deben interpretarse según los meses disponibles.</p><p><strong>Alcance del tablero:</strong> mide precipitaciones y desvíos pluviométricos. No estima superficie inundada, hectáreas afectadas, daño productivo ni constituye una evaluación oficial de eventos.</p></article>
         <article class="method-card available"><h3>Datos disponibles</h3><ul><li>Lluvia mensual por departamento, 1993–2026, complementada con acumulados diarios operativos mensualizados cuando falta una carga mensual específica.</li><li>Registro diario departamental combinado, con historia 2015–2025 y observaciones operativas vigentes, usado para seguimiento y ventanas diarias.</li><li>Temperatura, humedad, viento y lluvia diaria de ocho estaciones.</li></ul></article>
-        <article class="method-card pending"><h3>Datos pendientes</h3><ul><li>Superficie inundada y hectáreas afectadas.</li><li>Geometrías departamentales propias para mapas.</li><li>Variables de vulnerabilidad territorial.</li></ul></article>
+        <article class="method-card pending"><h3>Datos pendientes</h3><ul><li>Superficie inundada y hectáreas afectadas.</li><li>Ubicación y metadatos normalizados de estaciones puntuales.</li><li>Variables de vulnerabilidad territorial.</li></ul></article>
         <article class="method-card"><h3>Procesamiento</h3><ul><li>Nombres departamentales normalizados.</li><li>La base mensual se compone de registros mensuales existentes y, para los meses recientes sin carga mensual específica, de acumulados construidos a partir de registros diarios consolidados por departamento y mes. Estos acumulados diarios mensualizados se utilizan como observaciones mensuales disponibles para el análisis, incluyendo promedios, mínimos y máximos mensuales.</li><li>Los registros mensuales existentes tienen prioridad sobre los acumulados derivados.</li><li>Filas vacías y años totalmente en cero excluidos.</li><li>Fechas inválidas de estaciones descartadas.</li><li>Sin interpolación ni datos inventados.</li></ul></article>
         <article class="method-card"><h3>Limitación principal</h3><p>El prototipo permite análisis histórico mensual y seguimiento diario descriptivo. No permite afirmar cuántas hectáreas están inundadas, estimar daño productivo, predecir eventos ni sustituir una evaluación hidrológica oficial.</p><p>Un registro con 0 mm representa una observación válida sin lluvia. “Sin dato” indica ausencia de registro válido.</p><p>En las tablas, los valores faltantes de lluvia pueden visualizarse como 0 mm por simplicidad de lectura. Esta visualización no implica imputación: los faltantes no se usan como cero en los cálculos.</p></article>
       </section>
@@ -153,6 +192,7 @@
 
   <footer><p>Dashboard independiente · Datos exclusivos de Precipitaciones-Lluvias</p><p id="dataNote"></p></footer>
   <div class="error-banner" id="errorBanner"></div>
-  <script src="app.js?v=20260811-1"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="app.js?v=20260811-2"></script>
 </body>
 </html>

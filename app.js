@@ -6,7 +6,7 @@ const DAILY_WINDOWS = [1, 7, 15, 30];
 const DAILY_REFERENCE_WINDOWS = [7, 15, 30];
 const MINIMUM_COMPARABLE_YEARS = 3;
 const CACHE_VERSION = '20260811-1';
-const state = { rainfall: [], monthlyRainfall: [], monthlySourceStats: {}, operationalDailyRecords: [], dailyRecords: [], dailyDataSource: 'operational', stations: [], metadata: {}, charts: {}, tableRows: [], filterConfigs: {}, temporalFiltersExplicit: { years: false, months: false }, climateMetrics: new Set(['temperature','humidity','wind','rain24Total']) };
+const state = { rainfall: [], monthlyRainfall: [], monthlySourceStats: {}, operationalDailyRecords: [], dailyRecords: [], dailyDataSource: 'operational', stations: [], metadata: {}, charts: {}, tableRows: [], filterConfigs: {}, temporalFiltersExplicit: { years: false, months: false }, climateMetrics: new Set(['temperature','humidity','wind','rain24Total']), climateMap: { map: null, geoLayer: null, statuses: new Map(), stationStatuses: [], selectedDepartment: null, variable: 'rain7dMm' } };
 const $ = id => document.getElementById(id);
 const format = value => new Intl.NumberFormat('es-AR', { maximumFractionDigits: 1 }).format(value || 0);
 const average = values => values.length ? values.reduce((a,b) => a + b, 0) / values.length : 0;
@@ -41,6 +41,7 @@ async function init() {
       metadata
     });
     state.monthlySourceStats = buildCombinedMonthlyRainfall();
+    await initializeClimateMap();
     populateFilters();
     wireControls();
     setupStickyFilters();
@@ -503,6 +504,289 @@ function validDailyRecords(f = filters()) {
       matchesSelection(record.department, f.departments)
     )
     .sort((a, b) => a.date.localeCompare(b.date) || a.department.localeCompare(b.department, 'es'));
+}
+
+const CLIMATE_MAP_VARIABLES = {
+  rainLastDateMm: { label: 'Lluvia última fecha', unit: 'mm', scale: 'rain' },
+  rain7dMm: { label: 'Acumulado 7 días', unit: 'mm', scale: 'rain' },
+  rain15dMm: { label: 'Acumulado 15 días', unit: 'mm', scale: 'rain' },
+  rain30dMm: { label: 'Acumulado 30 días', unit: 'mm', scale: 'rain' },
+  monthlyDifferencePct: { label: 'Desvío mensual vs histórico', unit: '%', scale: 'difference' },
+  monthlyCategory: { label: 'Categoría mensual', unit: '', scale: 'category' }
+};
+
+const CLIMATE_MAP_NEUTRAL = '#d8e2df';
+
+function fetchClimateMapData(path, optional = false) {
+  const separator = path.includes('?') ? '&' : '?';
+  return fetch(`data/${path}${separator}v=${Date.now()}`, { cache: 'no-store' }).then(response => {
+    if (optional && response.status === 404) return [];
+    if (!response.ok) throw new Error(`No se pudo cargar data/${path}`);
+    return response.json();
+  }).catch(error => {
+    if (optional) {
+      console.info(`${error.message}. La capa opcional queda sin datos.`);
+      return [];
+    }
+    throw error;
+  });
+}
+
+async function initializeClimateMap() {
+  const container = $('climateMap');
+  if (!container) return;
+  try {
+    if (typeof L === 'undefined') throw new Error('Leaflet no se encuentra disponible');
+    const [statuses, geojson, stationStatuses] = await Promise.all([
+      fetchClimateMapData('department-climate-status.json'),
+      fetchClimateMapData('geo/corrientes-departamentos.geojson'),
+      fetchClimateMapData('stations-climate-status.json', true)
+    ]);
+    if (!Array.isArray(statuses) || !statuses.length) throw new Error('El archivo departamental no contiene registros');
+    if (!geojson || !Array.isArray(geojson.features) || !geojson.features.length) throw new Error('El GeoJSON no contiene departamentos');
+
+    state.climateMap.statuses = new Map(statuses.map(status => [normalizeClimateDepartment(status.department), status]));
+    state.climateMap.stationStatuses = Array.isArray(stationStatuses) ? stationStatuses : [];
+    state.climateMap.variable = $('climateMapVariable')?.value || 'rain7dMm';
+    state.climateMap.map = L.map(container, {
+      zoomControl: true,
+      minZoom: 6,
+      maxZoom: 13,
+      scrollWheelZoom: false
+    });
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(state.climateMap.map);
+
+    state.climateMap.geoLayer = L.geoJSON(geojson, {
+      style: climateDepartmentStyle,
+      onEachFeature: wireClimateDepartmentFeature
+    }).addTo(state.climateMap.map);
+    state.climateMap.map.fitBounds(state.climateMap.geoLayer.getBounds(), { padding: [14, 14] });
+    state.climateMap.map.setMaxBounds(state.climateMap.geoLayer.getBounds().pad(0.35));
+
+    $('climateMapVariable')?.addEventListener('change', event => {
+      state.climateMap.variable = event.target.value;
+      refreshClimateMap();
+    });
+    refreshClimateMap();
+    const initialDepartment = state.climateMap.statuses.has('Capital')
+      ? 'Capital'
+      : geojson.features[0]?.properties?.department;
+    if (initialDepartment) selectClimateDepartment(initialDepartment);
+    requestAnimationFrame(() => state.climateMap.map.invalidateSize());
+  } catch (error) {
+    showClimateMapMessage('No fue posible cargar la información territorial. El resto del dashboard continúa disponible.');
+    $('climateMapReference').textContent = 'Información territorial no disponible';
+    console.error(error);
+  }
+}
+
+function normalizeClimateDepartment(value) {
+  const key = String(value || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[._-]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase();
+  const aliases = {
+    'gral alvear': 'General Alvear',
+    'gral paz': 'General Paz',
+    'monte casero': 'Monte Caseros',
+    'paso de los libres': 'Paso de los Libres',
+    'p de los libres': 'Paso de los Libres'
+  };
+  if (aliases[key]) return aliases[key];
+  return state.metadata.departments?.find(department => department
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase() === key) || String(value || '').trim();
+}
+
+function climateStatusForFeature(feature) {
+  const department = normalizeClimateDepartment(feature?.properties?.department || feature?.properties?.officialName);
+  return state.climateMap.statuses.get(department) || null;
+}
+
+function climateDepartmentStyle(feature) {
+  const department = normalizeClimateDepartment(feature?.properties?.department || feature?.properties?.officialName);
+  const status = climateStatusForFeature(feature);
+  const selected = state.climateMap.selectedDepartment === department;
+  return {
+    color: selected ? '#073f4c' : '#466f68',
+    weight: selected ? 3.2 : 1.15,
+    opacity: 1,
+    fillColor: climateMapColor(status?.[state.climateMap.variable], state.climateMap.variable),
+    fillOpacity: selected ? 0.86 : 0.72
+  };
+}
+
+function wireClimateDepartmentFeature(feature, layer) {
+  const department = normalizeClimateDepartment(feature?.properties?.department || feature?.properties?.officialName);
+  layer.bindTooltip(() => climateMapTooltip(department), { sticky: true, direction: 'top' });
+  layer.on({
+    mouseover: () => {
+      layer.setStyle({ weight: 3, color: '#0b6f8d', fillOpacity: 0.88 });
+      layer.bringToFront();
+    },
+    mouseout: () => state.climateMap.geoLayer?.resetStyle(layer),
+    click: () => selectClimateDepartment(department)
+  });
+}
+
+function climateMapTooltip(department) {
+  const status = state.climateMap.statuses.get(department);
+  const variable = CLIMATE_MAP_VARIABLES[state.climateMap.variable];
+  return `<strong>${department}</strong><br>${variable.label}: ${formatClimateMapValue(status?.[state.climateMap.variable], state.climateMap.variable)}`;
+}
+
+function refreshClimateMap() {
+  if (!state.climateMap.geoLayer) return;
+  state.climateMap.geoLayer.setStyle(climateDepartmentStyle);
+  state.climateMap.geoLayer.eachLayer(layer => {
+    const department = normalizeClimateDepartment(layer.feature?.properties?.department || layer.feature?.properties?.officialName);
+    layer.setTooltipContent(climateMapTooltip(department));
+  });
+  renderClimateMapLegend();
+  updateClimateMapReference();
+}
+
+function selectClimateDepartment(department) {
+  const normalized = normalizeClimateDepartment(department);
+  state.climateMap.selectedDepartment = normalized;
+  state.climateMap.geoLayer?.setStyle(climateDepartmentStyle);
+  renderClimateDepartmentDetail(state.climateMap.statuses.get(normalized) || { department: normalized });
+}
+
+function climateMapColor(value, variableKey) {
+  if (value === null || value === undefined || value === '' || (typeof value === 'number' && !Number.isFinite(value))) return CLIMATE_MAP_NEUTRAL;
+  const scale = CLIMATE_MAP_VARIABLES[variableKey]?.scale;
+  if (scale === 'category') {
+    return {
+      'Muy por debajo': '#b88955',
+      'Por debajo': '#dfbd83',
+      'En torno al promedio': '#e7e4cf',
+      'Por encima': '#8ac7ba',
+      'Muy por encima': '#2f8876',
+      'Sin referencia': CLIMATE_MAP_NEUTRAL
+    }[value] || CLIMATE_MAP_NEUTRAL;
+  }
+  const number = Number(value);
+  if (!Number.isFinite(number)) return CLIMATE_MAP_NEUTRAL;
+  if (scale === 'difference') {
+    if (number <= -30) return '#b88955';
+    if (number <= -10) return '#dfbd83';
+    if (number < 10) return '#e7e4cf';
+    if (number < 30) return '#8ac7ba';
+    return '#2f8876';
+  }
+  if (number === 0) return '#edf4f2';
+  if (number <= 10) return '#d5ebec';
+  if (number <= 30) return '#acd7dc';
+  if (number <= 60) return '#70bcc6';
+  if (number <= 100) return '#3194a6';
+  return '#08677d';
+}
+
+function climateLegendItems(variableKey) {
+  const scale = CLIMATE_MAP_VARIABLES[variableKey]?.scale;
+  if (scale === 'category') return [
+    ['#b88955', 'Muy por debajo'],
+    ['#dfbd83', 'Por debajo'],
+    ['#e7e4cf', 'En torno al promedio'],
+    ['#8ac7ba', 'Por encima'],
+    ['#2f8876', 'Muy por encima'],
+    [CLIMATE_MAP_NEUTRAL, 'Sin referencia']
+  ];
+  if (scale === 'difference') return [
+    ['#b88955', '≤ −30 %'],
+    ['#dfbd83', '−29,9 a −10 %'],
+    ['#e7e4cf', '−9,9 a 9,9 %'],
+    ['#8ac7ba', '10 a 29,9 %'],
+    ['#2f8876', '≥ 30 %'],
+    [CLIMATE_MAP_NEUTRAL, 'Sin dato']
+  ];
+  return [
+    ['#edf4f2', '0 mm'],
+    ['#d5ebec', '0,1 a 10 mm'],
+    ['#acd7dc', '10,1 a 30 mm'],
+    ['#70bcc6', '30,1 a 60 mm'],
+    ['#3194a6', '60,1 a 100 mm'],
+    ['#08677d', 'Más de 100 mm'],
+    [CLIMATE_MAP_NEUTRAL, 'Sin dato']
+  ];
+}
+
+function renderClimateMapLegend() {
+  const variable = CLIMATE_MAP_VARIABLES[state.climateMap.variable];
+  $('climateMapLegend').innerHTML = `<strong>${variable.label}</strong>${climateLegendItems(state.climateMap.variable)
+    .map(([color, label]) => `<span class="climate-legend-row"><i class="climate-legend-swatch" style="--legend-color:${color}"></i>${label}</span>`)
+    .join('')}`;
+}
+
+function updateClimateMapReference() {
+  const statuses = [...state.climateMap.statuses.values()];
+  const selected = state.climateMap.statuses.get(state.climateMap.selectedDepartment) || statuses[0];
+  const variable = CLIMATE_MAP_VARIABLES[state.climateMap.variable];
+  const reference = variable.scale === 'rain'
+    ? `Referencia diaria: ${selected?.referenceDateDaily ? formatDate(selected.referenceDateDaily) : 'Sin dato'}`
+    : `Referencia mensual: ${selected?.monthlyReference || 'último mes disponible por departamento'}`;
+  $('climateMapReference').textContent = `${reference} · ${statuses.length} departamentos`;
+}
+
+function renderClimateDepartmentDetail(status) {
+  $('mapDetailDepartment').textContent = status.department || 'Sin dato';
+  $('mapDetailDailyDate').textContent = status.referenceDateDaily ? formatDate(status.referenceDateDaily) : 'Sin dato';
+  $('mapDetailLastRain').textContent = formatClimateMm(status.rainLastDateMm);
+  $('mapDetailRain7').textContent = formatClimateMm(status.rain7dMm);
+  $('mapDetailRain15').textContent = formatClimateMm(status.rain15dMm);
+  $('mapDetailRain30').textContent = formatClimateMm(status.rain30dMm);
+  $('mapDetailCoverage').textContent = [status.coverage7d, status.coverage15d, status.coverage30d].every(Boolean)
+    ? `${status.coverage7d} · ${status.coverage15d} · ${status.coverage30d}`
+    : 'Sin dato';
+  $('mapDetailMonthlyReference').textContent = status.monthlyReference || 'Sin dato';
+  $('mapDetailMonthlyObserved').textContent = formatClimateMm(status.monthlyObservedMm);
+  $('mapDetailMonthlyHistorical').textContent = formatClimateMm(status.monthlyHistoricalAvgMm);
+  $('mapDetailMonthlyDifference').textContent = formatClimateSigned(status.monthlyDifferenceMm, 'mm');
+  $('mapDetailMonthlyDifferencePct').textContent = formatClimateSigned(status.monthlyDifferencePct, '%');
+  $('mapDetailMonthlyCategory').textContent = status.monthlyCategory || 'Sin dato';
+  $('mapDetailSource').textContent = status.sourceDaily || status.sourceMonthly
+    ? `Diaria: ${status.sourceDaily || 'Sin dato'} · Mensual: ${status.sourceMonthly || 'Sin dato'}`
+    : 'Sin dato';
+  $('mapDetailUpdated').textContent = formatClimateUpdatedAt(status.updatedAt);
+  updateClimateMapReference();
+}
+
+function formatClimateMapValue(value, variableKey) {
+  if (value === null || value === undefined || value === '' || (typeof value === 'number' && !Number.isFinite(value))) return 'Sin dato';
+  if (CLIMATE_MAP_VARIABLES[variableKey]?.scale === 'category') return String(value);
+  const unit = CLIMATE_MAP_VARIABLES[variableKey]?.unit || '';
+  return `${format(Number(value))}${unit ? ` ${unit}` : ''}`;
+}
+
+function formatClimateMm(value) {
+  return Number.isFinite(value) ? `${format(value)} mm` : 'Sin dato';
+}
+
+function formatClimateSigned(value, unit) {
+  if (!Number.isFinite(value)) return 'Sin dato';
+  const sign = value > 0 ? '+' : '';
+  return `${sign}${format(value)} ${unit}`;
+}
+
+function formatClimateUpdatedAt(value) {
+  if (!value) return 'Sin dato';
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? value : parsed.toLocaleString('es-AR');
+}
+
+function showClimateMapMessage(message) {
+  const element = $('climateMapMessage');
+  if (!element) return;
+  element.textContent = message;
+  element.hidden = false;
 }
 
 function normalizeMonthlyComparisonYears(changedId) {

@@ -14,3 +14,8 @@ Thumbs.db
 __pycache__/
 _site/
 private-data-repo/
+tmp/
+docs/.qa_documento/
+docs/.qa_original/
+**/page-*.png
+**/*render_verified*/

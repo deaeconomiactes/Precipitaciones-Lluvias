@@ -6,7 +6,7 @@ const DAILY_WINDOWS = [1, 7, 15, 30];
 const DAILY_REFERENCE_WINDOWS = [7, 15, 30];
 const MINIMUM_COMPARABLE_YEARS = 3;
 const CACHE_VERSION = '20260811-1';
-const state = { rainfall: [], monthlyRainfall: [], monthlySourceStats: {}, operationalDailyRecords: [], dailyRecords: [], dailyDataSource: 'operational', stations: [], metadata: {}, charts: {}, tableRows: [], filterConfigs: {}, temporalFiltersExplicit: { years: false, months: false }, climateMetrics: new Set(['temperature','humidity','wind','rain24Total']), climateMap: { map: null, geoLayer: null, statuses: new Map(), stationStatuses: [], selectedDepartment: null, variable: 'rain7dMm' } };
+const state = { rainfall: [], monthlyRainfall: [], monthlySourceStats: {}, operationalDailyRecords: [], dailyRecords: [], dailyDataSource: 'operational', stations: [], metadata: {}, charts: {}, tableRows: [], filterConfigs: {}, temporalFiltersExplicit: { years: false, months: false }, climateMetrics: new Set(['temperature','humidity','wind','rain24Total']), climateMap: { map: null, geoLayer: null, resizeObserver: null, statuses: new Map(), stationStatuses: [], selectedDepartment: null, variable: 'rain7dMm' } };
 const $ = id => document.getElementById(id);
 const format = value => new Intl.NumberFormat('es-AR', { maximumFractionDigits: 1 }).format(value || 0);
 const average = values => values.length ? values.reduce((a,b) => a + b, 0) / values.length : 0;
@@ -266,7 +266,9 @@ function wireControls() {
       if (id === 'monthFilter') state.temporalFiltersExplicit.months = true;
       normalizeMultiSelection(id, event.target);
       updateMultiSummary(id);
+      const currentFilters = filters();
       render();
+      if (id === 'departmentFilter') syncClimateMapWithGlobalFilter(currentFilters);
     });
   });
   ['annualFromFilter','annualToFilter'].forEach(id => $(id).addEventListener('change', () => {
@@ -552,10 +554,13 @@ async function initializeClimateMap() {
       zoomControl: true,
       minZoom: 6,
       maxZoom: 13,
+      zoomSnap: 0.25,
+      zoomDelta: 0.5,
       scrollWheelZoom: false
     });
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19,
+      opacity: 0.55,
       attribution: '&copy; OpenStreetMap contributors'
     }).addTo(state.climateMap.map);
 
@@ -563,8 +568,7 @@ async function initializeClimateMap() {
       style: climateDepartmentStyle,
       onEachFeature: wireClimateDepartmentFeature
     }).addTo(state.climateMap.map);
-    state.climateMap.map.fitBounds(state.climateMap.geoLayer.getBounds(), { padding: [14, 14] });
-    state.climateMap.map.setMaxBounds(state.climateMap.geoLayer.getBounds().pad(0.35));
+    fitClimateMapToCorrientes();
 
     $('climateMapVariable')?.addEventListener('change', event => {
       state.climateMap.variable = event.target.value;
@@ -575,7 +579,21 @@ async function initializeClimateMap() {
       ? 'Capital'
       : geojson.features[0]?.properties?.department;
     if (initialDepartment) selectClimateDepartment(initialDepartment);
-    requestAnimationFrame(() => state.climateMap.map.invalidateSize());
+    requestAnimationFrame(() => {
+      state.climateMap.map.invalidateSize();
+      fitClimateMapToCorrientes();
+    });
+    if ('ResizeObserver' in window) {
+      let resizeTimer;
+      state.climateMap.resizeObserver = new ResizeObserver(() => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => {
+          state.climateMap.map.invalidateSize();
+          fitClimateMapToCorrientes();
+        }, 100);
+      });
+      state.climateMap.resizeObserver.observe(container);
+    }
   } catch (error) {
     showClimateMapMessage('No fue posible cargar la información territorial. El resto del dashboard continúa disponible.');
     $('climateMapReference').textContent = 'Información territorial no disponible';
@@ -615,11 +633,13 @@ function climateDepartmentStyle(feature) {
   const status = climateStatusForFeature(feature);
   const selected = state.climateMap.selectedDepartment === department;
   return {
-    color: selected ? '#073f4c' : '#466f68',
-    weight: selected ? 3.2 : 1.15,
+    color: selected ? '#052f3a' : '#315f59',
+    weight: selected ? 4.5 : 1.4,
     opacity: 1,
     fillColor: climateMapColor(status?.[state.climateMap.variable], state.climateMap.variable),
-    fillOpacity: selected ? 0.86 : 0.72
+    fillOpacity: selected ? 0.93 : 0.8,
+    lineCap: 'round',
+    lineJoin: 'round'
   };
 }
 
@@ -628,12 +648,29 @@ function wireClimateDepartmentFeature(feature, layer) {
   layer.bindTooltip(() => climateMapTooltip(department), { sticky: true, direction: 'top' });
   layer.on({
     mouseover: () => {
-      layer.setStyle({ weight: 3, color: '#0b6f8d', fillOpacity: 0.88 });
+      const selected = state.climateMap.selectedDepartment === department;
+      layer.setStyle({
+        weight: selected ? 5 : 3.25,
+        color: selected ? '#052f3a' : '#087d94',
+        fillOpacity: 0.95
+      });
       layer.bringToFront();
     },
-    mouseout: () => state.climateMap.geoLayer?.resetStyle(layer),
+    mouseout: () => {
+      state.climateMap.geoLayer?.resetStyle(layer);
+      bringSelectedClimateDepartmentToFront();
+    },
     click: () => selectClimateDepartment(department)
   });
+}
+
+function fitClimateMapToCorrientes() {
+  if (!state.climateMap.map || !state.climateMap.geoLayer) return;
+  const bounds = state.climateMap.geoLayer.getBounds();
+  state.climateMap.map.setMinZoom(6);
+  state.climateMap.map.fitBounds(bounds, { padding: [2, 2], animate: false });
+  state.climateMap.map.setMinZoom(state.climateMap.map.getZoom());
+  state.climateMap.map.setMaxBounds(bounds.pad(0.12));
 }
 
 function climateMapTooltip(department) {
@@ -657,7 +694,21 @@ function selectClimateDepartment(department) {
   const normalized = normalizeClimateDepartment(department);
   state.climateMap.selectedDepartment = normalized;
   state.climateMap.geoLayer?.setStyle(climateDepartmentStyle);
+  bringSelectedClimateDepartmentToFront();
   renderClimateDepartmentDetail(state.climateMap.statuses.get(normalized) || { department: normalized });
+}
+
+function bringSelectedClimateDepartmentToFront() {
+  if (!state.climateMap.geoLayer || !state.climateMap.selectedDepartment) return;
+  state.climateMap.geoLayer.eachLayer(layer => {
+    const department = normalizeClimateDepartment(layer.feature?.properties?.department || layer.feature?.properties?.officialName);
+    if (department === state.climateMap.selectedDepartment) layer.bringToFront();
+  });
+}
+
+function syncClimateMapWithGlobalFilter(currentFilters = filters()) {
+  if (!state.climateMap.geoLayer || currentFilters.departments?.length !== 1) return;
+  selectClimateDepartment(currentFilters.departments[0]);
 }
 
 function climateMapColor(value, variableKey) {
@@ -731,9 +782,9 @@ function updateClimateMapReference() {
   const selected = state.climateMap.statuses.get(state.climateMap.selectedDepartment) || statuses[0];
   const variable = CLIMATE_MAP_VARIABLES[state.climateMap.variable];
   const reference = variable.scale === 'rain'
-    ? `Referencia diaria: ${selected?.referenceDateDaily ? formatDate(selected.referenceDateDaily) : 'Sin dato'}`
+    ? `Fecha diaria de referencia: ${selected?.referenceDateDaily ? formatClimateReferenceDate(selected.referenceDateDaily) : 'Sin dato'} · ${statuses.length} departamentos en la base diaria`
     : `Referencia mensual: ${selected?.monthlyReference || 'último mes disponible por departamento'}`;
-  $('climateMapReference').textContent = `${reference} · ${statuses.length} departamentos`;
+  $('climateMapReference').textContent = reference;
 }
 
 function renderClimateDepartmentDetail(status) {
@@ -780,6 +831,11 @@ function formatClimateUpdatedAt(value) {
   if (!value) return 'Sin dato';
   const parsed = new Date(value);
   return Number.isNaN(parsed.getTime()) ? value : parsed.toLocaleString('es-AR');
+}
+
+function formatClimateReferenceDate(value) {
+  const match = String(value || '').match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  return match ? `${match[3]}/${match[2]}/${match[1]}` : value;
 }
 
 function showClimateMapMessage(message) {

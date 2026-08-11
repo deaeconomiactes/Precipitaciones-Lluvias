@@ -419,7 +419,7 @@ main {
 
 .climate-map-layout {
   display: grid;
-  grid-template-columns: minmax(0, 2.25fr) minmax(280px, .75fr);
+  grid-template-columns: minmax(0, 1.45fr) minmax(340px, .85fr);
   gap: 14px;
   align-items: stretch;
 }
@@ -435,8 +435,8 @@ main {
 
 #climateMap {
   width: 100%;
-  height: min(68vh, 640px);
-  min-height: 520px;
+  height: min(72vh, 680px);
+  min-height: 560px;
   background: #e8f0ee;
 }
 

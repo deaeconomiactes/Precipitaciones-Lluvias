@@ -1308,6 +1308,96 @@ footer {
   width: 100%;
 }
 
+.monthly-comparison-toolbar {
+  display: flex;
+  align-items: end;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin: 2px 0 14px;
+  padding: 12px 14px;
+  border: 1px solid rgba(96, 165, 250, .15);
+  border-radius: 12px;
+  background: rgba(96, 165, 250, .045);
+}
+
+.monthly-comparison-toolbar label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: var(--muted);
+  font-size: .64rem;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.monthly-comparison-toolbar select {
+  min-width: 150px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface2);
+  color: var(--text);
+  font: 500 .75rem Inter, sans-serif;
+}
+
+.monthly-comparison-years {
+  display: flex;
+  align-items: end;
+  gap: 10px;
+}
+
+.monthly-comparison-separator {
+  padding-bottom: 9px;
+  color: var(--muted);
+  font-size: .72rem;
+  font-weight: 700;
+}
+
+.monthly-comparison-summary {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 1px;
+  margin-bottom: 14px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--border);
+}
+
+.monthly-comparison-summary div {
+  min-width: 0;
+  padding: 11px 12px;
+  background: var(--surface);
+}
+
+.monthly-comparison-summary span,
+.monthly-comparison-summary strong {
+  display: block;
+}
+
+.monthly-comparison-summary span {
+  min-height: 2.4em;
+  color: var(--muted);
+  font-size: .59rem;
+  font-weight: 700;
+  letter-spacing: .06em;
+  line-height: 1.35;
+  text-transform: uppercase;
+}
+
+.monthly-comparison-summary strong {
+  margin-top: 5px;
+  color: var(--text);
+  font-size: .8rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.monthly-comparison-years.hidden,
+.monthly-comparison-summary.hidden {
+  display: none;
+}
+
 .department-profile-chart {
   height: 430px;
 }
@@ -1328,9 +1418,31 @@ footer {
   .department-ranking-chart {
     height: 480px;
   }
+
+  .monthly-comparison-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 480px) {
+  .monthly-comparison-toolbar,
+  .monthly-comparison-years {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .monthly-comparison-toolbar select {
+    width: 100%;
+  }
+
+  .monthly-comparison-separator {
+    display: none;
+  }
+
+  .monthly-comparison-summary {
+    grid-template-columns: 1fr;
+  }
+
   .department-profile-chart {
     height: 350px;
   }

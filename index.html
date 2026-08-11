@@ -11,7 +11,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="climate-controls.css?v=20260612-4">
-  <link rel="stylesheet" href="operational.css?v=20260807-2">
+  <link rel="stylesheet" href="operational.css?v=20260811-1">
 </head>
 <body>
   <div class="loading" id="loading"><div class="spinner"></div><p>Preparando datos climáticos...</p></div>
@@ -110,7 +110,20 @@
     <section class="dashboard-panel" id="departmentPanel">
       <div class="panel-intro"><div><span class="eyebrow">Lectura territorial</span><h2>Análisis por departamento</h2><p>Usá el selector superior para enfocar un departamento y compararlo con el resto.</p></div></div>
       <section class="chart-grid department-chart-grid">
-        <article class="card full department-chart-card"><div class="card-head"><div><h2>Perfil mensual</h2><p id="monthlyChartDescription">Acumulado mensual observado frente al promedio y rango histórico del mismo mes calendario.</p></div><span class="source-tag" id="monthlyChartScope">Todos los departamentos</span></div><div class="chart-box department-profile-chart"><canvas id="monthlyChart"></canvas></div><section class="method-note">El rango histórico mensual compara cada mes contra los valores mínimos y máximos observados para ese mismo mes calendario en la serie mensual combinada. No representa acumulados anuales.</section></article>
+        <article class="card full department-chart-card">
+          <div class="card-head"><div><h2>Perfil mensual</h2><p id="monthlyChartDescription">Acumulado mensual observado frente al promedio y rango histórico del mismo mes calendario.</p></div><span class="source-tag" id="monthlyChartScope">Todos los departamentos</span></div>
+          <div class="monthly-comparison-toolbar" aria-label="Controles de comparación interanual">
+            <label><span>Vista</span><select id="monthlyViewMode"><option value="comparison" selected>Comparar dos años</option><option value="standard">Según filtros generales</option></select></label>
+            <div class="monthly-comparison-years" id="monthlyComparisonControls">
+              <label><span>Año base</span><select id="monthlyBaseYear"></select></label>
+              <span class="monthly-comparison-separator">vs.</span>
+              <label><span>Año comparado</span><select id="monthlyCompareYear"></select></label>
+            </div>
+          </div>
+          <section class="monthly-comparison-summary" id="monthlyComparisonSummary" aria-live="polite"></section>
+          <div class="chart-box department-profile-chart"><canvas id="monthlyChart"></canvas></div>
+          <section class="method-note" id="monthlyChartMethodology">El rango histórico mensual compara cada mes contra los valores mínimos y máximos observados para ese mismo mes calendario en la serie mensual combinada. No representa acumulados anuales.</section>
+        </article>
         <article class="card full department-chart-card"><div class="card-head"><div><h2>Ranking departamental</h2><p>Acumulado del período seleccionado frente al promedio histórico del mismo período calendario. Ordenado por acumulado observado.</p></div></div><div class="chart-box department-ranking-chart"><canvas id="rankingChart"></canvas></div><section class="method-note">El ranking compara el acumulado del período seleccionado contra el promedio histórico del mismo conjunto de meses calendario. Si el año seleccionado está incompleto, la referencia histórica se calcula para los mismos meses disponibles, no para el año completo. Los años históricos sin todos los meses comparables se excluyen; los valores explícitos de 0 mm se conservan. Cuando se seleccionan todos los años, se muestra una sola serie con el promedio histórico comparable para evitar duplicar la misma referencia.</section></article>
         <article class="card full"><div class="card-head"><div><h2>Mapa de calor departamental</h2><p>Intensidad mensual media según los filtros activos</p></div><span class="source-tag">Unidad: milímetros (mm)</span></div><div class="heatmap-wrap" id="heatmap"></div></article>
       </section>
@@ -140,6 +153,6 @@
 
   <footer><p>Dashboard independiente · Datos exclusivos de Precipitaciones-Lluvias</p><p id="dataNote"></p></footer>
   <div class="error-banner" id="errorBanner"></div>
-  <script src="app.js?v=20260807-2"></script>
+  <script src="app.js?v=20260811-1"></script>
 </body>
 </html>

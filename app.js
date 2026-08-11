@@ -5,7 +5,7 @@ const ALL_MONTHS = MONTHS.map((_, index) => index);
 const DAILY_WINDOWS = [1, 7, 15, 30];
 const DAILY_REFERENCE_WINDOWS = [7, 15, 30];
 const MINIMUM_COMPARABLE_YEARS = 3;
-const CACHE_VERSION = '20260807-2';
+const CACHE_VERSION = '20260811-1';
 const state = { rainfall: [], monthlyRainfall: [], monthlySourceStats: {}, operationalDailyRecords: [], dailyRecords: [], dailyDataSource: 'operational', stations: [], metadata: {}, charts: {}, tableRows: [], filterConfigs: {}, temporalFiltersExplicit: { years: false, months: false }, climateMetrics: new Set(['temperature','humidity','wind','rain24Total']) };
 const $ = id => document.getElementById(id);
 const format = value => new Intl.NumberFormat('es-AR', { maximumFractionDigits: 1 }).format(value || 0);
@@ -107,6 +107,10 @@ function populateFilters() {
   fillSelect('annualToFilter', [...years].reverse());
   $('annualFromFilter').value = state.metadata.yearMin;
   $('annualToFilter').value = maxMonthlyYear;
+  fillSelect('monthlyBaseYear', years);
+  fillSelect('monthlyCompareYear', years);
+  $('monthlyBaseYear').value = years.includes(1998) ? '1998' : String(years[years.length - 1]);
+  $('monthlyCompareYear').value = years.includes(2026) ? '2026' : String(maxMonthlyYear);
 }
 
 function monthlyRows() {
@@ -270,6 +274,10 @@ function wireControls() {
     if (from > to) [$('annualFromFilter').value, $('annualToFilter').value] = [String(to), String(from)];
     renderAnnual(filters());
   }));
+  ['monthlyViewMode','monthlyBaseYear','monthlyCompareYear'].forEach(id => $(id).addEventListener('change', () => {
+    if (id !== 'monthlyViewMode') normalizeMonthlyComparisonYears(id);
+    renderMonthly(filteredRainfall(filters()), filters());
+  }));
   $('dailyWindowFilter').addEventListener('change', () => renderDaily(filters()));
   $('dailySortFilter').addEventListener('change', () => renderDaily(filters()));
   $('dailyMatrixSortFilter').addEventListener('change', () => renderDaily(filters()));
@@ -284,6 +292,9 @@ function wireControls() {
     state.temporalFiltersExplicit.months = false;
     $('annualFromFilter').value = state.metadata.yearMin;
     $('annualToFilter').value = state.metadata.yearMax;
+    $('monthlyViewMode').value = 'comparison';
+    $('monthlyBaseYear').value = monthlyRows().some(row => row.year === 1998) ? '1998' : String(state.metadata.yearMin);
+    $('monthlyCompareYear').value = monthlyRows().some(row => row.year === 2026) ? '2026' : String(latestAvailableYear);
     render();
   });
   document.querySelectorAll('.section-tab').forEach(button => button.addEventListener('click', () => {
@@ -492,6 +503,15 @@ function validDailyRecords(f = filters()) {
       matchesSelection(record.department, f.departments)
     )
     .sort((a, b) => a.date.localeCompare(b.date) || a.department.localeCompare(b.department, 'es'));
+}
+
+function normalizeMonthlyComparisonYears(changedId) {
+  const base = $('monthlyBaseYear');
+  const compared = $('monthlyCompareYear');
+  if (base.value !== compared.value) return;
+  const target = changedId === 'monthlyBaseYear' ? compared : base;
+  const alternative = [...target.options].find(option => option.value !== base.value);
+  if (alternative) target.value = alternative.value;
 }
 
 // La referencia histórica diaria tiene un alcance temporal propio: siempre usa
@@ -955,6 +975,13 @@ function renderAnnual(f) {
 }
 
 function renderMonthly(rows, f) {
+  const comparisonMode = $('monthlyViewMode')?.value === 'comparison';
+  $('monthlyComparisonControls')?.classList.toggle('hidden', !comparisonMode);
+  $('monthlyComparisonSummary')?.classList.toggle('hidden', !comparisonMode);
+  if (comparisonMode) {
+    renderMonthlyComparison(f);
+    return;
+  }
   const months = selectedMonths(f);
   const labels = months.map(month => MONTHS[month]);
   let datasets;
@@ -1015,7 +1042,150 @@ function renderMonthly(rows, f) {
   options.layout = { padding: { top: 8, right: 18, bottom: 4, left: 10 } };
   options.plugins.legend.position = 'top';
   options.plugins.legend.labels.padding = 16;
+  $('monthlyChartMethodology').textContent = 'El rango histórico mensual compara cada mes contra los valores mínimos y máximos observados para ese mismo mes calendario en la serie mensual combinada. El tooltip identifica el año de cada extremo. No representa acumulados anuales.';
   chart('monthlyChart', 'bar', { labels, datasets }, options);
+}
+
+function renderMonthlyComparison(f) {
+  const baseYear = +$('monthlyBaseYear').value;
+  const compareYear = +$('monthlyCompareYear').value;
+  const months = selectedMonths(f);
+  const departments = state.metadata.departments.filter(department => matchesSelection(department, f.departments));
+  const comparison = months.map(month => {
+    const base = monthlyScopeObservation(departments, baseYear, month);
+    const compared = monthlyScopeObservation(departments, compareYear, month);
+    const comparable = Number.isFinite(base.value) && Number.isFinite(compared.value);
+    const differenceMm = comparable ? compared.value - base.value : null;
+    const differencePct = comparable && base.value !== 0 ? (differenceMm / base.value) * 100 : null;
+    return {
+      month,
+      base,
+      compared,
+      comparable,
+      differenceMm,
+      differencePct,
+      historical: monthlyScopeHistoricalStats(departments, month)
+    };
+  });
+  const comparable = comparison.filter(item => item.comparable);
+  const baseTotal = comparable.length ? comparable.reduce((sum, item) => sum + item.base.value, 0) : null;
+  const compareTotal = comparable.length ? comparable.reduce((sum, item) => sum + item.compared.value, 0) : null;
+  const totalDifference = Number.isFinite(baseTotal) && Number.isFinite(compareTotal) ? compareTotal - baseTotal : null;
+  const totalDifferencePct = Number.isFinite(totalDifference) && baseTotal !== 0 ? (totalDifference / baseTotal) * 100 : null;
+  const scopeLabel = departments.length === 1 ? departments[0] : `Promedio de ${departments.length} departamentos`;
+  const comparisonInfo = comparison.map(item => ({
+    baseYear,
+    compareYear,
+    baseValue: item.base.value,
+    compareValue: item.compared.value,
+    differenceMm: item.differenceMm,
+    differencePct: item.differencePct
+  }));
+  const historicalData = comparison.map(item => item.comparable ? item.historical.average : null);
+  const minimumData = comparison.map(item => item.comparable ? item.historical.min : null);
+  const maximumData = comparison.map(item => item.comparable ? item.historical.max : null);
+  const datasets = [
+    {
+      ...dataset(String(baseYear), comparison.map(item => item.comparable ? item.base.value : null), '#607d8b', false, 'mm'),
+      sourceInfo: comparison.map(item => item.base.sourceLabel),
+      order: 4
+    },
+    {
+      ...dataset(String(compareYear), comparison.map(item => item.comparable ? item.compared.value : null), '#17a2d4', false, 'mm'),
+      sourceInfo: comparison.map(item => item.compared.sourceLabel),
+      comparisonInfo,
+      order: 4
+    },
+    {
+      ...dataset('Promedio histórico', historicalData, '#6f8794', false, 'mm'),
+      type: 'line',
+      backgroundColor: 'transparent',
+      borderDash: [7, 4],
+      borderWidth: 2.5,
+      pointRadius: 3,
+      order: 2
+    },
+    {
+      ...dataset('Mínimo histórico', minimumData, '#2e7d5b', false, 'mm'),
+      type: 'line',
+      backgroundColor: 'transparent',
+      borderDash: [5, 4],
+      borderWidth: 3,
+      pointRadius: 3,
+      extremeYears: comparison.map(item => item.historical.minYears),
+      spanGaps: true,
+      order: 1
+    },
+    {
+      ...dataset('Máximo histórico', maximumData, '#c34f59', false, 'mm'),
+      type: 'line',
+      backgroundColor: 'transparent',
+      borderDash: [5, 4],
+      borderWidth: 3,
+      pointRadius: 3,
+      extremeYears: comparison.map(item => item.historical.maxYears),
+      spanGaps: true,
+      order: 1
+    }
+  ];
+  const options = barOptions('mm', false, true, 'Precipitación mensual comparable (mm)');
+  options.interaction = { mode: 'index', intersect: false };
+  options.layout = { padding: { top: 8, right: 18, bottom: 4, left: 10 } };
+  options.plugins.legend.position = 'top';
+  options.plugins.legend.labels.padding = 16;
+  $('monthlyChartScope').textContent = scopeLabel;
+  $('monthlyChartDescription').textContent = `${baseYear} y ${compareYear} se muestran por separado; el promedio histórico es una referencia independiente.`;
+  $('monthlyChartMethodology').textContent = `La comparación utiliza únicamente meses calendario cerrados con datos en ambos años. Los acumulados resumen exactamente esos mismos meses; los faltantes no se imputan como 0 mm. El rango histórico se calcula para el alcance territorial seleccionado y el tooltip identifica el año de cada extremo.`;
+  renderMonthlyComparisonSummary({ baseYear, compareYear, comparable, requestedMonths: months.length, baseTotal, compareTotal, totalDifference, totalDifferencePct });
+  chart('monthlyChart', 'bar', { labels: months.map(month => MONTHS[month]), datasets }, options);
+}
+
+function monthlyScopeObservation(departments, year, month) {
+  const today = new Date();
+  if (year === today.getFullYear() && month >= today.getMonth()) {
+    return { value: null, departments: 0, sourceLabel: 'mes calendario no cerrado' };
+  }
+  const rows = monthlyRows().filter(row => row.year === year && departments.includes(row.department) && Number.isFinite(row.months[month]));
+  return {
+    value: averageFinite(rows.map(row => row.months[month])),
+    departments: rows.length,
+    sourceLabel: monthlyObservationSourceLabel(rows, month)
+  };
+}
+
+function monthlyScopeHistoricalStats(departments, month) {
+  const years = [...new Set(monthlyRows().map(row => row.year))].sort((a, b) => a - b);
+  const observations = years.map(year => ({ year, value: monthlyScopeObservation(departments, year, month).value }))
+    .filter(item => Number.isFinite(item.value));
+  if (!observations.length) return { min: null, max: null, average: null, minYears: [], maxYears: [] };
+  const values = observations.map(item => item.value);
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  return {
+    min,
+    max,
+    average: average(values),
+    minYears: observations.filter(item => item.value === min).map(item => item.year),
+    maxYears: observations.filter(item => item.value === max).map(item => item.year)
+  };
+}
+
+function renderMonthlyComparisonSummary(summary) {
+  const element = $('monthlyComparisonSummary');
+  if (!element) return;
+  const coverage = `${summary.comparable.length} de ${summary.requestedMonths} meses`;
+  const baseValue = Number.isFinite(summary.baseTotal) ? `${format(summary.baseTotal)} mm` : 'Sin dato';
+  const compareValue = Number.isFinite(summary.compareTotal) ? `${format(summary.compareTotal)} mm` : 'Sin dato';
+  const difference = Number.isFinite(summary.totalDifference)
+    ? `${formatSignedMm(summary.totalDifference)}${Number.isFinite(summary.totalDifferencePct) ? ` (${formatSignedPercent(summary.totalDifferencePct)})` : ''}`
+    : 'Sin dato';
+  const monthsAbove = summary.comparable.filter(item => item.differenceMm > 0).length;
+  element.innerHTML = `
+    <div><span>Meses comparables</span><strong>${coverage}</strong></div>
+    <div><span>Acumulado ${summary.baseYear}</span><strong>${baseValue}</strong></div>
+    <div><span>Acumulado ${summary.compareYear}</span><strong>${compareValue}</strong></div>
+    <div><span>Diferencia ${summary.compareYear} vs. ${summary.baseYear}</span><strong>${difference}</strong></div>
+    <div><span>${summary.compareYear} supera a ${summary.baseYear}</span><strong>${monthsAbove} de ${summary.comparable.length} meses</strong></div>`;
 }
 
 function monthlyRangeDatasets(months, department) {
@@ -1029,6 +1199,7 @@ function monthlyRangeDatasets(months, department) {
       borderWidth: 3,
       pointRadius: 3,
       pointHoverRadius: 5,
+      extremeYears: months.map(month => monthlyHistoricalStats(department, month).minYears),
       spanGaps: true,
       order: 1
     },
@@ -1041,6 +1212,7 @@ function monthlyRangeDatasets(months, department) {
       borderWidth: 3,
       pointRadius: 3,
       pointHoverRadius: 5,
+      extremeYears: months.map(month => monthlyHistoricalStats(department, month).maxYears),
       spanGaps: true,
       order: 1
     }
@@ -1048,13 +1220,18 @@ function monthlyRangeDatasets(months, department) {
 }
 
 function monthlyHistoricalStats(department, month) {
-  const values = monthlyRows()
+  const observations = monthlyRows()
     .filter(row => (department === null || row.department === department) && Number.isFinite(row.months[month]))
-    .map(row => row.months[month]);
+    .map(row => ({ value: row.months[month], year: row.year }));
+  const values = observations.map(item => item.value);
+  const min = values.length ? Math.min(...values) : null;
+  const max = values.length ? Math.max(...values) : null;
   return {
-    min: values.length ? Math.min(...values) : null,
-    max: values.length ? Math.max(...values) : null,
-    average: values.length ? average(values) : null
+    min,
+    max,
+    average: values.length ? average(values) : null,
+    minYears: Number.isFinite(min) ? [...new Set(observations.filter(item => item.value === min).map(item => item.year))] : [],
+    maxYears: Number.isFinite(max) ? [...new Set(observations.filter(item => item.value === max).map(item => item.year))] : []
   };
 }
 
@@ -1439,7 +1616,17 @@ function tooltipLabel(context, fallbackUnit = '') {
   const label = context.dataset.tooltipScope ? `${context.dataset.tooltipScope} - ${context.dataset.label}` : context.dataset.label;
   if (!Number.isFinite(context.raw)) return `${label}: Sin dato`;
   const sourceInfo = context.dataset.sourceInfo?.[context.dataIndex];
-  return `${label}: ${format(context.raw)}${unit ? ` ${unit}` : ''}${sourceInfo ? ` (${sourceInfo})` : ''}`;
+  const primary = `${label}: ${format(context.raw)}${unit ? ` ${unit}` : ''}${sourceInfo ? ` (${sourceInfo})` : ''}`;
+  const extremeYears = context.dataset.extremeYears?.[context.dataIndex] || [];
+  if (extremeYears.length) {
+    return [primary, `${extremeYears.length === 1 ? 'Año' : 'Años'}: ${extremeYears.join(', ')}`];
+  }
+  const comparison = context.dataset.comparisonInfo?.[context.dataIndex];
+  if (comparison && Number.isFinite(comparison.differenceMm)) {
+    const comparisonLine = `Diferencia ${comparison.compareYear} vs. ${comparison.baseYear}: ${formatSignedMm(comparison.differenceMm)}${Number.isFinite(comparison.differencePct) ? ` (${formatSignedPercent(comparison.differencePct)})` : ''}`;
+    return [primary, comparisonLine];
+  }
+  return primary;
 }
 
 function lineOptions(unit = '', axisTitle = '') {

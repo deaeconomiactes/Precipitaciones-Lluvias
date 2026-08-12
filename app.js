@@ -710,13 +710,14 @@ function formatClimateUpdatedAt(value) {
 // Implementación puntual del mapa. Las declaraciones siguientes reemplazan la
 // vista coroplética anterior sin modificar los análisis departamentales del resto
 // del tablero.
+const CLIMATE_CATEGORY_COLORS = Object.freeze({ precipitation: '#1677b8', hydrometry: '#13806f', satellite: '#d66b3d', models: '#7656a8' });
 const CLIMATE_POINT_SOURCES = Object.freeze({
-  ina: { label: 'Altura del río · INA', color: '#0b6f8d', countId: 'climateInaCount', pane: 'inaPointPane' },
-  snih: { label: 'Altura del río · SNIH', color: '#12856f', countId: 'climateSnihCount', pane: 'snihPointPane' },
-  salto: { label: 'Altura del río · Salto Grande', color: '#c56b1c', countId: 'climateSaltoCount', pane: 'saltoPointPane' },
-  rain: { label: 'Lluvias registradas', color: '#087f8c', countId: 'climateRainCount', pane: 'rainPointPane' },
-  nasa: { label: 'Precipitación NASA', color: '#6f57a6', countId: 'climateNasaCount', pane: 'nasaPointPane' },
-  geoglows: { label: 'Pronóstico de caudal', color: '#c43d50', countId: 'climateGeoglowsCount', pane: 'geoglowsPointPane' }
+  ina: { label: 'Altura del río · INA', category: 'hydrometry', color: CLIMATE_CATEGORY_COLORS.hydrometry, countId: 'climateInaCount', pane: 'inaPointPane' },
+  snih: { label: 'Altura del río · SNIH', category: 'hydrometry', color: CLIMATE_CATEGORY_COLORS.hydrometry, countId: 'climateSnihCount', pane: 'snihPointPane' },
+  salto: { label: 'Altura del río · Salto Grande', category: 'hydrometry', color: CLIMATE_CATEGORY_COLORS.hydrometry, countId: 'climateSaltoCount', pane: 'saltoPointPane' },
+  rain: { label: 'Lluvias registradas', category: 'precipitation', color: CLIMATE_CATEGORY_COLORS.precipitation, countId: 'climateRainCount', pane: 'rainPointPane' },
+  nasa: { label: 'Precipitación NASA', category: 'models', color: CLIMATE_CATEGORY_COLORS.models, countId: 'climateNasaCount', pane: 'nasaPointPane' },
+  geoglows: { label: 'Pronóstico de caudal', category: 'models', color: CLIMATE_CATEGORY_COLORS.models, countId: 'climateGeoglowsCount', pane: 'geoglowsPointPane' }
 });
 const PRIMARY_HEIGHT_SOURCE_DETAILS = Object.freeze({
   ina: {
@@ -1085,18 +1086,19 @@ function updateClimatePointSummary() {
 function renderClimatePointLegend() {
   const legend = $('climateMapLegend');
   if (!legend || state.climateMap.mode !== 'hydrology') return;
-  const rows = Object.entries(CLIMATE_POINT_SOURCES).filter(([source]) => {
+  const activeCategories = new Map();
+  Object.entries(CLIMATE_POINT_SOURCES).filter(([source]) => {
     const control = document.querySelector(`[data-point-source="${source}"]`);
     return control?.checked && !control.disabled;
-  }).map(([source, config]) => {
+  }).forEach(([source, config]) => {
     const count = state.climateMap.pointCounts.get(source) || 0;
-    return `<span class="climate-legend-row"><i class="climate-legend-swatch climate-point-swatch" style="--legend-color:${config.color}"></i>${escapeHtml(config.label)} <strong>${count}</strong></span>`;
-  }).join('');
+    activeCategories.set(config.category, (activeCategories.get(config.category) || 0) + count);
+  });
   const raster = state.climateMap.wmsLayers.get(state.climateMap.activeHydrologyLayer)?.config;
-  const rasterRow = raster
-    ? `<span class="climate-legend-row"><i class="climate-legend-swatch climate-raster-swatch"></i>${escapeHtml(raster.shortLabel || raster.label)}</span>`
-    : '';
-  legend.innerHTML = `<strong>Datos visibles</strong>${rows || '<span class="climate-legend-row">Sin puntos activos</span>'}${rasterRow}`;
+  if (raster) activeCategories.set('satellite', null);
+  const categoryLabels = { precipitation: 'Precipitaciones', hydrometry: 'Hidrometría', satellite: 'Observación satelital', models: 'Modelos y pronósticos' };
+  const rows = [...activeCategories.entries()].map(([category, count]) => `<span class="climate-legend-row"><i class="climate-legend-swatch climate-point-swatch" style="--legend-color:${CLIMATE_CATEGORY_COLORS[category]}"></i>${categoryLabels[category]}${Number.isFinite(count) ? ` <strong>${count}</strong>` : ''}</span>`).join('');
+  legend.innerHTML = `<strong>Tipo de información</strong>${rows || '<span class="climate-legend-row">Sin datos activos</span>'}`;
 }
 
 function updateClimatePointReference() {
@@ -1141,7 +1143,7 @@ function renderRainPointLayer(records, sourceInfo = {}) {
   replaceClimatePointLayer('rain', points, point => {
     const marker = L.circleMarker([point.lat, point.lng], rainMarkerOptions(point));
     marker.bindTooltip(`${point.municipality || point.department}: ${formatClimateMm(point.rainfallMm)} · ${formatDate(point.date)}`, { direction: 'top' });
-    marker.bindPopup(`<strong>${escapeHtml(point.municipality || point.department)}</strong><span class="climate-api-popup-label">Lluvia</span>${escapeHtml(formatClimateMm(point.rainfallMm))}<span class="climate-api-popup-label">Fecha</span>${escapeHtml(formatDate(point.date))}`);
+    marker.bindPopup(`<strong>Precipitaciones</strong><span class="climate-api-popup-label">Registro observado</span>${escapeHtml(point.municipality || point.department)} · ${escapeHtml(formatClimateMm(point.rainfallMm))}<span class="climate-api-popup-label">Fecha</span>${escapeHtml(formatDate(point.date))}<span class="climate-api-popup-label">Fuente</span>Registro Provincial`);
     marker.on('click', () => renderRainPointDetail(point));
     return marker;
   });
@@ -1401,9 +1403,9 @@ function renderInaPointLayer(stations, sourceInfo = {}) {
     const marker = L.circleMarker([station.lat, station.lng], {
       pane: CLIMATE_POINT_SOURCES.ina.pane,
       radius: 6.5,
-      color: heightState.stroke,
+      color: '#07584a',
       weight: 2.2,
-      fillColor: heightState.color,
+      fillColor: CLIMATE_CATEGORY_COLORS.hydrometry,
       fillOpacity: older ? 0.72 : 0.96,
       dashArray: older ? '4 3' : undefined,
       className: `climate-point-marker source-ina-marker river-height-${heightState.key}${older ? ' river-height-older' : ''}`
@@ -1415,7 +1417,7 @@ function renderInaPointLayer(stations, sourceInfo = {}) {
       opacity: 0.96,
       className: `river-height-label river-height-label-${heightState.key}${older ? ' is-older' : ''}`
     });
-    marker.bindPopup(`<strong>${escapeHtml(station.name)}</strong><span class="climate-api-popup-label">Altura del río</span>${escapeHtml(format(value))} m · ${escapeHtml(formatApiDateTime(station.latestHeight.date))}<span class="climate-api-popup-label">Estado</span>${escapeHtml(heightState.label)}`);
+    marker.bindPopup(`<strong>Hidrometría</strong><span class="climate-api-popup-label">Estación</span>${escapeHtml(station.name)}<span class="climate-api-popup-label">Altura observada</span>${escapeHtml(format(value))} m · ${escapeHtml(formatApiDateTime(station.latestHeight.date))}<span class="climate-api-popup-label">Fuente</span>INA`);
     marker.on('click', () => renderPrimaryHeightDetail('ina', station));
     return marker;
   });
@@ -1487,7 +1489,7 @@ function renderAuthorityHeightLayer(sourceId, observations, sourceInfo = {}) {
     const marker = L.circleMarker([station.lat, station.lng], {
       pane: sourceConfig.pane,
       radius: 6.2,
-      color: sourceId === 'snih' ? '#07584a' : '#74400a',
+      color: '#07584a',
       weight: 2,
       fillColor: sourceConfig.color,
       fillOpacity: older ? 0.68 : 0.94,
@@ -1495,7 +1497,7 @@ function renderAuthorityHeightLayer(sourceId, observations, sourceInfo = {}) {
       className: `climate-point-marker source-${sourceId}-marker${older ? ' river-height-older' : ''}`
     });
     marker.bindTooltip(`${station.name}: ${format(value)} m · ${formatApiDateTime(station.latestHeight.date)}`, { direction: 'top' });
-    marker.bindPopup(`<strong>${escapeHtml(station.name)}</strong><span class="climate-api-popup-label">Altura del río · ${escapeHtml(definition.label)}</span>${escapeHtml(format(value))} m · ${escapeHtml(formatApiDateTime(station.latestHeight.date))}<span class="climate-api-popup-label">Validación</span>${escapeHtml(station.validation || definition.validation)}`);
+    marker.bindPopup(`<strong>Hidrometría</strong><span class="climate-api-popup-label">Estación</span>${escapeHtml(station.name)}<span class="climate-api-popup-label">Altura observada</span>${escapeHtml(format(value))} m · ${escapeHtml(formatApiDateTime(station.latestHeight.date))}<span class="climate-api-popup-label">Fuente</span>${escapeHtml(definition.label)}`);
     marker.on('click', () => renderPrimaryHeightDetail(sourceId, station));
     return marker;
   });
@@ -1718,7 +1720,7 @@ function renderNasaPointLayer(dataset, sourceInfo = {}) {
       className: 'climate-point-marker source-nasa-marker'
     });
     marker.bindTooltip(`NASA POWER: ${formatClimateMm(point.precipitationMm)} · ${formatDate(point.date)}`, { direction: 'top' });
-    marker.bindPopup(`<strong>NASA POWER</strong><span class="climate-api-popup-label">Lluvia estimada</span>${escapeHtml(formatClimateMm(point.precipitationMm))}<span class="climate-api-popup-label">Fecha</span>${escapeHtml(formatDate(point.date))}`);
+    marker.bindPopup(`<strong>Modelos y pronósticos</strong><span class="climate-api-popup-label">Valor modelado</span>${escapeHtml(formatClimateMm(point.precipitationMm))}<span class="climate-api-popup-label">Fecha</span>${escapeHtml(formatDate(point.date))}<span class="climate-api-popup-label">Fuente</span>NASA POWER`);
     marker.on('click', () => renderNasaPointDetail(point, metadata));
     return marker;
   });
@@ -1785,7 +1787,7 @@ function renderGeoglowsPointLayer(nodes, sourceInfo = {}) {
       className: 'climate-point-marker source-geoglows-marker'
     });
     marker.bindTooltip(`${node.stationName} · pronóstico disponible al consultar`, { direction: 'top' });
-    marker.bindPopup(`<strong>${escapeHtml(node.stationName)}</strong><span class="climate-api-popup-label">Pronóstico</span>Seleccioná el punto para consultar la tendencia esperada.`);
+    marker.bindPopup(`<strong>Modelos y pronósticos</strong><span class="climate-api-popup-label">Punto de referencia</span>${escapeHtml(node.stationName)}<span class="climate-api-popup-label">Fuente</span>GEOGLOWS`);
     marker.on('click', () => renderGeoglowsNodeDetail(node));
     return marker;
   });
@@ -2295,7 +2297,7 @@ function renderMapPointDetail(detail, action = null) {
   sourceAudit.selectedId = detail.sourceId || ({'Apps Script · registro de lluvias':'rain','GEOGLOWS–ECMWF':'geoglows'}[detail.source]) || (String(detail.source || '').includes('NASA POWER') ? 'nasa' : String(detail.source || '').includes('SNIH') ? 'snih' : String(detail.source || '').includes('Salto') ? 'salto' : String(detail.source || '').includes('INA') ? 'ina' : sourceAudit.selectedId);
   if ($('mapPointDetailTitle')) $('mapPointDetailTitle').textContent = detail.title || 'Información seleccionada';
   const kind = detail.presentationType || (detail.nature === 'Satelital' ? 'satellite' : String(detail.nature || '').includes('Modelado') ? 'forecast' : 'station');
-  if ($('mapPointDetailEyebrow')) $('mapPointDetailEyebrow').textContent = ({ rain: 'Lluvia', forecast: 'Pronóstico', satellite: 'Imagen satelital', station: 'Estación' })[kind] || 'Información seleccionada';
+  if ($('mapPointDetailEyebrow')) $('mapPointDetailEyebrow').textContent = ({ rain: 'Precipitaciones', forecast: 'Modelos y pronósticos', satellite: 'Observación satelital', station: 'Hidrometría' })[kind] || 'Información seleccionada';
   let rows;
   if (kind === 'rain') {
     const territorial = state.climateMap.statuses.get(normalizeClimateDepartment(detail.department)) || {};

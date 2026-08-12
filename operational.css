@@ -534,12 +534,9 @@ main {
   filter: grayscale(.45);
 }
 
-.source-rain { --source-color: #087f8c !important; }
-.source-ina { --source-color: #0b6f8d !important; }
-.source-snih { --source-color: #12856f !important; }
-.source-salto { --source-color: #c56b1c !important; }
-.source-nasa { --source-color: #6f57a6 !important; }
-.source-geoglows { --source-color: #c43d50 !important; }
+.source-rain { --source-color: #1677b8 !important; }
+.source-ina, .source-snih, .source-salto { --source-color: #13806f !important; }
+.source-nasa, .source-geoglows { --source-color: #7656a8 !important; }
 
 .climate-map-toolbar .climate-raster-select {
   min-width: min(360px, 100%);
@@ -795,7 +792,7 @@ main {
 
 .climate-raster-swatch {
   border-radius: 3px;
-  background: linear-gradient(90deg, #32d2f5 0 33%, #ffff00 33% 66%, #fa1e24 66% 100%);
+  background: #d66b3d;
 }
 
 .climate-legend-swatch.climate-point-swatch {
@@ -2133,4 +2130,4 @@ footer {
 .climate-map-method summary{cursor:pointer;color:var(--deep);font-size:.7rem;font-weight:800}.climate-map-method:not([open]) p{display:none}.source-info-button{display:none}.climate-operational-detail .climate-detail-list{grid-template-columns:1fr}.climate-operational-detail .climate-detail-list div{padding:10px 11px}.climate-operational-detail .climate-detail-list dd{font-size:.76rem}.climate-map-card{padding-bottom:14px}.climate-map-heading{margin-bottom:8px}.climate-map-mode-bar{margin-bottom:8px}.climate-map-toolbar{margin-bottom:9px;padding:9px}.climate-point-toolbar{gap:7px}
 
 /* Controles del visor geoespacial */
-.climate-source-group > summary{cursor:pointer;list-style:none;font-weight:750;color:#244f4a;padding:.75rem .85rem;display:flex;justify-content:space-between;align-items:center}.climate-source-group > summary::after{content:'+';font-size:1.1rem}.climate-source-group[open] > summary::after{content:'−'}.climate-source-group > summary::-webkit-details-marker{display:none}.climate-source-content{padding:0 .75rem .75rem;display:grid;gap:.55rem}.climate-opacity-control{display:grid;gap:.35rem;color:#496473;font-size:.78rem}.climate-opacity-control span{display:flex;justify-content:space-between}.climate-opacity-control input{width:100%;accent-color:#087d94}.climate-map-actions{position:absolute;z-index:550;top:.65rem;right:.65rem;display:flex;gap:.4rem}.climate-map-actions button{border:1px solid #b8ccc8;background:rgba(255,255,255,.94);color:#244f4a;border-radius:.55rem;padding:.45rem .58rem;font:inherit;font-size:.76rem;font-weight:700;cursor:pointer;box-shadow:0 2px 8px rgba(18,60,55,.12)}.climate-map-actions button:hover{background:#edf7f5;border-color:#6aa49b}.climate-map-actions button:disabled{opacity:.55;cursor:wait}.climate-map-visual.is-map-fullscreen{position:fixed;inset:0;z-index:3000;background:#eef4f2;padding:0}.climate-map-visual.is-map-fullscreen #climateMap{height:100vh}.map-fullscreen-open{overflow:hidden}.climate-nature-legend{position:absolute;z-index:520;left:.7rem;bottom:.7rem;display:grid;gap:.28rem;max-width:190px;padding:.55rem .65rem;border:1px solid rgba(61,98,91,.22);border-radius:.65rem;background:rgba(255,255,255,.92);color:#385c57;font-size:.68rem;box-shadow:0 4px 14px rgba(25,57,52,.12)}.climate-nature-legend span{display:flex;align-items:center;gap:.38rem}.climate-nature-legend i{width:.65rem;height:.65rem;border-radius:50%;background:#879e99}.climate-nature-legend .nature-own{background:#187f6b}.climate-nature-legend .nature-external{background:#247aa5}.climate-nature-legend .nature-preliminary{background:#bd8a2e}.climate-nature-legend .nature-model{background:#7656a8}.climate-nature-legend .nature-satellite{background:#c65b49}.climate-nature-legend .nature-local{background:#76837f}.climate-map-exporting .climate-map-actions{display:none}@media(max-width:760px){.climate-map-actions button span{display:none}.climate-nature-legend{max-width:155px;font-size:.62rem}}
+.climate-source-group > summary{cursor:pointer;list-style:none;font-weight:750;color:#244f4a;padding:.75rem .85rem;display:flex;justify-content:space-between;align-items:center}.climate-source-group > summary::after{content:'+';font-size:1.1rem}.climate-source-group[open] > summary::after{content:'−'}.climate-source-group > summary::-webkit-details-marker{display:none}.climate-source-content{padding:0 .75rem .75rem;display:grid;gap:.55rem}.climate-opacity-control{display:grid;gap:.35rem;color:#496473;font-size:.78rem}.climate-opacity-control span{display:flex;justify-content:space-between}.climate-opacity-control input{width:100%;accent-color:#087d94}.climate-map-actions{position:absolute;z-index:550;top:.65rem;right:.65rem;display:flex;gap:.4rem}.climate-map-actions button{border:1px solid #b8ccc8;background:rgba(255,255,255,.94);color:#244f4a;border-radius:.55rem;padding:.45rem .58rem;font:inherit;font-size:.76rem;font-weight:700;cursor:pointer;box-shadow:0 2px 8px rgba(18,60,55,.12)}.climate-map-actions button:hover{background:#edf7f5;border-color:#6aa49b}.climate-map-actions button:disabled{opacity:.55;cursor:wait}.climate-map-visual.is-map-fullscreen{position:fixed;inset:0;z-index:3000;background:#eef4f2;padding:0}.climate-map-visual.is-map-fullscreen #climateMap{height:100vh}.map-fullscreen-open{overflow:hidden}.climate-nature-legend{position:absolute;z-index:520;left:.7rem;bottom:.7rem;display:grid;gap:.28rem;max-width:190px;padding:.55rem .65rem;border:1px solid rgba(61,98,91,.22);border-radius:.65rem;background:rgba(255,255,255,.92);color:#385c57;font-size:.68rem;box-shadow:0 4px 14px rgba(25,57,52,.12)}.climate-nature-legend span{display:flex;align-items:center;gap:.38rem}.climate-nature-legend i{width:.65rem;height:.65rem;border-radius:50%;background:#879e99}.climate-nature-legend .category-precipitation{background:#1677b8}.climate-nature-legend .category-hydrometry{background:#13806f}.climate-nature-legend .category-satellite{background:#d66b3d}.climate-nature-legend .category-models{background:#7656a8}.climate-map-exporting .climate-map-actions{display:none}@media(max-width:760px){.climate-map-actions button span{display:none}.climate-nature-legend{max-width:155px;font-size:.62rem}}

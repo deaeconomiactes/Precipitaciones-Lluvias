@@ -362,6 +362,53 @@ main {
   line-height: 1.55;
 }
 
+.climate-map-card [hidden] {
+  display: none !important;
+}
+
+.climate-map-mode-bar {
+  display: flex;
+  align-items: end;
+  gap: 14px;
+  margin-bottom: 12px;
+  padding: 12px;
+  border: 1px solid #bad2cd;
+  border-radius: 13px;
+  background: linear-gradient(135deg, #f4faf8, #eef6f7);
+}
+
+.climate-map-mode-bar label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 260px;
+}
+
+.climate-map-mode-bar label span {
+  color: var(--muted);
+  font-size: .62rem;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.climate-map-mode-bar select {
+  min-height: 40px;
+  padding: 8px 11px;
+  color: var(--text);
+  background: #fff;
+  border: 1px solid #9ebdb6;
+  border-radius: 9px;
+  font: 700 .76rem Inter, sans-serif;
+}
+
+.climate-mode-explanation {
+  padding-bottom: 9px;
+  color: var(--muted);
+  font-size: .72rem;
+  line-height: 1.45;
+}
+
 .climate-map-toolbar {
   display: flex;
   align-items: end;
@@ -376,6 +423,40 @@ main {
 
 .climate-point-toolbar {
   align-items: stretch;
+}
+
+.climate-source-group {
+  display: flex;
+  flex: 1 1 320px;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 260px;
+  margin: 0;
+  padding: 10px;
+  border: 1px solid #cbdad6;
+  border-radius: 11px;
+  background: rgba(255,255,255,.68);
+}
+
+.climate-source-group legend {
+  padding: 0 5px;
+  color: #315f59;
+  font-size: .67rem;
+  font-weight: 800;
+}
+
+.climate-source-group > small {
+  color: var(--muted);
+  font-size: .61rem;
+  line-height: 1.4;
+}
+
+.climate-source-group .climate-source-toggles {
+  grid-template-columns: 1fr;
+}
+
+.climate-source-group-future {
+  opacity: .62;
 }
 
 .climate-source-toggles {
@@ -1756,6 +1837,20 @@ footer {
   .climate-map-toolbar .climate-map-toggle {
     width: 100%;
     min-width: 0;
+  }
+
+  .climate-map-mode-bar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .climate-map-mode-bar label {
+    min-width: 0;
+  }
+
+  .climate-source-group {
+    min-width: 0;
+    width: 100%;
   }
 
   .climate-source-toggles {

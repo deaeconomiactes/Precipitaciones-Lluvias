@@ -55,6 +55,7 @@ INA_HEIGHTS_WFS_URL = (
 NASA_POWER_BASE_URL = "https://power.larc.nasa.gov/api/temporal/daily/regional"
 GEOGLOWS_BASE_URL = "https://geoglows.ecmwf.int/api/v2"
 USER_AGENT = "Precipitaciones-Lluvias-map-source-updater/1.0"
+PUBLIC_RAIN_COORDINATE_DECIMALS = 4
 
 
 def utc_now() -> dt.datetime:
@@ -228,17 +229,21 @@ def latest_rain_points(payload: Any, department_by_key: dict[str, str]) -> list[
             or not valid_corrientes_coordinate(latitude, longitude)
         ):
             continue
+        # La salida pública conserva precisión suficiente para ubicar la localidad,
+        # pero evita publicar coordenadas operativas con detalle submétrico.
+        public_latitude = round(latitude, PUBLIC_RAIN_COORDINATE_DECIMALS)
+        public_longitude = round(longitude, PUBLIC_RAIN_COORDINATE_DECIMALS)
         point = {
             "date": date,
             "department": department,
             "municipality": municipality,
             "rainfallMm": rainfall,
-            "lat": latitude,
-            "lng": longitude,
+            "lat": public_latitude,
+            "lng": public_longitude,
             "updatedAt": str(row.get("updatedAt") or row.get("updated_at") or ""),
         }
         key = "|".join(
-            [department, municipality, f"{latitude:.4f}", f"{longitude:.4f}"]
+            [department, municipality, f"{public_latitude:.4f}", f"{public_longitude:.4f}"]
         )
         current = by_location.get(key)
         if current is None or (point["date"], point["updatedAt"]) > (
@@ -591,6 +596,8 @@ def main() -> None:
             "endpoint": public_rain_url,
             "pointCount": len(rain_points),
             "latestDate": max((point["date"] for point in rain_points), default=None),
+            "publicCoordinateDecimals": PUBLIC_RAIN_COORDINATE_DECIMALS,
+            "privacyNote": "Solo se publican fecha, departamento, localidad, lluvia y coordenadas aproximadas; no se incluyen identificadores personales.",
             "points": rain_points,
         },
         "ina": {

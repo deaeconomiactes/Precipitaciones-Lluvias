@@ -98,8 +98,8 @@ if (nasa.points.length !== 1 || nasa.points[0].precipitationMm !== 3.5 || nasa.d
 const inaThresholdState = vm.runInContext(`inaHeightState({
   latestHeight: { valueM: 3.4, status: '', alertLevelM: 0, evacuationLevelM: 0, lowWaterLevelM: 0 }
 })`, context);
-if (inaThresholdState.key !== "normal") {
-  throw new Error(`Los umbrales INA en 0 se interpretaron falsamente como alerta: ${JSON.stringify(inaThresholdState)}`);
+if (inaThresholdState.key !== "reference") {
+  throw new Error(`Los umbrales INA en 0 se interpretaron falsamente como referencia superada: ${JSON.stringify(inaThresholdState)}`);
 }
 
 const config = JSON.parse(fs.readFileSync("data/external-api-config.json", "utf8"));
@@ -132,20 +132,26 @@ if (wmsById.get("nasaViirsFlood").layers !== "VIIRS_Combined_Flood_3-Day") {
 }
 
 if (cache.schemaVersion !== 3) throw new Error("map-point-sources.json usa un esquema inesperado.");
-if (cache.rainObservations.pointCount !== cache.rainObservations.points.length || cache.rainObservations.pointCount < 40) {
-  throw new Error("El respaldo de lluvia no contiene todas las ubicaciones normalizadas.");
+const referenceCounts = config.qualityReferenceCounts || {};
+const warnBelowReference = (label, count, reference) => {
+  if (Number.isFinite(reference) && count < reference) console.warn(`::warning::${label} bajó de ${reference} a ${count} observaciones; revisar cobertura sin invalidar la instantánea.`);
+};
+
+if (!Array.isArray(cache.rainObservations?.points) || cache.rainObservations.pointCount !== cache.rainObservations.points.length) {
+  throw new Error("El respaldo de lluvia tiene un esquema o conteo inconsistente.");
 }
-if (cache.ina.stationCount !== cache.ina.stations.length || cache.ina.hydrologicalCount < 40) {
+warnBelowReference("Lluvia propia", cache.rainObservations.pointCount, referenceCounts.rain);
+if (!Array.isArray(cache.ina?.stations) || cache.ina.stationCount !== cache.ina.stations.length) {
   throw new Error("El inventario INA está incompleto o es inconsistente.");
 }
-if (cache.ina.heightObservationCount !== cache.ina.heightObservations.length || cache.ina.heightObservationCount < 30) {
-  throw new Error("El respaldo INA no contiene las lecturas numéricas pertinentes para Corrientes.");
+if (!Array.isArray(cache.ina.heightObservations) || cache.ina.heightObservationCount !== cache.ina.heightObservations.length) {
+  throw new Error("El respaldo INA tiene un esquema o conteo inconsistente.");
 }
 
-function validateHeightObservations(label, observations, minimum, expectedSourceId) {
-  if (!Array.isArray(observations) || observations.length < minimum) {
-    throw new Error(`${label} contiene menos de ${minimum} alturas: ${observations?.length || 0}.`);
-  }
+function validateHeightObservations(label, observations, expectedSourceId, reference) {
+  if (!Array.isArray(observations)) throw new Error(`${label} no contiene un arreglo de observaciones.`);
+  warnBelowReference(label, observations.length, reference);
+  if (!observations.length) console.warn(`::warning::${label} no tiene observaciones en esta instantánea; se mantiene la capa sin puntos.`);
   if (observations.some(observation =>
     !Number.isFinite(observation.valueM) || observation.valueM <= -100 ||
     Number.isNaN(new Date(observation.date).getTime()) || new Date(observation.date).getUTCFullYear() < 2000 ||
@@ -160,17 +166,17 @@ function validateHeightObservations(label, observations, minimum, expectedSource
   if (new Set(keys).size !== observations.length) throw new Error(`${label} contiene estaciones duplicadas.`);
 }
 
-validateHeightObservations("INA", cache.ina.heightObservations, 30);
+validateHeightObservations("INA", cache.ina.heightObservations, null, referenceCounts.ina);
 if (cache.snih.pointCount !== cache.snih.observations.length) throw new Error("El conteo SNIH no coincide con sus observaciones.");
 if (cache.salto.pointCount !== cache.salto.observations.length) throw new Error("El conteo Salto Grande no coincide con sus observaciones.");
-validateHeightObservations("SNIH", cache.snih.observations, 20, "snih");
-validateHeightObservations("Salto Grande", cache.salto.observations, 8, "salto");
+validateHeightObservations("SNIH", cache.snih.observations, "snih", referenceCounts.snih);
+validateHeightObservations("Salto Grande", cache.salto.observations, "salto", referenceCounts.salto);
 
 const forbiddenSaltoStations = new Set(["Artigas", "Catalan Grande", "Cuareim Rio", "Paso de la Cruz"]);
 if (cache.salto.observations.some(observation => forbiddenSaltoStations.has(observation.name))) {
   throw new Error("Salto Grande incluye estaciones del rectángulo amplio que no son pertinentes para Corrientes.");
 }
-if (!(cache.salto.metadata.excludedOutsideCorrientesCount >= 4) || !cache.salto.metadata.spatialRule) {
+if (!cache.salto.metadata?.spatialRule) {
   throw new Error("Salto Grande no documenta el filtro espacial provincial y de borde.");
 }
 
@@ -178,30 +184,51 @@ const totalHeights = cache.ina.heightObservations.length + cache.snih.observatio
 if (cache.quality.primaryHeightCount !== totalHeights || cache.quality.noCrossSourceAveraging !== true) {
   throw new Error("La reconciliación de alturas primarias o la regla de no promediar fuentes es incorrecta.");
 }
+if (totalHeights + cache.rainObservations.pointCount + cache.nasaPower.pointCount + cache.geoglows.nodeCount === 0) {
+  throw new Error("map-point-sources.json está vacío.");
+}
 
-if (cache.nasaPower.pointCount !== cache.nasaPower.points.length || cache.nasaPower.pointCount < 20) {
-  throw new Error("El recorte NASA POWER está incompleto.");
+if (!Array.isArray(cache.nasaPower?.points) || cache.nasaPower.pointCount !== cache.nasaPower.points.length) {
+  throw new Error("El recorte NASA POWER tiene un esquema o conteo inconsistente.");
 }
-if (cache.geoglows.nodeCount !== cache.geoglows.nodes.length || cache.geoglows.nodeCount !== cache.ina.hydrologicalCount) {
-  throw new Error("GEOGLOWS no cubre todo el inventario hidrológico INA.");
+warnBelowReference("NASA POWER", cache.nasaPower.pointCount, referenceCounts.nasa);
+if (!Array.isArray(cache.geoglows?.nodes) || cache.geoglows.nodeCount !== cache.geoglows.nodes.length) {
+  throw new Error("GEOGLOWS tiene un esquema o conteo inconsistente.");
 }
+warnBelowReference("GEOGLOWS", cache.geoglows.nodeCount, referenceCounts.geoglows);
+if (cache.geoglows.nodeCount !== cache.ina.hydrologicalCount) console.warn(`::warning::GEOGLOWS cubre ${cache.geoglows.nodeCount} nodos para ${cache.ina.hydrologicalCount} estaciones hidrológicas INA.`);
 
 const satelliteLayers = cache.satelliteFlood?.layers || {};
 for (const id of ["operaS1", "gfmObservedFlood", "nasaViirsFlood"]) {
   const layer = satelliteLayers[id];
-  if (!layer?.available || !layer.date || !layer.acquiredAt || !layer.sceneId || !layer.sourceUrl) {
-    throw new Error(`La instantánea satelital no tiene procedencia y fecha completas para ${id}.`);
+  if (!layer || typeof layer.available !== "boolean" || !layer.sourceUrl) throw new Error(`La instantánea satelital tiene un esquema inválido para ${id}.`);
+  if (!layer.available || !layer.date || !layer.acquiredAt || !layer.sceneId) console.warn(`::warning::${id} no tiene una escena completa en esta instantánea.`);
+}
+
+const allowedRainFields = new Set(config.privacy?.publicRainFields || []);
+if (!allowedRainFields.size) throw new Error("La configuración no declara los campos públicos permitidos para lluvia.");
+for (const point of cache.rainObservations.points) {
+  const unexpected = Object.keys(point).filter(field => !allowedRainFields.has(field));
+  if (unexpected.length) throw new Error(`Lluvia propia publica campos no autorizados: ${unexpected.join(", ")}.`);
+  for (const coordinate of [point.lat, point.lng]) {
+    const decimals = String(coordinate).split(".")[1]?.length || 0;
+    if (decimals > Number(config.privacy.rainCoordinateDecimals || 4)) throw new Error("Una coordenada propia excede la precisión pública configurada.");
   }
 }
 
 const html = fs.readFileSync("index.html", "utf8");
 for (const id of [
   "climateInaToggle", "climateSnihToggle", "climateSaltoToggle", "climateRainToggle", "climateNasaToggle", "climateGeoglowsToggle",
-  "inaApiCard", "snihApiCard", "saltoApiCard", "satelliteApiCard", "rainApiCard", "nasaApiCard", "geoglowsApiCard", "mapPointDetailTitle"
+  "inaApiCard", "snihApiCard", "saltoApiCard", "satelliteApiCard", "rainApiCard", "nasaApiCard", "geoglowsApiCard", "mapPointDetailTitle",
+  "mapPointDetailNature", "mapPointDetailAvailability"
 ]) {
   if (!html.includes(`id="${id}"`)) throw new Error(`Falta el control o estado puntual ${id}.`);
 }
-if (html.includes('id="climateMapMode"')) throw new Error("El mapa todavía inicia con el selector coroplético anterior.");
+if (!html.includes('id="climateMapMode"') || !html.includes('value="departments" selected') || !html.includes('value="hydrology"')) throw new Error("El mapa no separa los modos departamental e hidrológico.");
+if (!html.includes('id="climateMapVariable"') || !html.includes('id="climateDepartmentDetail"') || !html.includes('id="climatePointDetail"')) throw new Error("Faltan los controles o paneles separados del mapa.");
+for (const group of ["Registros propios de lluvia", "Hidrometría observada externa", "Modelos y pronósticos", "Referencia satelital", "Marco institucional futuro"]) {
+  if (!html.includes(group)) throw new Error(`Falta el grupo metodológico: ${group}.`);
+}
 const toggleChecked = id => new RegExp(`<input[^>]*id="${id}"[^>]*\\schecked(?:\\s|>)`).test(html);
 for (const id of ["climateInaToggle", "climateSnihToggle", "climateSaltoToggle"]) {
   if (!toggleChecked(id)) throw new Error(`${id} no está activo en la vista hidrométrica inicial.`);
@@ -228,6 +255,14 @@ for (const workflowPath of [".github/workflows/deploy-pages.yml", ".github/workf
   if (!workflow.includes("data/map-point-sources.json")) {
     throw new Error(`${workflowPath} no publica el respaldo puntual.`);
   }
+}
+const rainfallWorkflow = fs.readFileSync(".github/workflows/update-daily-rainfall.yml", "utf8");
+const mapWorkflow = fs.readFileSync(".github/workflows/update-map-sources.yml", "utf8");
+if (rainfallWorkflow.includes("update-map-point-sources.py") || rainfallWorkflow.includes("data/map-point-sources.json data/department-climate-status.json")) {
+  throw new Error("El workflow de lluvia todavía depende de la actualización hidrológica.");
+}
+if (!mapWorkflow.includes("update-map-point-sources.py") || !mapWorkflow.includes("continue-on-error: true") || !mapWorkflow.includes("git restore --source=HEAD -- data/map-point-sources.json")) {
+  throw new Error("El workflow hidrológico no conserva la última instantánea válida ante fallas externas.");
 }
 
 console.log(`Alturas primarias: ${totalHeights} válidas (${cache.ina.heightObservationCount} INA + ${cache.snih.pointCount} SNIH + ${cache.salto.pointCount} Salto Grande).`);

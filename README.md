@@ -1,6 +1,6 @@
 ﻿# Registro y Seguimiento de Precipitaciones
 
-Dashboard del **Departamento de Economía Agraria** como herramienta de apoyo a la gestión. El frontend sigue siendo compatible con publicación estática y el servidor Node sin dependencias actualiza las fuentes primarias hidrométricas, descubre escenas satelitales y estabiliza la redirección del Apps Script.
+Dashboard del **Departamento de Economía Agraria** como herramienta de apoyo a la gestión. La vista básica funciona como publicación estática en GitHub Pages. El servidor Node es auxiliar: permite actualizaciones intradía de fuentes hidrométricas y metadatos satelitales, pero no es obligatorio para representar el mapa publicado.
 
 ## Ejecutar
 
@@ -97,7 +97,7 @@ python3 scripts/update-map-point-sources.py
 node scripts/test-map-api-integration.js
 ```
 
-El modo `--dry-run` inspecciona y valida sin escribir JSON. El detalle de formatos, normalizaciones y supuestos está en `docs/integracion-historica-diaria.md`.
+El detalle de formatos, normalizaciones y supuestos está en `docs/integracion-historica-diaria.md`.
 
 Opcionalmente se puede indicar una fuente JSON de Apps Script:
 
@@ -126,11 +126,18 @@ $env:DAILY_RAIN_CSV_URLS = "https://docs.google.com/spreadsheets/d/.../export?fo
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\build-daily-data.ps1
 ```
 
-El workflow `.github/workflows/update-daily-rainfall.yml` actualiza primero la base operativa cuando está configurada alguna de las variables `DAILY_RAIN_JSON_URL`, `DAILY_RAIN_CSV_URL` o `DAILY_RAIN_CSV_URLS`. Después importa los Excel históricos, regenera las bases histórica y combinada, actualiza los indicadores departamentales, refresca `data/map-point-sources.json` y publica el tablero. Si no hay diferencias, informa que no existen cambios y finaliza sin intentar un commit vacío. Desde la pestaña `Monitoreo diario`, el enlace `Abrir flujo de actualización` abre ese workflow en GitHub Actions; la ejecución manual requiere permisos de escritura sobre el repositorio.
+El workflow `.github/workflows/update-daily-rainfall.yml` actualiza la base operativa, importa la historia diaria, regenera la base combinada y actualiza los indicadores departamentales. No consulta APIs hidrológicas: una falla de INA, SNIH, Salto Grande, NASA o GEOGLOWS no puede bloquear la publicación de lluvia.
+
+El workflow `.github/workflows/update-map-sources.yml` actualiza de manera independiente `data/map-point-sources.json`. Si una fuente externa falla o la instantánea resultante no supera la validación de esquema, registra una advertencia y conserva la última instantánea válida. Las disminuciones de cantidad generan advertencias, no errores; solo se bloquean archivos inválidos o completamente vacíos.
 
 ## APIs externas del mapa
 
-El mapa inicia como una vista hidrológica: muestra solamente alturas de río con valor y fecha válidos, junto con la imagen satelital de inundación observada. Los departamentos quedan solo como contorno y las fuentes secundarias pueden activarse manualmente:
+El mapa tiene dos modos y comienza en **Departamentos / lluvia**:
+
+- **Departamentos / lluvia:** coroplético de lluvia última fecha, acumulados 7/15/30 días, desvío mensual y categoría descriptiva. Usa exclusivamente `data/department-climate-status.json`.
+- **Hidrología / puntos:** observaciones puntuales, modelos, pronósticos y referencias satelitales. Usa `data/map-point-sources.json` y activa consultas externas solo cuando el usuario abre este modo.
+
+Las fuentes hidrológicas se agrupan por naturaleza:
 
 - **INA SIyAH:** se unen las lecturas WFS dentro de la provincia con las asociadas a estaciones correntinas sobre ríos limítrofes. El inventario completo se conserva para trazabilidad, pero los puntos sin altura no se dibujan.
 - **SNIH:** se consulta todo el inventario hidrométrico, activo y telemétrico de Corrientes. Se omiten valores centinela, fechas inválidas y estaciones sin altura actual; la validación se informa como preliminar.
@@ -141,6 +148,12 @@ El mapa inicia como una vista hidrológica: muestra solamente alturas de río co
 - **NASA POWER:** 28 centros de celda de precipitación corregida dentro del límite provincial. Son grilla meteorológica, no estaciones físicas.
 - **GEOGLOWS–ECMWF:** 48 nodos resueltos desde todas las estaciones hidrológicas INA. El pronóstico de cada `river_id` se consulta al seleccionar el punto.
 - **Metadatos satelitales:** el catálogo STAC oficial de GFM y NASA CMR identifican la escena más reciente que intersecta Corrientes. Esa intersección no garantiza cobertura completa de toda la provincia.
+
+Cada punto muestra la fecha propia del dato y se identifica como observado propio, observado externo, preliminar externo o modelado/pronóstico. La disponibilidad se informa separadamente como consulta externa actualizada o respaldo local. Los umbrales publicados por INA se presentan como referencias externas y no como señales propias del dashboard.
+
+### Privacidad de lluvia puntual
+
+El JSON público de lluvia contiene únicamente fecha, departamento, localidad, milímetros, coordenadas aproximadas y fecha de actualización. No publica nombres personales, documentos, contactos ni identificadores administrativos. Las coordenadas se redondean a cuatro decimales antes de escribir `data/map-point-sources.json`; este ajuste no modifica los indicadores departamentales.
 
 Ver `docs/INTEGRACION-APIS-MAPA.md` para contratos, reconciliación INA API/WFS, respaldo y límites metodológicos.
 

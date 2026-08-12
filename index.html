@@ -12,7 +12,7 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="climate-controls.css?v=20260612-4">
-  <link rel="stylesheet" href="operational.css?v=20260812-2">
+  <link rel="stylesheet" href="operational.css?v=20260812-3">
 </head>
 <body>
   <div class="loading" id="loading"><div class="spinner"></div><p>Preparando datos climáticos...</p></div>
@@ -72,34 +72,50 @@
       <section class="decision-grid">
         <article class="card climate-map-card">
           <div class="card-head climate-map-heading">
-            <div><h2>Altura de ríos y zonas inundadas de Corrientes</h2><p>La vista inicial integra todas las lecturas válidas publicadas por INA, SNIH y Salto Grande, más inundación observada por satélite. No se dibujan estaciones sin altura o fecha válida.</p></div>
-            <span class="source-tag" id="climatePointTotal">Cargando alturas…</span>
+            <div><h2>Mapa climático interactivo de Corrientes</h2><p>La lluvia departamental y las fuentes hidrológicas se presentan en modos separados para no mezclar indicadores territoriales, mediciones puntuales, modelos y referencias satelitales.</p></div>
+            <span class="source-tag" id="climatePointTotal">Cargando mapa…</span>
           </div>
-          <div class="climate-map-toolbar climate-point-toolbar" aria-label="Fuentes puntuales del mapa">
-            <div class="climate-source-toggles" role="group" aria-label="Mostrar u ocultar fuentes puntuales">
-              <label class="climate-source-toggle source-ina"><input id="climateInaToggle" data-point-source="ina" type="checkbox" checked><i aria-hidden="true"></i><span>Altura del río · INA <strong id="climateInaCount">—</strong></span></label>
-              <label class="climate-source-toggle source-snih"><input id="climateSnihToggle" data-point-source="snih" type="checkbox" checked><i aria-hidden="true"></i><span>Altura del río · SNIH <strong id="climateSnihCount">—</strong></span></label>
-              <label class="climate-source-toggle source-salto"><input id="climateSaltoToggle" data-point-source="salto" type="checkbox" checked><i aria-hidden="true"></i><span>Altura · Salto Grande <strong id="climateSaltoCount">—</strong></span></label>
-              <label class="climate-source-toggle source-rain"><input id="climateRainToggle" data-point-source="rain" type="checkbox"><i aria-hidden="true"></i><span>Lluvias registradas <strong id="climateRainCount">—</strong></span></label>
-              <label class="climate-source-toggle source-nasa"><input id="climateNasaToggle" data-point-source="nasa" type="checkbox"><i aria-hidden="true"></i><span>Precipitación NASA <strong id="climateNasaCount">—</strong></span></label>
-              <label class="climate-source-toggle source-geoglows"><input id="climateGeoglowsToggle" data-point-source="geoglows" type="checkbox"><i aria-hidden="true"></i><span>Pronóstico de caudal <strong id="climateGeoglowsCount">—</strong></span></label>
-            </div>
-            <label class="climate-raster-select"><span>Zonas inundadas / contexto satelital</span><select id="climateHydrologyLayer"><option value="none">Sin imagen de inundación</option></select></label>
-            <span class="climate-map-reference" id="climateMapReference">Cargando alturas e inundación observada…</span>
+          <div class="climate-map-mode-bar">
+            <label><span>Modo del mapa</span><select id="climateMapMode"><option value="departments" selected>Departamentos / lluvia</option><option value="hydrology">Hidrología / puntos</option></select></label>
+            <span class="climate-mode-explanation" id="climateModeExplanation">Indicadores territoriales agregados por departamento.</span>
+          </div>
+          <div class="climate-map-toolbar" id="climateDepartmentControls" aria-label="Controles del mapa departamental">
+            <label><span>Variable del mapa</span><select id="climateMapVariable"><option value="rainLastDateMm">Lluvia última fecha</option><option value="rain7dMm" selected>Acumulado 7 días</option><option value="rain15dMm">Acumulado 15 días</option><option value="rain30dMm">Acumulado 30 días</option><option value="monthlyDifferencePct">Desvío mensual vs histórico</option><option value="monthlyCategory">Categoría mensual descriptiva</option></select></label>
+            <span class="climate-map-reference" id="climateMapReference">Cargando información territorial…</span>
+          </div>
+          <div class="climate-map-toolbar climate-point-toolbar" id="climateHydrologyControls" aria-label="Fuentes del mapa hidrológico" hidden>
+            <fieldset class="climate-source-group"><legend>Registros propios de lluvia</legend><label class="climate-source-toggle source-rain"><input id="climateRainToggle" data-point-source="rain" type="checkbox"><i aria-hidden="true"></i><span>Lluvias registradas <strong id="climateRainCount">—</strong></span></label><small>Observado propio · ubicación pública aproximada.</small></fieldset>
+            <fieldset class="climate-source-group"><legend>Hidrometría observada externa</legend><div class="climate-source-toggles"><label class="climate-source-toggle source-ina"><input id="climateInaToggle" data-point-source="ina" type="checkbox" checked><i aria-hidden="true"></i><span>Altura del río · INA <strong id="climateInaCount">—</strong></span></label><label class="climate-source-toggle source-snih"><input id="climateSnihToggle" data-point-source="snih" type="checkbox" checked><i aria-hidden="true"></i><span>Altura del río · SNIH <strong id="climateSnihCount">—</strong></span></label><label class="climate-source-toggle source-salto"><input id="climateSaltoToggle" data-point-source="salto" type="checkbox" checked><i aria-hidden="true"></i><span>Altura · Salto Grande <strong id="climateSaltoCount">—</strong></span></label></div><small>Observaciones externas; SNIH se identifica como preliminar.</small></fieldset>
+            <fieldset class="climate-source-group"><legend>Modelos y pronósticos</legend><div class="climate-source-toggles"><label class="climate-source-toggle source-nasa"><input id="climateNasaToggle" data-point-source="nasa" type="checkbox"><i aria-hidden="true"></i><span>Precipitación NASA POWER <strong id="climateNasaCount">—</strong></span></label><label class="climate-source-toggle source-geoglows"><input id="climateGeoglowsToggle" data-point-source="geoglows" type="checkbox"><i aria-hidden="true"></i><span>Pronóstico de caudal <strong id="climateGeoglowsCount">—</strong></span></label></div><small>Grilla modelada y pronóstico; no equivalen a mediciones puntuales.</small></fieldset>
+            <fieldset class="climate-source-group"><legend>Referencia satelital</legend><label class="climate-raster-select"><span>Capa visible</span><select id="climateHydrologyLayer"><option value="none">Sin referencia satelital</option></select></label><small>Ráster remoto con fecha de escena; no calcula hectáreas.</small></fieldset>
+            <fieldset class="climate-source-group climate-source-group-future" disabled><legend>Marco institucional futuro</legend><label class="climate-source-toggle"><input type="checkbox" disabled><i aria-hidden="true"></i><span>Capas institucionales validadas · próximamente</span></label></fieldset>
+            <span class="climate-map-reference" id="climateHydrologyReference">Instantánea local disponible; las consultas externas se activan al abrir este modo.</span>
           </div>
           <div class="climate-map-layout">
             <div class="climate-map-visual">
-              <div id="climateMap" role="application" aria-label="Mapa interactivo de fuentes climáticas e hidrológicas puntuales de Corrientes"></div>
+              <div id="climateMap" role="application" aria-label="Mapa climático interactivo de Corrientes por departamentos y fuentes puntuales"></div>
               <div class="climate-map-legend" id="climateMapLegend" aria-label="Leyenda del mapa"></div>
               <div class="climate-external-legend" id="climateExternalLegend" aria-label="Leyenda de la capa hidrológica externa" hidden></div>
               <div class="climate-map-message" id="climateMapMessage" hidden></div>
             </div>
-            <aside class="climate-map-detail" aria-live="polite">
+            <aside class="climate-map-detail" id="climateDepartmentDetail" aria-live="polite">
+              <span class="eyebrow">Detalle territorial</span>
+              <h3 id="mapDetailDepartment">Seleccioná un departamento</h3>
+              <dl class="climate-detail-list">
+                <div><dt>Última fecha diaria</dt><dd id="mapDetailDailyDate">Sin dato</dd></div><div><dt>Lluvia última fecha</dt><dd id="mapDetailLastRain">Sin dato</dd></div>
+                <div><dt>Acumulado 7 días</dt><dd id="mapDetailRain7">Sin dato</dd></div><div><dt>Acumulado 15 días</dt><dd id="mapDetailRain15">Sin dato</dd></div><div><dt>Acumulado 30 días</dt><dd id="mapDetailRain30">Sin dato</dd></div>
+                <div class="climate-detail-wide"><dt>Cobertura 7 / 15 / 30 días</dt><dd id="mapDetailCoverage">Sin dato</dd></div><div class="climate-detail-wide"><dt>Último mes disponible</dt><dd id="mapDetailMonthlyReference">Sin dato</dd></div>
+                <div><dt>Observado mensual</dt><dd id="mapDetailMonthlyObserved">Sin dato</dd></div><div><dt>Promedio histórico mensual</dt><dd id="mapDetailMonthlyHistorical">Sin dato</dd></div><div><dt>Diferencia</dt><dd id="mapDetailMonthlyDifference">Sin dato</dd></div><div><dt>Diferencia porcentual</dt><dd id="mapDetailMonthlyDifferencePct">Sin dato</dd></div>
+                <div class="climate-detail-wide"><dt>Categoría descriptiva</dt><dd id="mapDetailMonthlyCategory">Sin dato</dd></div><div class="climate-detail-wide"><dt>Fuente</dt><dd id="mapDetailSource">Sin dato</dd></div><div class="climate-detail-wide"><dt>Fecha de actualización</dt><dd id="mapDetailUpdated">Sin dato</dd></div>
+              </dl>
+            </aside>
+            <aside class="climate-map-detail" id="climatePointDetail" aria-live="polite" hidden>
               <span class="eyebrow">Punto seleccionado</span>
               <h3 id="mapPointDetailTitle">Seleccioná un punto del mapa</h3>
               <p class="climate-point-intro" id="mapPointDetailIntro">Cada punto visible tiene una altura, fecha, coordenadas e identificación de fuente. Las redes se muestran por separado porque pueden usar ceros hidrométricos distintos.</p>
               <dl class="climate-detail-list climate-point-detail-list">
-                <div><dt>Fuente</dt><dd id="mapPointDetailSource">—</dd></div>
+                <div><dt>Fuente</dt><dd id="mapPointDetailSource">—</dd></div><div><dt>Naturaleza del dato</dt><dd id="mapPointDetailNature">—</dd></div>
+                <div><dt>Disponibilidad</dt><dd id="mapPointDetailAvailability">—</dd></div>
                 <div><dt>Tipo</dt><dd id="mapPointDetailType">—</dd></div>
                 <div><dt>Valor</dt><dd id="mapPointDetailValue">—</dd></div>
                 <div><dt>Fecha</dt><dd id="mapPointDetailDate">—</dd></div>
@@ -112,7 +128,7 @@
               <button class="climate-point-action" id="mapPointDetailAction" type="button" hidden>Cargar pronóstico</button>
             </aside>
           </div>
-          <section class="climate-api-grid" aria-label="Estado de las fuentes API del mapa">
+          <section class="climate-api-grid" id="climateApiGrid" aria-label="Estado de las fuentes API del mapa" hidden>
             <article class="climate-api-card" id="rainApiCard" data-state="loading">
               <div class="climate-api-card-head"><span>Apps Script · lluvias</span><strong id="rainApiState">Respaldo local</strong></div>
               <p id="rainApiSummary">Cargando todas las ubicaciones con coordenadas del registro operativo.</p>
@@ -156,7 +172,8 @@
               <a href="https://geoglows.ecmwf.int/documentation" target="_blank" rel="noopener noreferrer">Documentación oficial</a>
             </article>
           </section>
-          <section class="method-callout compact climate-map-method"><strong>Nota metodológica</strong><p>La capa principal muestra todas las observaciones válidas encontradas en INA, SNIH y Salto Grande para Corrientes: exige altura numérica, fecha interpretable y coordenadas. Se omiten valores centinela y estaciones sin lectura. Cada red conserva su estación, unidad, fecha y grado de validación; no se promedian cotas entre fuentes porque pueden referirse a ceros hidrométricos distintos.</p><p>Copernicus GFM muestra extensión de inundación observada; OPERA aporta extensión dinámica de agua superficial por radar Sentinel-1 y VIIRS agrega el compuesto de inundación de tres días. La fecha visible corresponde a la última escena que intersecta el área de Corrientes, lo que no garantiza cobertura completa de toda la provincia.</p><p>Lluvias, NASA POWER y GEOGLOWS quedan apagados inicialmente y pueden activarse como contexto. Los rásteres permiten ubicar zonas, pero no calculan hectáreas ni reemplazan una delimitación o alerta oficial.</p></section>
+          <section class="method-callout compact climate-map-method" id="climateDepartmentMethod"><strong>Nota metodológica · departamentos</strong><p>Los valores por departamento son indicadores territoriales agregados. Los acumulados son inclusivos respecto de la fecha de referencia; los días faltantes no se imputan como 0 y los milímetros no se suman como total provincial.</p><p>No representan mediciones puntuales, superficie inundada calculada, hectáreas afectadas ni daño productivo.</p></section>
+          <section class="method-callout compact climate-map-method" id="climateHydrologyMethod" hidden><strong>Nota metodológica · hidrología</strong><p>Cada punto conserva fuente, fecha, unidad y grado de validación. Las cotas de INA, SNIH y Salto Grande no se promedian porque pueden utilizar ceros hidrométricos distintos. Las referencias de umbral pertenecen a la fuente externa y no constituyen una señal propia del dashboard.</p><p>GEOGLOWS y NASA POWER son productos modelados. GFM, OPERA y VIIRS son referencias satelitales remotas; no calculan hectáreas ni sustituyen una evaluación institucional.</p></section>
         </article>
       </section>
       <section class="flood-card">
@@ -242,6 +259,6 @@
   <footer><p>Dashboard independiente · Datos exclusivos de Precipitaciones-Lluvias</p><p id="dataNote"></p></footer>
   <div class="error-banner" id="errorBanner"></div>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="app.js?v=20260812-4"></script>
+  <script src="app.js?v=20260812-5"></script>
 </body>
 </html>

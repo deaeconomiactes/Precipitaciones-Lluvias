@@ -5,6 +5,8 @@
     "endpoint": "https://script.google.com/macros/s/AKfycbyWxsaNypgJegUB419DKjF5tXhTRAyY4mT7aH34L3fwUwmGpy_J4ywwwZAsEhJWcEY/exec",
     "pointCount": 43,
     "latestDate": "2026-08-06",
+    "publicCoordinateDecimals": 4,
+    "privacyNote": "Solo se publican fecha, departamento, localidad, lluvia y coordenadas aproximadas; no se incluyen identificadores personales.",
     "points": [
       {
         "date": "2026-08-03",
@@ -29,8 +31,8 @@
         "department": "Beron de Astrada",
         "municipality": "Berón de Astrada",
         "rainfallMm": 44.0,
-        "lat": -27.484517,
-        "lng": -57.587585,
+        "lat": -27.4845,
+        "lng": -57.5876,
         "updatedAt": "2026-08-03T17:29:37.394Z"
       },
       {
@@ -38,8 +40,8 @@
         "department": "Beron de Astrada",
         "municipality": "Berón de Astrada",
         "rainfallMm": 13.0,
-        "lat": -27.490766,
-        "lng": -57.60088,
+        "lat": -27.4908,
+        "lng": -57.6009,
         "updatedAt": "2026-08-03T17:31:33.855Z"
       },
       {
@@ -56,8 +58,8 @@
         "department": "Capital",
         "municipality": "Capital (Corrientes)",
         "rainfallMm": 55.5,
-        "lat": -27.46924,
-        "lng": -58.830357,
+        "lat": -27.4692,
+        "lng": -58.8304,
         "updatedAt": ""
       },
       {
@@ -66,7 +68,7 @@
         "municipality": "Capital (Corrientes)",
         "rainfallMm": 1.0,
         "lat": -27.4504,
-        "lng": -58.762779,
+        "lng": -58.7628,
         "updatedAt": "2026-06-30T13:38:52.653Z"
       },
       {
@@ -146,8 +148,8 @@
         "department": "Esquina",
         "municipality": "Pueblo Libertador",
         "rainfallMm": 32.0,
-        "lat": -30.186683,
-        "lng": -59.300766,
+        "lat": -30.1867,
+        "lng": -59.3008,
         "updatedAt": "2026-07-20T10:04:13.838Z"
       },
       {
@@ -209,8 +211,8 @@
         "department": "Itati",
         "municipality": "Itatí",
         "rainfallMm": 50.2,
-        "lat": -27.322468,
-        "lng": -58.039533,
+        "lat": -27.3225,
+        "lng": -58.0395,
         "updatedAt": "2026-08-06T15:17:25.934Z"
       },
       {
@@ -272,8 +274,8 @@
         "department": "Monte Caseros",
         "municipality": "Monte Caseros",
         "rainfallMm": 61.5,
-        "lat": -30.262033,
-        "lng": -57.638998,
+        "lat": -30.262,
+        "lng": -57.639,
         "updatedAt": "2026-07-20T10:06:25.436Z"
       },
       {
@@ -317,8 +319,8 @@
         "department": "San Martin",
         "municipality": "Carlos Pellegrini",
         "rainfallMm": 4.0,
-        "lat": -28.538285,
-        "lng": -57.186812,
+        "lat": -28.5383,
+        "lng": -57.1868,
         "updatedAt": "2026-08-06T15:55:46.081Z"
       },
       {

@@ -2,18 +2,18 @@
 
 ## Alcance
 
-La vista inicial muestra dos clases de evidencia:
+El mapa separa dos unidades de análisis:
 
-1. alturas de río puntuales publicadas por **INA**, **SNIH** y **Salto Grande**;
-2. zonas observadas mediante **Copernicus GFM**, **NASA OPERA Sentinel-1** y **NASA VIIRS**.
+1. **Departamentos / lluvia**, vista inicial basada en indicadores territoriales agregados;
+2. **Hidrología / puntos**, vista independiente para fuentes puntuales, modeladas y satelitales.
 
-No se dibujan estaciones sin valor, fecha o coordenadas válidas. Las tres redes hidrométricas se mantienen separadas: una coincidencia espacial no autoriza a deduplicar ni promediar alturas porque cada estación puede usar un cero de escala diferente.
+En el modo hidrológico no se dibujan estaciones sin valor, fecha o coordenadas válidas. Las tres redes hidrométricas se mantienen separadas: una coincidencia espacial no autoriza a deduplicar ni promediar alturas porque cada estación puede usar un cero de escala diferente.
 
-Lluvia operativa, NASA POWER y GEOGLOWS siguen disponibles como contexto, pero están apagados al iniciar. Los polígonos departamentales son solo una referencia espacial.
+Las capas se agrupan como registros propios de lluvia, hidrometría observada externa, modelos y pronósticos, referencia satelital y marco institucional futuro. Lluvia puntual, NASA POWER y GEOGLOWS permanecen apagados al abrir el modo hidrológico.
 
 ## Arquitectura y respaldo
 
-El navegador carga primero `data/map-point-sources.json`, por lo que el mapa no queda vacío cuando un proveedor se demora o falla. Con `npm start`, luego consulta:
+El navegador carga `data/department-climate-status.json` y el GeoJSON local para iniciar sin backend. `data/map-point-sources.json` aporta la última instantánea hidrológica válida. Las consultas externas se difieren hasta que el usuario abre el modo Hidrología / puntos. Con `npm start`, se habilitan además:
 
 ```text
 GET /api/river-heights
@@ -29,7 +29,7 @@ El navegador solicita actualización cada 5 minutos mientras la pestaña está v
 | Metadatos de escenas satelitales | 5 min | 60 min | Instantánea diaria |
 | Lluvia operativa | Al abrir | 5 min | Instantánea diaria |
 
-Si una de las tres redes hidrométricas falla, las otras siguen actualizándose y la interfaz conserva la última instantánea de la fuente fallida. No se reemplaza un faltante con el valor de otra red.
+La lluvia operativa y el mapa hidrológico se actualizan en workflows separados. Una falla hidrológica no bloquea la actualización departamental de lluvia. Si la actualización completa del mapa no genera un archivo válido, el workflow registra una advertencia y conserva la última instantánea versionada.
 
 La instantánea se regenera con:
 
@@ -58,7 +58,7 @@ GET https://alerta.ina.gob.ar/geoserver/public2/ows
     &bbox=-59.9,-30.8,-55.5,-27.0,EPSG:4326
 ```
 
-Se conservan las lecturas dentro del límite provincial y las enlazadas al inventario hidrológico del distrito para no perder estaciones correntinas ubicadas sobre ríos limítrofes. Se guardan valor, fecha, tendencia, estado, umbrales, `series_id` y serie temporal publicada. Los umbrales iguales a cero se consideran no informados.
+Se conservan las lecturas dentro del límite provincial y las enlazadas al inventario hidrológico del distrito para no perder estaciones correntinas ubicadas sobre ríos limítrofes. Se guardan valor, fecha, tendencia, estado, umbrales, `series_id` y serie temporal publicada. Los umbrales iguales a cero se consideran no informados. En la interfaz se presentan como **referencias hidrométricas informadas por la fuente externa**; no constituyen una señal propia del dashboard.
 
 ## Sistema Nacional de Información Hídrica
 
@@ -140,7 +140,7 @@ En las tres capas, **intersección con Corrientes no equivale a cobertura comple
 
 ## Fuentes secundarias
 
-- **Lluvia operativa:** ubicaciones con coordenadas del Apps Script. `server.mjs` sigue redirecciones y usa la instantánea si el origen falla.
+- **Lluvia operativa:** ubicaciones con coordenadas del Apps Script. La salida pública se limita a campos meteorológicos y territoriales y redondea coordenadas a cuatro decimales; no incluye identificadores personales. `server.mjs` sigue redirecciones y usa la instantánea si el origen falla.
 - **NASA POWER:** celdas de grilla de precipitación `PRECTOTCORR`; no son estaciones físicas.
 - **GEOGLOWS–ECMWF:** pronóstico de caudal del tramo modelado más cercano a estaciones INA; no es altura observada.
 
@@ -165,4 +165,5 @@ Ninguna variable es obligatoria para INA, SNIH, Salto Grande, GFM, OPERA o VIIRS
 - Una lectura antigua se muestra con trazo discontinuo; no se elimina silenciosamente.
 - Un dato telemétrico preliminar no se presenta como validado.
 - Los productos ráster no se contabilizan como puntos ni como hectáreas.
-- Ninguna capa sustituye alertas oficiales o evaluación hidrológica local.
+- Ninguna capa constituye una señal propia del dashboard ni sustituye una evaluación hidrológica institucional.
+- Las bajas de cantidad respecto de referencias históricas generan advertencias; solo un esquema inválido o una instantánea completamente vacía detienen la publicación.

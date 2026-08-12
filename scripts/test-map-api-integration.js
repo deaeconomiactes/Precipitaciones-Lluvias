@@ -3,6 +3,7 @@
 
 const fs = require("fs");
 const vm = require("vm");
+const app = fs.readFileSync("app.js", "utf8");
 
 const context = {
   document: {
@@ -24,7 +25,7 @@ const context = {
   Date
 };
 vm.createContext(context);
-vm.runInContext(fs.readFileSync("app.js", "utf8"), context);
+vm.runInContext(app, context);
 
 context.sampleApiRecords = [
   { date: "2026-08-10", department: "Capital", municipality: "Corrientes", rain: 0, lat: -27.4692, lng: -58.8306 },
@@ -220,12 +221,18 @@ const html = fs.readFileSync("index.html", "utf8");
 for (const id of [
   "climateInaToggle", "climateSnihToggle", "climateSaltoToggle", "climateRainToggle", "climateNasaToggle", "climateGeoglowsToggle",
   "inaApiCard", "snihApiCard", "saltoApiCard", "satelliteApiCard", "rainApiCard", "nasaApiCard", "geoglowsApiCard", "mapPointDetailTitle",
-  "mapPointDetailNature", "mapPointDetailAvailability"
+  "mapPointDetailEyebrow", "mapPointOperationalDetail"
 ]) {
   if (!html.includes(`id="${id}"`)) throw new Error(`Falta el control o estado puntual ${id}.`);
 }
 if (!html.includes('id="climateMapMode"') || !html.includes('value="departments" selected') || !html.includes('value="hydrology"')) throw new Error("El mapa no separa los modos departamental e hidrológico.");
 if (!html.includes('id="climateMapVariable"') || !html.includes('id="climateDepartmentDetail"') || !html.includes('id="climatePointDetail"')) throw new Error("Faltan los controles o paneles separados del mapa.");
+for (const field of ["Fuente", "Fecha", "Valor observado", "Observación"]) {
+  if (!app.includes(`'${field}'`) && !app.includes(`\"${field}\"`)) throw new Error(`El panel operativo no contempla el campo ${field}.`);
+}
+for (const removedId of ["mapPointDetailNature", "mapPointDetailAvailability", "mapPointDetailType", "mapPointDetailId", "mapPointDetailContext"]) {
+  if (html.includes(`id="${removedId}"`)) throw new Error(`La interfaz volvió a exponer el campo técnico ${removedId}.`);
+}
 for (const group of ["Registros propios", "Hidrometría", "Modelos", "Satélite", "Administrativo (preparado)"]) {
   if (!html.includes(group)) throw new Error(`Falta el grupo metodológico: ${group}.`);
 }

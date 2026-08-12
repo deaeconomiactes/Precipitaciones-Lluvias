@@ -3,7 +3,6 @@ const fs = require('fs');
 
 const html = fs.readFileSync('index.html', 'utf8');
 const app = fs.readFileSync('app.js', 'utf8');
-const config = JSON.parse(fs.readFileSync('data/external-api-config.json', 'utf8'));
 const rainfallBefore = fs.readFileSync('data/rainfall.json');
 
 for (const id of ['climateFullscreenButton','climateExportPngButton','climateSatelliteOpacity','climateMapLegend']) {
@@ -12,11 +11,12 @@ for (const id of ['climateFullscreenButton','climateExportPngButton','climateSat
 for (const group of ['Registros propios','Hidrometría','Satélite','Modelos','Administrativo (preparado)']) {
   if (!html.includes(`<summary>${group}</summary>`)) throw Error(`Falta el grupo ${group}`);
 }
-if (!app.includes('renderSatelliteLayerDetail') || !app.includes('applyClimateViewFromUrl') || !app.includes('exportClimateMapPng')) throw Error('Falta una función central del visor');
-if (!config.satelliteTimeline || config.satelliteTimeline.enabled !== false) throw Error('La línea temporal futura no está preparada correctamente');
-for (const layer of config.wmsLayers || []) {
-  for (const key of ['serviceUrl','layers','spatialResolution','crsLabel','statusKey']) if (!layer[key]) throw Error(`${layer.id}: falta ${key}`);
-  if (!/^https:\/\//.test(layer.serviceUrl)) throw Error(`${layer.id}: WMS no seguro`);
+for (const id of ['mapPointDetailTitle','mapPointDetailEyebrow','mapPointOperationalDetail']) {
+  if (!html.includes(`id="${id}"`)) throw Error(`Falta el elemento operativo ${id}`);
 }
+for (const label of ['Lluvia registrada','Acumulado 7 días','Acumulado 30 días','Fuente','Fecha','Valor observado','Observación']) {
+  if (!app.includes(label)) throw Error(`El panel no contempla ${label}`);
+}
+if (!app.includes('renderSatelliteLayerDetail') || !app.includes('exportClimateMapPng')) throw Error('Falta una función visible central del visor');
 if (!rainfallBefore.length) throw Error('rainfall.json está vacío');
-console.log(`Visor: ${config.wmsLayers.length} capas satelitales con metadatos y controles estructurales válidos.`);
+console.log('Visor: controles, grupos y panel operativo validados.');

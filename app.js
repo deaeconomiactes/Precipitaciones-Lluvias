@@ -16,6 +16,7 @@ const CLIMATE_MAP_VARIABLES = Object.freeze({
   monthlyCategory: { label: 'Categoría mensual descriptiva', unit: '', scale: 'category' }
 });
 const state = { rainfall: [], monthlyRainfall: [], monthlySourceStats: {}, operationalDailyRecords: [], dailyRecords: [], dailyDataSource: 'operational', stations: [], metadata: {}, charts: {}, tableRows: [], filterConfigs: {}, temporalFiltersExplicit: { years: false, months: false }, climateMetrics: new Set(['temperature','humidity','wind','rain24Total']), climateMap: { map: null, geoLayer: null, resizeObserver: null, refreshTimer: null, statuses: new Map(), selectedDepartment: null, mode: 'departments', variable: 'rain7dMm', externalConfig: {}, pointCache: null, provinceGeojson: null, satelliteStatus: null, pointLayers: new Map(), pointCounts: new Map(), pointData: new Map(), pointRequests: new Set(), wmsLayers: new Map(), activeHydrologyLayer: 'none', preferredHydrologyLayer: 'none', geoglowsForecasts: new Map(), refreshingPrimaryHeights: false, refreshingSatelliteStatus: false, primaryProxyUnavailable: false, satelliteProxyUnavailable: false, hydrologyLiveStarted: false, detailAction: null } };
+const sourceAudit = { catalog: new Map(), health: new Map(), selectedId: null };
 const $ = id => document.getElementById(id);
 const format = value => new Intl.NumberFormat('es-AR', { maximumFractionDigits: 1 }).format(value || 0);
 const average = values => values.length ? values.reduce((a,b) => a + b, 0) / values.length : 0;
@@ -50,6 +51,7 @@ async function init() {
       metadata
     });
     state.monthlySourceStats = buildCombinedMonthlyRainfall();
+    await initializeSourceAudit();
     await initializeClimateMap();
     populateFilters();
     syncClimateMapWithGlobalFilter(filters());
@@ -804,6 +806,35 @@ async function initializeClimateMap() {
   }
 }
 
+async function initializeSourceAudit() {
+  const [catalog, health] = await Promise.all([fetchClimateMapData('source-catalog.json'), fetchClimateMapData('source-health.json', true)]);
+  sourceAudit.catalog = new Map((catalog || []).map(item => [item.id, item]));
+  sourceAudit.health = new Map((health || []).map(item => [item.id, item]));
+  renderSourceHealthPanel();
+  $('sourceInfoButton')?.addEventListener('click', () => showSourceInformation(sourceAudit.selectedId || 'rain'));
+  $('sourceInfoClose')?.addEventListener('click', () => { $('sourceInfoPanel').hidden = true; });
+}
+
+function renderSourceHealthPanel() {
+  const body = $('sourceHealthBody');
+  if (!body) return;
+  body.innerHTML = [...sourceAudit.catalog.values()].map(source => {
+    const health = sourceAudit.health.get(source.id);
+    const technical = health?.status || (source.status === 'Pendiente' ? 'PENDIENTE' : 'SIN DATO');
+    return `<tr><td><button class="source-table-link" data-source-info="${escapeHtml(source.id)}">${escapeHtml(source.name)}</button></td><td><span class="source-chip source-chip-${escapeHtml(technical.toLowerCase().replace(/\s+/g,'-'))}">${escapeHtml(technical)}</span></td><td>${escapeHtml(source.confidenceLevel)}</td><td>${escapeHtml(health?.lastValidation || source.lastValidation || 'Sin validar')}</td><td>${source.supportsGithubPages ? 'Sí' : 'No'}</td><td>${source.requiresBackend ? 'Sí' : 'No'}</td></tr>`;
+  }).join('');
+  body.querySelectorAll('[data-source-info]').forEach(button => button.addEventListener('click', () => showSourceInformation(button.dataset.sourceInfo)));
+}
+
+function showSourceInformation(sourceId) {
+  const source = sourceAudit.catalog.get(sourceId);
+  if (!source || !$('sourceInfoPanel')) return;
+  const health = sourceAudit.health.get(sourceId);
+  $('sourceInfoTitle').textContent = source.name;
+  $('sourceInfoContent').innerHTML = `<div class="source-info-grid"><div><strong>Proveedor</strong><span>${escapeHtml(source.provider)}</span></div><div><strong>Grupo</strong><span>${escapeHtml(source.group)}</span></div><div><strong>Naturaleza</strong><span>${escapeHtml(source.nature)}</span></div><div><strong>Estado</strong><span class="source-chip">${escapeHtml(source.status)}</span></div><div><strong>Confianza metodológica</strong><span>${escapeHtml(source.confidenceLevel)}</span></div><div><strong>Disponibilidad</strong><span>${escapeHtml(health?.availability || 'Sin monitoreo')}</span></div><div><strong>Cobertura</strong><span>${escapeHtml(source.coverage)}</span></div><div><strong>Resolución espacial</strong><span>${escapeHtml(source.resolutionSpatial)}</span></div><div><strong>Resolución temporal</strong><span>${escapeHtml(source.resolutionTemporal)}</span></div><div><strong>Frecuencia</strong><span>${escapeHtml(source.updateFrequency)}</span></div><div><strong>Última validación</strong><span>${escapeHtml(health?.lastValidation || source.lastValidation || 'Sin validar')}</span></div><div><strong>GitHub Pages / backend</strong><span>${source.supportsGithubPages ? 'Compatible' : 'No compatible'} · ${source.requiresBackend ? 'requiere backend' : 'sin backend obligatorio'}</span></div></div><h4>Limitaciones</h4><ul>${source.limitations.map(item => `<li>${escapeHtml(item)}</li>`).join('')}</ul><h4>Metodología</h4><p>${escapeHtml(source.methodology)}</p>${source.documentationUrl ? `<a href="${escapeHtml(source.documentationUrl)}" target="_blank" rel="noopener noreferrer">Documentación oficial</a>` : '<p>Documentación pendiente.</p>'}`;
+  $('sourceInfoPanel').hidden = false;
+}
+
 function createClimatePointPanes() {
   const panes = [
     ['climateRasterPane', 350],
@@ -828,7 +859,10 @@ function wireClimatePointControls() {
     refreshClimateDepartmentMap();
   });
   document.querySelectorAll('[data-point-source]').forEach(control => {
-    control.addEventListener('change', () => applyClimatePointSourceVisibility(control.dataset.pointSource));
+    control.addEventListener('change', () => {
+      if (control.checked) sourceAudit.selectedId = control.dataset.pointSource;
+      applyClimatePointSourceVisibility(control.dataset.pointSource);
+    });
   });
 }
 
@@ -1888,6 +1922,7 @@ async function refreshSatelliteFloodStatus() {
 }
 
 function selectClimateHydrologyLayer(layerId) {
+  sourceAudit.selectedId = ({operaS1:'opera', nasaViirsFlood:'viirs', gfmObservedFlood:'gfm'})[layerId] || sourceAudit.selectedId;
   state.climateMap.wmsLayers.forEach(({ layer }) => {
     if (state.climateMap.map.hasLayer(layer)) state.climateMap.map.removeLayer(layer);
   });
@@ -2139,6 +2174,7 @@ function formatClimateReferenceDate(value) {
 }
 
 function renderMapPointDetail(detail, action = null) {
+  sourceAudit.selectedId = detail.sourceId || ({'Apps Script · registro de lluvias':'rain','GEOGLOWS–ECMWF':'geoglows'}[detail.source]) || (String(detail.source || '').includes('NASA POWER') ? 'nasa' : String(detail.source || '').includes('SNIH') ? 'snih' : String(detail.source || '').includes('Salto') ? 'salto' : String(detail.source || '').includes('INA') ? 'ina' : sourceAudit.selectedId);
   const values = {
     mapPointDetailTitle: detail.title || 'Punto sin nombre',
     mapPointDetailIntro: detail.intro || '',

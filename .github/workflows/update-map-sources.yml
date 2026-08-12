@@ -54,16 +54,22 @@ jobs:
           git restore --source=HEAD -- data/map-point-sources.json
           npm run test:map
 
+      - name: Update source health from the valid local snapshot
+        run: npm run refresh:source-health
+
+      - name: Validate published map artifacts
+        run: npm run test:map
+
       - name: Commit valid map snapshot
         run: |
           set -euo pipefail
-          if git diff --quiet -- data/map-point-sources.json; then
+          if git diff --quiet -- data/map-point-sources.json data/source-health.json; then
             echo "No hydrology or map-source changes."
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/map-point-sources.json
+          git add data/map-point-sources.json data/source-health.json
           git commit -m "Update hydrology and map sources"
           git push
 
@@ -76,7 +82,7 @@ jobs:
           set -euo pipefail
           mkdir -p _site/data/geo
           cp index.html app.js styles.css climate-controls.css operational.css _site/
-          cp data/rainfall.json data/rainfall-daily.json data/rainfall-daily-history.json data/rainfall-daily-combined.json data/rainfall-daily-summary.json data/stations.json data/metadata.json data/department-climate-status.json data/stations-climate-status.json data/external-api-config.json data/map-point-sources.json _site/data/
+          cp data/rainfall.json data/rainfall-daily.json data/rainfall-daily-history.json data/rainfall-daily-combined.json data/rainfall-daily-summary.json data/stations.json data/metadata.json data/department-climate-status.json data/stations-climate-status.json data/external-api-config.json data/map-point-sources.json data/source-catalog.json data/source-health.json data/source-cross-validation.json _site/data/
           cp data/geo/corrientes-departamentos.geojson _site/data/geo/
           touch _site/.nojekyll
 

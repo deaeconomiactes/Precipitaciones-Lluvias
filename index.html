@@ -126,6 +126,7 @@
                 <div class="climate-detail-wide"><dt>Actualización / procedencia</dt><dd id="mapPointDetailUpdated">—</dd></div>
               </dl>
               <button class="climate-point-action" id="mapPointDetailAction" type="button" hidden>Cargar pronóstico</button>
+              <button class="climate-point-action source-info-button" id="sourceInfoButton" type="button">Información de la fuente</button>
             </aside>
           </div>
           <section class="climate-api-grid" id="climateApiGrid" aria-label="Estado de las fuentes API del mapa" hidden>
@@ -174,6 +175,8 @@
           </section>
           <section class="method-callout compact climate-map-method" id="climateDepartmentMethod"><strong>Nota metodológica · departamentos</strong><p>Los valores por departamento son indicadores territoriales agregados. Los acumulados son inclusivos respecto de la fecha de referencia; los días faltantes no se imputan como 0 y los milímetros no se suman como total provincial.</p><p>No representan mediciones puntuales, superficie inundada calculada, hectáreas afectadas ni daño productivo.</p></section>
           <section class="method-callout compact climate-map-method" id="climateHydrologyMethod" hidden><strong>Nota metodológica · hidrología</strong><p>Cada punto conserva fuente, fecha, unidad y grado de validación. Las cotas de INA, SNIH y Salto Grande no se promedian porque pueden utilizar ceros hidrométricos distintos. Las referencias de umbral pertenecen a la fuente externa y no constituyen una señal propia del dashboard.</p><p>GEOGLOWS y NASA POWER son productos modelados. GFM, OPERA y VIIRS son referencias satelitales remotas; no calculan hectáreas ni sustituyen una evaluación institucional.</p></section>
+          <details class="source-health-card"><summary>Estado de las fuentes</summary><div class="source-health-table-wrap"><table><thead><tr><th>Fuente</th><th>Disponibilidad</th><th>Confianza</th><th>Última validación</th><th>Pages</th><th>Backend</th></tr></thead><tbody id="sourceHealthBody"></tbody></table></div></details>
+          <aside class="source-info-panel" id="sourceInfoPanel" hidden><button id="sourceInfoClose" type="button" aria-label="Cerrar información">×</button><h3 id="sourceInfoTitle">Información de la fuente</h3><div id="sourceInfoContent"></div></aside>
         </article>
       </section>
       <section class="flood-card">

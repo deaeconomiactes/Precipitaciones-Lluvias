@@ -226,7 +226,7 @@ for (const id of [
 }
 if (!html.includes('id="climateMapMode"') || !html.includes('value="departments" selected') || !html.includes('value="hydrology"')) throw new Error("El mapa no separa los modos departamental e hidrológico.");
 if (!html.includes('id="climateMapVariable"') || !html.includes('id="climateDepartmentDetail"') || !html.includes('id="climatePointDetail"')) throw new Error("Faltan los controles o paneles separados del mapa.");
-for (const group of ["Registros propios de lluvia", "Hidrometría observada externa", "Modelos y pronósticos", "Referencia satelital", "Marco institucional futuro"]) {
+for (const group of ["Registros propios", "Hidrometría", "Modelos", "Satélite", "Administrativo (preparado)"]) {
   if (!html.includes(group)) throw new Error(`Falta el grupo metodológico: ${group}.`);
 }
 const toggleChecked = id => new RegExp(`<input[^>]*id="${id}"[^>]*\\schecked(?:\\s|>)`).test(html);

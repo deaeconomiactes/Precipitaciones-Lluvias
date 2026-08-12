@@ -1,0 +1,135 @@
+{
+  "version": 3,
+  "pointCacheFile": "map-point-sources.json",
+  "defaultRasterLayer": "gfmObservedFlood",
+  "sourceGroups": {
+    "ownObserved": ["rain"],
+    "externalHydrometry": ["ina", "snih", "salto"],
+    "modelsAndForecasts": ["nasa", "geoglows"],
+    "satelliteReference": ["operaS1", "gfmObservedFlood", "nasaViirsFlood"],
+    "futureInstitutional": []
+  },
+  "privacy": {
+    "rainCoordinateDecimals": 4,
+    "publicRainFields": ["date", "department", "municipality", "rainfallMm", "lat", "lng", "updatedAt"],
+    "note": "No se publican nombres de personas, documentos, contactos ni identificadores administrativos."
+  },
+  "qualityReferenceCounts": {
+    "rain": 40,
+    "ina": 30,
+    "snih": 20,
+    "salto": 8,
+    "nasa": 20,
+    "geoglows": 40
+  },
+  "primaryRiverHeights": {
+    "proxyUrl": "/api/river-heights",
+    "refreshIntervalMs": 300000,
+    "timeoutMs": 120000,
+    "upstreamCacheMinutes": 15
+  },
+  "satelliteFloodStatus": {
+    "proxyUrl": "/api/satellite-flood-status",
+    "refreshIntervalMs": 300000,
+    "timeoutMs": 60000,
+    "metadataCacheMinutes": 60
+  },
+  "rainObservations": {
+    "id": "rain",
+    "label": "Registro operativo de lluvias",
+    "url": "https://script.google.com/macros/s/AKfycbyWxsaNypgJegUB419DKjF5tXhTRAyY4mT7aH34L3fwUwmGpy_J4ywwwZAsEhJWcEY/exec",
+    "proxyUrl": "/api/rain-observations",
+    "timeoutMs": 120000
+  },
+  "ina": {
+    "id": "ina",
+    "label": "INA SIyAH",
+    "stationUrl": "https://alerta.ina.gob.ar/pub/datos/estaciones&distrito=Corrientes&format=json",
+    "latestHeightsWfsUrl": "https://alerta.ina.gob.ar/geoserver/public2/ows?service=WFS&version=2.0.0&request=GetFeature&typeNames=public2%3Aultimas_alturas_con_timeseries&outputFormat=application%2Fjson&srsName=EPSG%3A4326&bbox=-59.9%2C-30.8%2C-55.5%2C-27.0%2CEPSG%3A4326",
+    "timeoutMs": 60000
+  },
+  "nasaPower": {
+    "id": "nasa",
+    "label": "NASA POWER",
+    "baseUrl": "https://power.larc.nasa.gov/api/temporal/daily/regional",
+    "parameter": "PRECTOTCORR",
+    "community": "AG",
+    "lookbackDays": 22,
+    "timeStandard": "UTC",
+    "bbox": {
+      "latitudeMin": -30.8,
+      "latitudeMax": -27.0,
+      "longitudeMin": -59.9,
+      "longitudeMax": -55.5
+    },
+    "timeoutMs": 150000
+  },
+  "geoglows": {
+    "id": "geoglows",
+    "label": "GEOGLOWS–ECMWF",
+    "baseUrl": "https://geoglows.ecmwf.int/api/v2",
+    "timeoutMs": 45000
+  },
+  "satelliteTimeline": {
+    "enabled": false,
+    "status": "prepared",
+    "sceneDateField": "date",
+    "sceneAcquiredAtField": "acquiredAt",
+    "sceneIdentifierField": "sceneId",
+    "note": "Estructura reservada; el selector temporal todavía no se renderiza."
+  },
+  "wmsLayers": [
+    {
+      "id": "operaS1",
+      "label": "NASA OPERA · agua superficial Sentinel-1",
+      "shortLabel": "Zonas con agua · OPERA Sentinel-1",
+      "kind": "observed",
+      "serviceUrl": "https://gibs.earthdata.nasa.gov/wms/epsg4326/best/wms.cgi",
+      "layers": "OPERA_L3_Dynamic_Surface_Water_Extent-Sentinel-1",
+      "format": "image/png",
+      "transparent": true,
+      "opacity": 0.72,
+      "spatialResolution": "30 m",
+      "crsLabel": "WMS compatible con EPSG:3857 y EPSG:4326",
+      "attribution": "NASA EOSDIS GIBS",
+      "statusKey": "operaS1",
+      "timeMode": "source-status",
+      "usesTimeParameter": true,
+      "legendUrl": "https://gibs.earthdata.nasa.gov/legends/OPERA_Dynamic_Surface_Water_Extent_S1_H.png"
+    },
+    {
+      "id": "gfmObservedFlood",
+      "label": "Copernicus GFM · inundación observada",
+      "shortLabel": "GFM observado (ráster)",
+      "kind": "observed",
+      "serviceUrl": "https://geoserver.gfm.eodc.eu/geoserver/gfm/wms",
+      "layers": "observed_flood_extent_group_layer",
+      "legendUrl": "https://geoserver.gfm.eodc.eu/geoserver/gfm/wms?REQUEST=GetLegendGraphic&VERSION=1.0.0&FORMAT=image%2Fpng&LAYER=observed_flood_extent_group_layer",
+      "opacity": 0.62,
+      "spatialResolution": "20 m (producto Sentinel-1)",
+      "crsLabel": "WMS Copernicus GFM compatible con EPSG:3857 y EPSG:4326",
+      "attribution": "Copernicus GFM",
+      "statusKey": "gfmObservedFlood",
+      "timeMode": "source-status",
+      "usesTimeParameter": false
+    },
+    {
+      "id": "nasaViirsFlood",
+      "label": "NASA LANCE · inundación VIIRS 3 días",
+      "shortLabel": "Zonas inundadas · VIIRS (3 días)",
+      "kind": "observed",
+      "serviceUrl": "https://gibs.earthdata.nasa.gov/wms/epsg4326/best/wms.cgi",
+      "layers": "VIIRS_Combined_Flood_3-Day",
+      "format": "image/png",
+      "transparent": true,
+      "opacity": 0.68,
+      "spatialResolution": "375 m (sensor VIIRS)",
+      "crsLabel": "WMS compatible con EPSG:3857 y EPSG:4326",
+      "attribution": "NASA EOSDIS GIBS",
+      "statusKey": "nasaViirsFlood",
+      "timeMode": "source-status",
+      "usesTimeParameter": true,
+      "legendUrl": "https://gibs.earthdata.nasa.gov/legends/MODIS_Flood_H.png"
+    }
+  ]
+}

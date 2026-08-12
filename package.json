@@ -1,0 +1,16 @@
+{
+  "name": "precipitaciones-lluvias",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "node --env-file-if-exists=.env.local server.mjs",
+    "refresh:points": "python3 scripts/update-map-point-sources.py",
+    "refresh:source-health": "node scripts/build-source-health.js",
+    "test:daily": "node scripts/test-daily-reference.js",
+    "test:map": "node scripts/test-primary-source-parsers.mjs && node scripts/test-map-api-integration.js && node scripts/test-source-audit.js && node scripts/test-map-viewer-ui.js",
+    "test": "npm run test:daily && npm run test:map"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

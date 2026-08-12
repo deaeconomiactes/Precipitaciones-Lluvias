@@ -25,6 +25,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Validate dashboard and primary-source contracts
+        run: npm test
+
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
 
@@ -32,9 +40,10 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p _site/data
+          mkdir -p _site/data/geo
           cp index.html app.js styles.css climate-controls.css operational.css _site/
-          cp data/rainfall.json data/rainfall-daily.json data/rainfall-daily-history.json data/rainfall-daily-combined.json data/rainfall-daily-summary.json data/stations.json data/metadata.json _site/data/
+          cp data/rainfall.json data/rainfall-daily.json data/rainfall-daily-history.json data/rainfall-daily-combined.json data/rainfall-daily-summary.json data/stations.json data/metadata.json data/department-climate-status.json data/stations-climate-status.json data/external-api-config.json data/map-point-sources.json data/source-catalog.json data/source-health.json data/source-cross-validation.json _site/data/
+          cp data/geo/corrientes-departamentos.geojson _site/data/geo/
           touch _site/.nojekyll
 
       - name: Verify private files are excluded
@@ -47,6 +56,10 @@ jobs:
           fi
           test -s _site/data/rainfall-daily-history.json
           test -s _site/data/rainfall-daily-combined.json
+          test -s _site/data/department-climate-status.json
+          test -s _site/data/external-api-config.json
+          test -s _site/data/map-point-sources.json
+          test -s _site/data/geo/corrientes-departamentos.geojson
           find _site -maxdepth 3 -type f -print
 
       - name: Upload public dashboard only

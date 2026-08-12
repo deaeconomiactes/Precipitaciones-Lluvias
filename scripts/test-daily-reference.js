@@ -104,7 +104,11 @@ if (!(realSignals[0].observedMm < recentSevenDaySum)) {
   throw new Error("La lectura de todos los departamentos parece sumar mm en lugar de promediarlos.");
 }
 
-const expectedStarts = ["2026-07-30", "2026-07-22", "2026-07-07"];
+const expectedStarts = [7, 15, 30].map(days => {
+  const start = new Date(`${context.inputLatestDate}T00:00:00Z`);
+  start.setUTCDate(start.getUTCDate() - (days - 1));
+  return start.toISOString().slice(0, 10);
+});
 if (JSON.stringify(realSignals.map(signal => signal.periodStart)) !== JSON.stringify(expectedStarts)) {
   throw new Error(`Ventanas observadas inesperadas: ${JSON.stringify(realSignals.map(signal => signal.periodStart))}`);
 }

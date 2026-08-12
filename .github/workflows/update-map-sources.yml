@@ -1,0 +1,96 @@
+name: Update hydrology and map sources
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "30 11 * * *"
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: hydrology-map-update
+  cancel-in-progress: false
+
+jobs:
+  update:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    env:
+      DAILY_RAIN_JSON_URL: ${{ vars.DAILY_RAIN_JSON_URL }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Refresh hydrology and map snapshot
+        id: refresh
+        continue-on-error: true
+        run: python scripts/update-map-point-sources.py
+
+      - name: Validate refreshed snapshot
+        id: validate_candidate
+        if: ${{ steps.refresh.outcome == 'success' }}
+        continue-on-error: true
+        run: npm run test:map
+
+      - name: Preserve last valid snapshot when refresh is unavailable
+        if: ${{ steps.refresh.outcome != 'success' || steps.validate_candidate.outcome == 'failure' }}
+        run: |
+          echo "::warning::Una o más fuentes externas no produjeron una instantánea válida. Se conserva data/map-point-sources.json de la última actualización exitosa."
+          git restore --source=HEAD -- data/map-point-sources.json
+          npm run test:map
+
+      - name: Update source health from the valid local snapshot
+        run: npm run refresh:source-health
+
+      - name: Validate published map artifacts
+        run: npm run test:map
+
+      - name: Commit valid map snapshot
+        run: |
+          set -euo pipefail
+          if git diff --quiet -- data/map-point-sources.json data/source-health.json; then
+            echo "No hydrology or map-source changes."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/map-point-sources.json data/source-health.json
+          git commit -m "Update hydrology and map sources"
+          git push
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Build public site from allowlist
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p _site/data/geo
+          cp index.html app.js styles.css climate-controls.css operational.css _site/
+          cp data/rainfall.json data/rainfall-daily.json data/rainfall-daily-history.json data/rainfall-daily-combined.json data/rainfall-daily-summary.json data/stations.json data/metadata.json data/department-climate-status.json data/stations-climate-status.json data/external-api-config.json data/map-point-sources.json data/source-catalog.json data/source-health.json data/source-cross-validation.json _site/data/
+          cp data/geo/corrientes-departamentos.geojson _site/data/geo/
+          touch _site/.nojekyll
+
+      - name: Upload public dashboard only
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - name: Deploy GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

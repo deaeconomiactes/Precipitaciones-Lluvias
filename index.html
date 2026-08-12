@@ -9,9 +9,11 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="climate-controls.css?v=20260612-4">
-  <link rel="stylesheet" href="operational.css?v=20260811-1">
+  <link rel="stylesheet" href="operational.css?v=20260812-3">
 </head>
 <body>
   <div class="loading" id="loading"><div class="spinner"></div><p>Preparando datos climáticos...</p></div>
@@ -66,13 +68,110 @@
         <div><span>Lluvia última fecha disponible</span><strong id="quickRain24">No disponible</strong></div>
         <div><span>Lluvia últimos 7 días</span><strong id="quickRain7">No disponible</strong></div>
         <div><span>Lluvia últimos 30 días</span><strong id="quickRain30">No disponible</strong></div>
-        <div><span>Superficie inundada</span><strong>No disponible</strong></div>
+        <div><span>Zonas inundadas observadas</span><strong>GFM / OPERA / VIIRS · fecha visible</strong></div>
       </section>
       <section class="decision-grid">
-        <article class="card map-placeholder"><div class="card-head"><div><h2>Mapa departamental de Corrientes</h2><p>Vista piloto embebida para validar interacción y apariencia. No representa superficie inundada calculada, hectáreas afectadas ni daño productivo.</p></div><span class="pending-badge">Piloto externo</span></div><div class="pilot-map"><iframe title="Mapa piloto departamental de Corrientes" src="https://geomat-maps.com.ar/mpc/maptiles/mpc-general.php?ori=v84501%22" loading="lazy" referrerpolicy="no-referrer-when-downgrade" allow="geolocation; fullscreen"></iframe><div class="map-note"><strong>Mapa piloto</strong><p>Referencia territorial piloto. No mide superficie inundada, hectáreas afectadas ni daño productivo.</p><a href="https://geomat-maps.com.ar/mpc/maptiles/mpc-general.php?ori=v84501%22" target="_blank" rel="noopener noreferrer">Abrir mapa en una pestaña nueva</a></div></div></article>
+        <article class="card climate-map-card">
+          <div class="card-head climate-map-heading">
+            <div><h2>Mapa climático interactivo de Corrientes</h2><p>La lluvia departamental y las fuentes hidrológicas se presentan en modos separados para no mezclar indicadores territoriales, mediciones puntuales, modelos y referencias satelitales.</p></div>
+            <span class="source-tag" id="climatePointTotal">Cargando mapa…</span>
+          </div>
+          <div class="climate-map-mode-bar">
+            <label><span>Modo del mapa</span><select id="climateMapMode"><option value="departments" selected>Departamentos / lluvia</option><option value="hydrology">Hidrología / puntos</option></select></label>
+            <span class="climate-mode-explanation" id="climateModeExplanation">Indicadores territoriales agregados por departamento.</span>
+          </div>
+          <div class="climate-map-toolbar" id="climateDepartmentControls" aria-label="Controles del mapa departamental">
+            <label><span>Variable del mapa</span><select id="climateMapVariable"><option value="rainLastDateMm">Lluvia última fecha</option><option value="rain7dMm" selected>Acumulado 7 días</option><option value="rain15dMm">Acumulado 15 días</option><option value="rain30dMm">Acumulado 30 días</option><option value="monthlyDifferencePct">Desvío mensual vs histórico</option><option value="monthlyCategory">Categoría mensual descriptiva</option></select></label>
+            <span class="climate-map-reference" id="climateMapReference">Cargando información territorial…</span>
+          </div>
+          <div class="climate-map-toolbar climate-point-toolbar" id="climateHydrologyControls" aria-label="Fuentes del mapa hidrológico" hidden>
+            <details class="climate-source-group" open><summary>Registros propios</summary><div class="climate-source-content"><label class="climate-source-toggle source-rain"><input id="climateRainToggle" data-point-source="rain" type="checkbox"><i aria-hidden="true"></i><span>Lluvias registradas <strong id="climateRainCount">—</strong></span></label><small>Observado propio · ubicación pública aproximada.</small></div></details>
+            <details class="climate-source-group" open><summary>Hidrometría</summary><div class="climate-source-content climate-source-toggles"><label class="climate-source-toggle source-ina"><input id="climateInaToggle" data-point-source="ina" type="checkbox" checked><i aria-hidden="true"></i><span>Altura del río · INA <strong id="climateInaCount">—</strong></span></label><label class="climate-source-toggle source-snih"><input id="climateSnihToggle" data-point-source="snih" type="checkbox" checked><i aria-hidden="true"></i><span>Altura del río · SNIH <strong id="climateSnihCount">—</strong></span></label><label class="climate-source-toggle source-salto"><input id="climateSaltoToggle" data-point-source="salto" type="checkbox" checked><i aria-hidden="true"></i><span>Altura · Salto Grande <strong id="climateSaltoCount">—</strong></span></label><small>Observaciones externas; SNIH se identifica como preliminar.</small></div></details>
+            <details class="climate-source-group"><summary>Satélite</summary><div class="climate-source-content"><label class="climate-raster-select"><span>Capa visible</span><select id="climateHydrologyLayer"><option value="none">Sin referencia satelital</option></select></label><label class="climate-opacity-control"><span>Opacidad <output id="climateSatelliteOpacityValue">65 %</output></span><input id="climateSatelliteOpacity" type="range" min="10" max="100" step="5" value="65"></label><small>Ráster remoto con fecha de escena; no calcula hectáreas.</small></div></details>
+            <details class="climate-source-group"><summary>Modelos</summary><div class="climate-source-content climate-source-toggles"><label class="climate-source-toggle source-nasa"><input id="climateNasaToggle" data-point-source="nasa" type="checkbox"><i aria-hidden="true"></i><span>Precipitación NASA POWER <strong id="climateNasaCount">—</strong></span></label><label class="climate-source-toggle source-geoglows"><input id="climateGeoglowsToggle" data-point-source="geoglows" type="checkbox"><i aria-hidden="true"></i><span>Pronóstico de caudal <strong id="climateGeoglowsCount">—</strong></span></label><small>Grilla modelada y pronóstico; no equivalen a mediciones puntuales.</small></div></details>
+            <details class="climate-source-group climate-source-group-future"><summary>Administrativo (preparado)</summary><div class="climate-source-content"><label class="climate-source-toggle"><input type="checkbox" disabled><i aria-hidden="true"></i><span>Capas institucionales validadas · próximamente</span></label></div></details>
+            <span class="climate-map-reference" id="climateHydrologyReference">Instantánea local disponible; las consultas externas se activan al abrir este modo.</span>
+          </div>
+          <div class="climate-map-layout">
+            <div class="climate-map-visual">
+              <div class="climate-map-actions"><button id="climateFullscreenButton" type="button" title="Pantalla completa">⛶ <span>Pantalla completa</span></button><button id="climateExportPngButton" type="button" title="Exportar vista como PNG">↓ <span>PNG</span></button></div>
+              <div id="climateMap" role="application" aria-label="Mapa climático interactivo de Corrientes por departamentos y fuentes puntuales"></div>
+              <div class="climate-map-legend" id="climateMapLegend" aria-label="Leyenda del mapa"></div>
+              <div class="climate-nature-legend" aria-label="Naturaleza de los datos"><strong>Naturaleza del dato</strong><span><i class="nature-own"></i>Observado propio</span><span><i class="nature-external"></i>Observado externo</span><span><i class="nature-preliminary"></i>Preliminar externo</span><span><i class="nature-model"></i>Modelado / pronóstico</span><span><i class="nature-satellite"></i>Satelital</span><span><i class="nature-local"></i>Respaldo local</span></div>
+              <div class="climate-external-legend" id="climateExternalLegend" aria-label="Leyenda de la capa hidrológica externa" hidden></div>
+              <div class="climate-map-message" id="climateMapMessage" hidden></div>
+            </div>
+            <aside class="climate-map-detail" id="climateDepartmentDetail" aria-live="polite">
+              <span class="eyebrow">Detalle territorial</span>
+              <h3 id="mapDetailDepartment">Seleccioná un departamento</h3>
+              <dl class="climate-detail-list">
+                <div><dt>Última fecha diaria</dt><dd id="mapDetailDailyDate">Sin dato</dd></div><div><dt>Lluvia última fecha</dt><dd id="mapDetailLastRain">Sin dato</dd></div>
+                <div><dt>Acumulado 7 días</dt><dd id="mapDetailRain7">Sin dato</dd></div><div><dt>Acumulado 15 días</dt><dd id="mapDetailRain15">Sin dato</dd></div><div><dt>Acumulado 30 días</dt><dd id="mapDetailRain30">Sin dato</dd></div>
+                <div class="climate-detail-wide"><dt>Cobertura 7 / 15 / 30 días</dt><dd id="mapDetailCoverage">Sin dato</dd></div><div class="climate-detail-wide"><dt>Último mes disponible</dt><dd id="mapDetailMonthlyReference">Sin dato</dd></div>
+                <div><dt>Observado mensual</dt><dd id="mapDetailMonthlyObserved">Sin dato</dd></div><div><dt>Promedio histórico mensual</dt><dd id="mapDetailMonthlyHistorical">Sin dato</dd></div><div><dt>Diferencia</dt><dd id="mapDetailMonthlyDifference">Sin dato</dd></div><div><dt>Diferencia porcentual</dt><dd id="mapDetailMonthlyDifferencePct">Sin dato</dd></div>
+                <div class="climate-detail-wide"><dt>Categoría descriptiva</dt><dd id="mapDetailMonthlyCategory">Sin dato</dd></div><div class="climate-detail-wide"><dt>Fuente</dt><dd id="mapDetailSource">Sin dato</dd></div><div class="climate-detail-wide"><dt>Fecha de actualización</dt><dd id="mapDetailUpdated">Sin dato</dd></div>
+              </dl>
+            </aside>
+            <aside class="climate-map-detail" id="climatePointDetail" aria-live="polite" hidden>
+              <span class="eyebrow" id="mapPointDetailEyebrow">Información seleccionada</span>
+              <h3 id="mapPointDetailTitle">Seleccioná un punto del mapa</h3>
+              <div id="mapPointOperationalDetail" class="climate-operational-detail"><p class="climate-point-intro">Seleccioná una estación, registro, pronóstico o imagen para ver su información principal.</p></div>
+              <button class="climate-point-action" id="mapPointDetailAction" type="button" hidden>Cargar pronóstico</button>
+              <button class="climate-point-action source-info-button" id="sourceInfoButton" type="button">Información de la fuente</button>
+            </aside>
+          </div>
+          <section class="climate-api-grid" id="climateApiGrid" aria-label="Estado de las fuentes API del mapa" hidden>
+            <article class="climate-api-card" id="rainApiCard" data-state="loading">
+              <div class="climate-api-card-head"><span>Registros propios de lluvia</span><strong id="rainApiState">Respaldo local</strong></div>
+              <p id="rainApiSummary">Cobertura disponible: —</p>
+              <small id="rainApiMeta">Última actualización: consultando</small>
+              <a href="https://script.google.com/macros/s/AKfycbyWxsaNypgJegUB419DKjF5tXhTRAyY4mT7aH34L3fwUwmGpy_J4ywwwZAsEhJWcEY/exec" target="_blank" rel="noopener noreferrer">Abrir endpoint</a>
+            </article>
+            <article class="climate-api-card" id="inaApiCard" data-state="loading">
+              <div class="climate-api-card-head"><span>INA SIyAH</span><strong id="inaApiState">Consultando</strong></div>
+              <p id="inaApiSummary">Estaciones disponibles: —</p>
+              <small id="inaApiMeta">Última actualización: consultando</small>
+              <a href="https://alerta.ina.gob.ar/pub/gui/apibase" target="_blank" rel="noopener noreferrer">API oficial</a>
+            </article>
+            <article class="climate-api-card" id="snihApiCard" data-state="loading">
+              <div class="climate-api-card-head"><span>SNIH</span><strong id="snihApiState">Consultando</strong></div>
+              <p id="snihApiSummary">Estaciones disponibles: —</p>
+              <small id="snihApiMeta">Última actualización: consultando</small>
+              <a href="https://snih.hidricosargentina.gob.ar/" target="_blank" rel="noopener noreferrer">Sistema oficial</a>
+            </article>
+            <article class="climate-api-card" id="saltoApiCard" data-state="loading">
+              <div class="climate-api-card-head"><span>Salto Grande</span><strong id="saltoApiState">Consultando</strong></div>
+              <p id="saltoApiSummary">Estaciones disponibles: —</p>
+              <small id="saltoApiMeta">Última actualización: consultando</small>
+              <a href="https://www.saltogrande.org/servicios.php" target="_blank" rel="noopener noreferrer">Servicios oficiales</a>
+            </article>
+            <article class="climate-api-card" id="satelliteApiCard" data-state="loading">
+              <div class="climate-api-card-head"><span>Imágenes satelitales</span><strong id="satelliteApiState">Consultando</strong></div>
+              <p id="satelliteApiSummary">Coberturas disponibles: —</p>
+              <small id="satelliteApiMeta">Última actualización: consultando</small>
+              <a href="https://global-flood.emergency.copernicus.eu/technical-information/glofas-gfm/" target="_blank" rel="noopener noreferrer">Metodología GFM</a>
+            </article>
+            <article class="climate-api-card" id="nasaApiCard" data-state="loading">
+              <div class="climate-api-card-head"><span>NASA POWER</span><strong id="nasaApiState">Consultando</strong></div>
+              <p id="nasaApiSummary">Cobertura disponible: —</p>
+              <small id="nasaApiMeta">Última actualización: consultando</small>
+              <a href="https://power.larc.nasa.gov/docs/services/api/temporal/daily/" target="_blank" rel="noopener noreferrer">Documentación oficial</a>
+            </article>
+            <article class="climate-api-card" id="geoglowsApiCard" data-state="loading">
+              <div class="climate-api-card-head"><span>GEOGLOWS–ECMWF</span><strong id="geoglowsApiState">Consultando</strong></div>
+              <p id="geoglowsApiSummary">Puntos con pronóstico: —</p>
+              <small id="geoglowsApiMeta">Última actualización: al consultar</small>
+              <a href="https://geoglows.ecmwf.int/documentation" target="_blank" rel="noopener noreferrer">Documentación oficial</a>
+            </article>
+          </section>
+          <details class="method-callout compact climate-map-method" id="climateDepartmentMethod"><summary>Nota metodológica · departamentos</summary><p>Los valores por departamento son indicadores territoriales agregados. Los días faltantes no se imputan como 0 y los milímetros no se suman como total provincial.</p></details>
+          <details class="method-callout compact climate-map-method" id="climateHydrologyMethod" hidden><summary>Nota metodológica · hidrología</summary><p>Las fuentes observadas, modeladas y satelitales se presentan por separado y no constituyen una señal propia del dashboard.</p></details>
+          <details class="source-health-card"><summary>Estado de las fuentes</summary><div class="source-health-table-wrap"><table><thead><tr><th>Fuente</th><th>Disponibilidad</th><th>Confianza</th><th>Última validación</th><th>Pages</th><th>Backend</th></tr></thead><tbody id="sourceHealthBody"></tbody></table></div></details>
+          <aside class="source-info-panel" id="sourceInfoPanel" hidden><button id="sourceInfoClose" type="button" aria-label="Cerrar información">×</button><h3 id="sourceInfoTitle">Información de la fuente</h3><div id="sourceInfoContent"></div></aside>
+        </article>
       </section>
       <section class="flood-card">
-        <div class="flood-icon">ha</div><div><span class="eyebrow">Información pendiente</span><h2>Superficie inundada por departamento</h2><p>No existen mediciones de hectáreas inundadas, geometrías ni variaciones temporales en las fuentes locales. El módulo queda preparado sin inventar estimaciones.</p></div><strong>— ha</strong>
+        <div class="flood-icon">sat</div><div><span class="eyebrow">Observación satelital</span><h2>Zonas inundadas visibles en el mapa</h2><p>GFM, OPERA Sentinel-1 y VIIRS aportan imágenes observadas con fecha de escena trazable. Todavía no existe una medición validada de hectáreas afectadas por departamento, por lo que no se inventa una superficie.</p></div><strong>Mapa · sin ha</strong>
       </section>
     </section>
 
@@ -143,8 +242,8 @@
       <div class="panel-intro"><div><span class="eyebrow">Trazabilidad</span><h2>Metodología y datos</h2><p>Qué puede responder hoy el prototipo y qué necesita para avanzar.</p></div></div>
       <section class="method-grid">
         <article class="method-card guide"><h3>Guía rápida de lectura</h3><p><strong>Resumen provincial:</strong> muestra una lectura sintética del mes de referencia. Compara la lluvia observada del mes contra el promedio histórico del mismo mes calendario. Cuando se muestran todos los departamentos, se informa un promedio departamental en mm; no se suman milímetros entre departamentos.</p><p><strong>Monitoreo diario:</strong> utiliza la base diaria histórica y operativa combinada. La unidad de análisis es departamento-fecha y la observación operativa prevalece cuando ambas fuentes coinciden.</p><p><strong>Análisis por departamento:</strong> compara cada departamento contra su propio promedio histórico mensual. El valor observado corresponde al acumulado mensual del mes de referencia, no al acumulado anual cuando el filtro está en “Año completo”.</p><p><strong>Evolución temporal:</strong> permite observar la trayectoria mensual y anual de la precipitación con la base mensual combinada. Los años con carga parcial deben interpretarse según los meses disponibles.</p><p><strong>Alcance del tablero:</strong> mide precipitaciones y desvíos pluviométricos. No estima superficie inundada, hectáreas afectadas, daño productivo ni constituye una evaluación oficial de eventos.</p></article>
-        <article class="method-card available"><h3>Datos disponibles</h3><ul><li>Lluvia mensual por departamento, 1993–2026, complementada con acumulados diarios operativos mensualizados cuando falta una carga mensual específica.</li><li>Registro diario departamental combinado, con historia 2015–2025 y observaciones operativas vigentes, usado para seguimiento y ventanas diarias.</li><li>Temperatura, humedad, viento y lluvia diaria de ocho estaciones.</li></ul></article>
-        <article class="method-card pending"><h3>Datos pendientes</h3><ul><li>Superficie inundada y hectáreas afectadas.</li><li>Geometrías departamentales propias para mapas.</li><li>Variables de vulnerabilidad territorial.</li></ul></article>
+        <article class="method-card available"><h3>Datos disponibles</h3><ul><li>Lluvia mensual por departamento, 1993–2026, complementada con acumulados diarios operativos mensualizados cuando falta una carga mensual específica.</li><li>Registro diario departamental combinado, con historia 2015–2025 y observaciones operativas vigentes, usado para seguimiento y ventanas diarias.</li><li>Temperatura, humedad, viento y lluvia diaria de ocho estaciones.</li><li>Vista hidrológica: integración completa de alturas válidas de INA, SNIH y Salto Grande, más rásteres observados GFM, OPERA Sentinel-1 y VIIRS. Lluvia puntual, NASA POWER y GEOGLOWS quedan como contexto activable.</li></ul></article>
+        <article class="method-card pending"><h3>Datos pendientes</h3><ul><li>Superficie inundada y hectáreas afectadas con una metodología local validada.</li><li>Umbrales oficiales comparables para estaciones de SNIH y Salto Grande.</li><li>Variables de vulnerabilidad territorial.</li></ul></article>
         <article class="method-card"><h3>Procesamiento</h3><ul><li>Nombres departamentales normalizados.</li><li>La base mensual se compone de registros mensuales existentes y, para los meses recientes sin carga mensual específica, de acumulados construidos a partir de registros diarios consolidados por departamento y mes. Estos acumulados diarios mensualizados se utilizan como observaciones mensuales disponibles para el análisis, incluyendo promedios, mínimos y máximos mensuales.</li><li>Los registros mensuales existentes tienen prioridad sobre los acumulados derivados.</li><li>Filas vacías y años totalmente en cero excluidos.</li><li>Fechas inválidas de estaciones descartadas.</li><li>Sin interpolación ni datos inventados.</li></ul></article>
         <article class="method-card"><h3>Limitación principal</h3><p>El prototipo permite análisis histórico mensual y seguimiento diario descriptivo. No permite afirmar cuántas hectáreas están inundadas, estimar daño productivo, predecir eventos ni sustituir una evaluación hidrológica oficial.</p><p>Un registro con 0 mm representa una observación válida sin lluvia. “Sin dato” indica ausencia de registro válido.</p><p>En las tablas, los valores faltantes de lluvia pueden visualizarse como 0 mm por simplicidad de lectura. Esta visualización no implica imputación: los faltantes no se usan como cero en los cálculos.</p></article>
       </section>
@@ -153,6 +252,7 @@
 
   <footer><p>Dashboard independiente · Datos exclusivos de Precipitaciones-Lluvias</p><p id="dataNote"></p></footer>
   <div class="error-banner" id="errorBanner"></div>
-  <script src="app.js?v=20260811-1"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="app.js?v=20260812-6"></script>
 </body>
 </html>

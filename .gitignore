@@ -8,6 +8,10 @@ Temperatura/
 Thumbs.db
 .vscode/
 .idea/
+node_modules/
+.env
+.env.*
+!.env.example
 
 # Temporary outputs
 *.log

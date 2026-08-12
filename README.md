@@ -1,16 +1,24 @@
 ﻿# Registro y Seguimiento de Precipitaciones
 
-Aplicación web estática e independiente del **Departamento de Economía Agraria** como herramienta de apoyo a la gestión. Organiza precipitaciones departamentales y variables de estaciones meteorológicas para facilitar una lectura territorial. Usa únicamente los archivos `.xls` incluidos en esta carpeta.
+Dashboard del **Departamento de Economía Agraria** como herramienta de apoyo a la gestión. El frontend sigue siendo compatible con publicación estática y el servidor Node sin dependencias actualiza las fuentes primarias hidrométricas, descubre escenas satelitales y estabiliza la redirección del Apps Script.
 
 ## Ejecutar
 
-Los JSON necesarios ya están generados en `data/`. Para abrir el dashboard, iniciá un servidor HTTP desde esta carpeta:
+Los JSON necesarios ya están generados en `data/`. La ejecución local recomendada es:
+
+```bash
+npm start
+```
+
+Luego abrí `http://127.0.0.1:8000`. No hay dependencias npm que instalar.
+
+Como alternativa puramente estática se puede usar:
 
 ```powershell
 python -m http.server 8000
 ```
 
-Luego abrí `http://localhost:8000`. No funciona correctamente abriendo `index.html` directamente porque el navegador restringe la carga local de JSON.
+La alternativa estática conserva la instantánea diaria completa y las APIs públicas con CORS. El servidor Node agrega actualización intradía y respaldo automático para INA, SNIH, Salto Grande, metadatos satelitales y Apps Script. No funciona correctamente abriendo `index.html` directamente porque el navegador restringe la carga local de JSON.
 
 ## GitHub y publicación
 
@@ -44,7 +52,9 @@ Genera:
 - `data/rainfall-daily-summary.json`: resumen derivado de la base operativa para ventanas móviles de 1, 7, 15 y 30 días. La interfaz actual calcula sus ventanas directamente desde la base combinada, con respaldo operativo.
 - `data/department-climate-status.json`: indicadores diarios y mensuales por departamento consumidos por el mapa interactivo.
 - `data/geo/corrientes-departamentos.geojson`: polígonos normalizados de los 25 departamentos de Corrientes, obtenidos de la API oficial GeoRef Argentina (geometrías basadas en IGN).
-- `data/stations-climate-status.json`: contrato inicial de la futura capa puntual; puede estar vacío o no existir sin impedir la carga del mapa departamental.
+- `data/map-point-sources.json`: respaldo completo de alturas válidas INA, SNIH y Salto Grande, ubicaciones de lluvia, celdas NASA POWER, nodos GEOGLOWS y metadatos de escenas satelitales.
+- `data/stations-climate-status.json`: contrato histórico de estaciones; puede estar vacío sin impedir la carga del mapa puntual.
+- `data/external-api-config.json`: configuración pública y versionada de los proxies, Apps Script, INA, NASA POWER, GEOGLOWS y las capas WMS observadas.
 - `data/stations.json`: variables meteorológicas agregadas mensualmente.
 - `data/metadata.json`: cobertura y fuentes.
 
@@ -80,6 +90,13 @@ Para actualizar el GeoJSON desde GeoRef Argentina:
 python .\scripts\fetch-corrientes-geojson.py
 ```
 
+Para refrescar y validar todos los inventarios puntuales:
+
+```bash
+python3 scripts/update-map-point-sources.py
+node scripts/test-map-api-integration.js
+```
+
 El modo `--dry-run` inspecciona y valida sin escribir JSON. El detalle de formatos, normalizaciones y supuestos está en `docs/integracion-historica-diaria.md`.
 
 Opcionalmente se puede indicar una fuente JSON de Apps Script:
@@ -109,7 +126,31 @@ $env:DAILY_RAIN_CSV_URLS = "https://docs.google.com/spreadsheets/d/.../export?fo
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\build-daily-data.ps1
 ```
 
-El workflow `.github/workflows/update-daily-rainfall.yml` actualiza primero la base operativa cuando está configurada alguna de las variables `DAILY_RAIN_JSON_URL`, `DAILY_RAIN_CSV_URL` o `DAILY_RAIN_CSV_URLS`. Después importa los Excel históricos, regenera las bases histórica y combinada, actualiza los indicadores departamentales del mapa y publica el tablero. Si no hay diferencias, informa que no existen cambios y finaliza sin intentar un commit vacío. Desde la pestaña `Monitoreo diario`, el enlace `Abrir flujo de actualización` abre ese workflow en GitHub Actions; la ejecución manual requiere permisos de escritura sobre el repositorio.
+El workflow `.github/workflows/update-daily-rainfall.yml` actualiza primero la base operativa cuando está configurada alguna de las variables `DAILY_RAIN_JSON_URL`, `DAILY_RAIN_CSV_URL` o `DAILY_RAIN_CSV_URLS`. Después importa los Excel históricos, regenera las bases histórica y combinada, actualiza los indicadores departamentales, refresca `data/map-point-sources.json` y publica el tablero. Si no hay diferencias, informa que no existen cambios y finaliza sin intentar un commit vacío. Desde la pestaña `Monitoreo diario`, el enlace `Abrir flujo de actualización` abre ese workflow en GitHub Actions; la ejecución manual requiere permisos de escritura sobre el repositorio.
+
+## APIs externas del mapa
+
+El mapa inicia como una vista hidrológica: muestra solamente alturas de río con valor y fecha válidos, junto con la imagen satelital de inundación observada. Los departamentos quedan solo como contorno y las fuentes secundarias pueden activarse manualmente:
+
+- **INA SIyAH:** se unen las lecturas WFS dentro de la provincia con las asociadas a estaciones correntinas sobre ríos limítrofes. El inventario completo se conserva para trazabilidad, pero los puntos sin altura no se dibujan.
+- **SNIH:** se consulta todo el inventario hidrométrico, activo y telemétrico de Corrientes. Se omiten valores centinela, fechas inválidas y estaciones sin altura actual; la validación se informa como preliminar.
+- **Salto Grande:** se descubre el inventario SOAP oficial completo y se consultan todas las estaciones activas con variable de altura en el área; no existe una lista piloto codificada.
+- **Copernicus GFM:** extensión de inundación observada activa al iniciar, usando el nombre vigente de la capa WMS.
+- **NASA OPERA y VIIRS:** agua superficial dinámica derivada de Sentinel-1 y compuesto observado de inundación de tres días. Las fechas se descubren en NASA CMR.
+- **Apps Script:** 43 ubicaciones lógicas normalizadas del registro de lluvias, apagadas al iniciar. Node expone `/api/rain-observations`; Pages usa la instantánea diaria si la redirección de Google no responde al navegador.
+- **NASA POWER:** 28 centros de celda de precipitación corregida dentro del límite provincial. Son grilla meteorológica, no estaciones físicas.
+- **GEOGLOWS–ECMWF:** 48 nodos resueltos desde todas las estaciones hidrológicas INA. El pronóstico de cada `river_id` se consulta al seleccionar el punto.
+- **Metadatos satelitales:** el catálogo STAC oficial de GFM y NASA CMR identifican la escena más reciente que intersecta Corrientes. Esa intersección no garantiza cobertura completa de toda la provincia.
+
+Ver `docs/INTEGRACION-APIS-MAPA.md` para contratos, reconciliación INA API/WFS, respaldo y límites metodológicos.
+
+## Variables de entorno del servidor
+
+No hay variables obligatorias para las fuentes hidrométricas o satelitales. Copiar `.env.example` a `.env.local` solo para reemplazar valores opcionales; `.env.local` está ignorado por Git.
+
+- `DAILY_RAIN_JSON_URL`: opcional; reemplaza el endpoint de Apps Script para el proxy y los procesos de actualización.
+- `HOST`: opcional; por defecto `127.0.0.1`.
+- `PORT`: opcional; por defecto `8000`.
 
 ## Fuentes y criterios
 
@@ -142,7 +183,7 @@ El workflow `.github/workflows/update-daily-rainfall.yml` actualiza primero la b
 
 ## Áreas inundadas
 
-Las fuentes actuales no contienen hectáreas inundadas, geometrías propias ni superficies departamentales afectadas. El mapa es una referencia territorial piloto y no representa superficie inundada calculada, hectáreas afectadas ni daño productivo.
+Copernicus GFM permite visualizar extensión de inundación observada; OPERA Sentinel-1 agrega agua superficial dinámica y VIIRS un compuesto de inundación de tres días. El proyecto no convierte los rásteres en hectáreas ni superficies departamentales afectadas. Tampoco deben interpretarse como una estimación de daño productivo.
 
 ## Desvíos mensuales departamentales
 
@@ -160,7 +201,9 @@ Este indicador sirve para detectar diferencias relevantes contra el historial pr
 - `index.html`: estructura de la interfaz.
 - `styles.css`: diseño responsivo.
 - `app.js`: filtros, métricas y visualizaciones Chart.js.
+- `server.mjs`: servidor estático local y adaptadores con caché para Apps Script, alturas primarias y metadatos satelitales, sin dependencias externas.
 - `scripts/build-data.ps1`: transformación reproducible de planillas a JSON.
+- `scripts/update-map-point-sources.py`: actualización reproducible de todos los inventarios puntuales.
 - `operational.css`: diseño institucional y navegación de la sala de situación.
 - `docs/diagnostico.md`: diagnóstico de fuentes, variables y faltantes.
 

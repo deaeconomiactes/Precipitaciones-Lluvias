@@ -28,6 +28,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
       - name: Skip when Google Sheets CSV URL is not configured
         if: ${{ env.DAILY_RAIN_JSON_URL == '' && env.DAILY_RAIN_CSV_URL == '' && env.DAILY_RAIN_CSV_URLS == '' }}
         run: |
@@ -57,16 +62,22 @@ jobs:
       - name: Build department climate status
         run: python scripts/build-department-climate-status.py
 
+      - name: Refresh complete point-source cache
+        run: python scripts/update-map-point-sources.py
+
+      - name: Validate dashboard and primary-source contracts
+        run: npm test
+
       - name: Commit updated daily data
         run: |
           set -euo pipefail
-          if git diff --quiet -- data/rainfall-daily.json data/rainfall-daily-summary.json data/rainfall-daily-history.json data/rainfall-daily-combined.json data/department-climate-status.json; then
+          if git diff --quiet -- data/rainfall-daily.json data/rainfall-daily-summary.json data/rainfall-daily-history.json data/rainfall-daily-combined.json data/department-climate-status.json data/map-point-sources.json; then
             echo "No daily data changes."
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/rainfall-daily.json data/rainfall-daily-summary.json data/rainfall-daily-history.json data/rainfall-daily-combined.json data/department-climate-status.json
+          git add data/rainfall-daily.json data/rainfall-daily-summary.json data/rainfall-daily-history.json data/rainfall-daily-combined.json data/department-climate-status.json data/map-point-sources.json
           git commit -m "Update daily rainfall data"
           git push
 
@@ -79,7 +90,7 @@ jobs:
           set -euo pipefail
           mkdir -p _site/data/geo
           cp index.html app.js styles.css climate-controls.css operational.css _site/
-          cp data/rainfall.json data/rainfall-daily.json data/rainfall-daily-history.json data/rainfall-daily-combined.json data/rainfall-daily-summary.json data/stations.json data/metadata.json data/department-climate-status.json data/stations-climate-status.json _site/data/
+          cp data/rainfall.json data/rainfall-daily.json data/rainfall-daily-history.json data/rainfall-daily-combined.json data/rainfall-daily-summary.json data/stations.json data/metadata.json data/department-climate-status.json data/stations-climate-status.json data/external-api-config.json data/map-point-sources.json _site/data/
           cp data/geo/corrientes-departamentos.geojson _site/data/geo/
           touch _site/.nojekyll
 
@@ -91,6 +102,8 @@ jobs:
             echo "Private or internal files found in the public artifact."
             exit 1
           fi
+          test -s _site/data/external-api-config.json
+          test -s _site/data/map-point-sources.json
           find _site -maxdepth 3 -type f -print
 
       - name: Upload public dashboard only

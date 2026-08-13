@@ -2,6 +2,7 @@
 
 import {
   normalizeSnihCurrentPayload,
+  parseInaTimeseries,
   parseSaltoHydrometeorological,
   parseSaltoStations,
   selectSnihStations
@@ -14,6 +15,10 @@ function assert(condition, message) {
 
 const dotNetDate = milliseconds => `/Date(${milliseconds})/`;
 const validTime = Date.UTC(2026, 7, 11, 15, 0, 0);
+const inaRows = Array.from({ length: 20 }, (_, index) => [new Date(validTime + index * 60 * 60 * 1000).toISOString(), String(index / 10)]);
+const parsedInaRows = parseInaTimeseries(JSON.stringify(inaRows));
+assert(parsedInaRows.length === 20, 'INA todavía limita arbitrariamente el timeseries reciente a 14 observaciones.');
+assert(parsedInaRows[0][1] === 0 && parsedInaRows.at(-1)[1] === 1.9, 'INA no conserva u ordena correctamente las observaciones reales.');
 const snihInventory = {
   d: [
     {

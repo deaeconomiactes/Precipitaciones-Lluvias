@@ -20,9 +20,17 @@ for (const label of ['Lluvia registrada','Acumulado 7 días','Acumulado 30 días
 if (!app.includes('renderSatelliteLayerDetail') || !app.includes('exportClimateMapPng')) throw Error('Falta una función visible central del visor');
 if (app.includes("element.hidden = true;\n  element.innerHTML = '';\n  return;\n  if (!layerConfig)")) throw Error('La leyenda satelital permanece bloqueada');
 const satelliteConfig = fs.readFileSync('data/external-api-config.json', 'utf8');
-for (const category of ['Surface Water','Recurring Flood','Flood','Insufficient Data']) {
+for (const category of ['Agua superficial','Inundación recurrente','Inundación detectada','Datos insuficientes']) {
   if (!satelliteConfig.includes(category)) throw Error(`Falta la clase oficial VIIRS ${category}`);
 }
+for (const category of ['Agua abierta','Vegetación inundada','Sin agua','Datos no disponibles / máscaras']) {
+  if (!satelliteConfig.includes(category)) throw Error(`Falta la clase ejecutiva OPERA ${category}`);
+}
+for (const category of ['Extensión de inundación observada','Agua observada','Cobertura / footprint']) {
+  if (!satelliteConfig.includes(category)) throw Error(`Falta la clase ejecutiva GFM ${category}`);
+}
+if (!app.includes('Qué muestra esta capa') || app.includes("[['Estado observado', detail.status]")) throw Error('El panel satelital conserva una etiqueta técnica.');
+if (!html.includes('Imagen satelital correspondiente a la fecha seleccionada.') || html.includes('Ráster remoto con fecha de escena')) throw Error('El selector conserva texto técnico.');
 for (const category of ['Precipitaciones','Hidrometría','Observación satelital','Modelos y pronósticos']) {
   if (!html.includes(category) || !app.includes(category)) throw Error(`Falta la categoría visual ${category}`);
 }

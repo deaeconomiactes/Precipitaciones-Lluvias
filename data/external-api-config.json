@@ -95,7 +95,14 @@
       "statusKey": "operaS1",
       "timeMode": "source-status",
       "usesTimeParameter": true,
-      "legendUrl": "https://gibs.earthdata.nasa.gov/legends/OPERA_Dynamic_Surface_Water_Extent_S1_H.png"
+      "legendUrl": "https://gibs.earthdata.nasa.gov/legends/OPERA_Dynamic_Surface_Water_Extent_S1_H.png",
+      "hideLegendImage": true,
+      "legendItems": [
+        { "label": "Agua abierta", "color": "#0000ff", "emphasis": "primary" },
+        { "label": "Vegetación inundada", "color": "#00ff00", "emphasis": "primary" },
+        { "label": "Sin agua", "color": "#ffffff", "emphasis": "auxiliary" },
+        { "label": "Datos no disponibles / máscaras", "color": "#9b9b9b", "emphasis": "auxiliary" }
+      ]
     },
     {
       "id": "gfmObservedFlood",
@@ -120,7 +127,13 @@
       "statusKey": "gfmObservedFlood",
       "timeMode": "source-status",
       "usesTimeParameter": true,
-      "displayTimeMode": "wms-date"
+      "displayTimeMode": "wms-date",
+      "hideLegendImage": true,
+      "legendItems": [
+        { "label": "Extensión de inundación observada", "color": "#e84c78", "emphasis": "primary" },
+        { "label": "Agua observada", "color": "#3499b0", "emphasis": "secondary" },
+        { "label": "Cobertura / footprint", "color": "#ff760d", "emphasis": "auxiliary" }
+      ]
     },
     {
       "id": "nasaViirsFlood",
@@ -139,11 +152,12 @@
       "timeMode": "source-status",
       "usesTimeParameter": true,
       "legendUrl": "https://gibs.earthdata.nasa.gov/legends/MODIS_Flood_H.png",
+      "hideLegendImage": true,
       "legendItems": [
-        { "label": "Surface Water", "color": "#32d2f5" },
-        { "label": "Recurring Flood", "color": "#ffff00" },
-        { "label": "Flood", "color": "#fa1e24" },
-        { "label": "Insufficient Data", "color": "#afafaf" }
+        { "label": "Inundación detectada", "color": "#fa1e24", "emphasis": "primary" },
+        { "label": "Agua superficial", "color": "#32d2f5", "emphasis": "secondary" },
+        { "label": "Inundación recurrente", "color": "#ffff00", "emphasis": "secondary" },
+        { "label": "Datos insuficientes", "color": "#afafaf", "emphasis": "auxiliary" }
       ]
     }
   ]

@@ -775,6 +775,35 @@ main {
   font-size: .58rem;
 }
 
+.climate-raster-legend-items .legend-primary {
+  grid-column: 1 / -1;
+  color: #173f3a;
+  font-size: .64rem;
+  font-weight: 800;
+}
+
+.climate-raster-legend-items .legend-primary i {
+  width: 11px;
+  height: 11px;
+  flex-basis: 11px;
+  box-shadow: 0 0 0 2px rgba(255,255,255,.9), 0 0 0 3px rgba(37,67,63,.18);
+}
+
+.climate-raster-legend-items .legend-secondary {
+  color: #385c57;
+  font-weight: 650;
+}
+
+.climate-raster-legend-items .legend-auxiliary {
+  color: #71827f;
+  font-size: .54rem;
+  opacity: .68;
+}
+
+.climate-raster-legend-items .legend-auxiliary i {
+  opacity: .48;
+}
+
 .climate-raster-legend-items span {
   display: flex;
   align-items: center;

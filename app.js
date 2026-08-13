@@ -2034,6 +2034,7 @@ function selectClimateHydrologyLayer(layerId) {
     setClimateSatelliteOpacity(selectedOpacity, { updateUrl: false });
   }
   if (selected && state.climateMap.mode === 'hydrology') selected.layer.addTo(state.climateMap.map);
+  if (state.climateMap.mode === 'hydrology') state.climateMap.geoLayer?.setStyle(climatePointBoundaryStyle);
   if ($('climateHydrologyLayer')) $('climateHydrologyLayer').value = state.climateMap.activeHydrologyLayer;
   renderClimateExternalLegend(selected?.config || null);
   if (selected) renderSatelliteLayerDetail(selected.config);
@@ -2044,6 +2045,11 @@ function selectClimateHydrologyLayer(layerId) {
 function renderSatelliteLayerDetail(layerConfig) {
   const hasDate = layerConfig.displayTimeMode === 'wms-date' ? Boolean(layerConfig.resolvedTime) : Boolean(layerConfig.acquiredAt || layerConfig.resolvedTime);
   const available = layerConfig.available !== false && hasDate;
+  const executiveDescription = {
+    nasaViirsFlood: 'Áreas clasificadas por el satélite como agua superficial, inundación detectada o cobertura insuficiente.',
+    operaS1: 'Superficies con agua abierta y vegetación inundada identificadas mediante observación satelital.',
+    gfmObservedFlood: 'Áreas donde el producto satelital identifica extensión de inundación y agua observada.'
+  }[layerConfig.id] || 'Información clasificada por el producto satelital seleccionado.';
   renderMapPointDetail({
     presentationType: 'satellite',
     sourceId: ({ operaS1: 'opera', nasaViirsFlood: 'viirs', gfmObservedFlood: 'gfm' })[layerConfig.id],
@@ -2053,10 +2059,10 @@ function renderSatelliteLayerDetail(layerConfig) {
     nature: 'Satelital',
     availability: available ? 'Escena disponible' : 'Datos insuficientes',
     type: 'Observación satelital',
-    value: available ? 'Se identifican sectores con presencia de agua superficial.' : 'Datos insuficientes',
+    value: available ? executiveDescription : 'Datos insuficientes',
     date: layerConfig.displayTimeMode === 'wms-date' ? (layerConfig.resolvedTime ? formatDate(layerConfig.resolvedTime) : 'Datos insuficientes') : (layerConfig.acquiredAt ? formatApiDateTime(layerConfig.acquiredAt) : (layerConfig.resolvedTime ? formatDate(layerConfig.resolvedTime) : 'Datos insuficientes')),
     location: 'Área de Corrientes intersectada por la escena',
-    status: available ? 'Presencia de agua superficial observada' : 'Datos insuficientes',
+    status: available ? executiveDescription : 'Datos insuficientes',
     context: available ? 'La imagen evidencia áreas con agua superficial dentro del área visualizada.' : 'No hay información suficiente para interpretar la imagen seleccionada.',
     updated: layerConfig.displayTimeMode === 'wms-date' ? (layerConfig.resolvedTime || '') : (layerConfig.acquiredAt || layerConfig.resolvedTime || '')
   });
@@ -2072,8 +2078,8 @@ function renderClimateExternalLegend(layerConfig) {
   }
   const method = 'Naturaleza: satelital · disponibilidad: capa remota con metadatos en respaldo local. No se convierte en estaciones ni en una estimación de hectáreas.';
   const legendUrls = Array.isArray(layerConfig.legendUrls) ? layerConfig.legendUrls : (layerConfig.legendUrl ? [layerConfig.legendUrl] : []);
-  const images = legendUrls.map((url, index) => `<img src="${escapeHtml(url)}" alt="Leyenda ${index + 1} de ${escapeHtml(layerConfig.shortLabel || layerConfig.label)}">`).join('');
-  const items = Array.isArray(layerConfig.legendItems) ? `<div class="climate-raster-legend-items">${layerConfig.legendItems.map(item => `<span><i style="--legend-color:${escapeHtml(item.color)}"></i>${escapeHtml(item.label)}</span>`).join('')}</div>` : '';
+  const images = layerConfig.hideLegendImage ? '' : legendUrls.map((url, index) => `<img src="${escapeHtml(url)}" alt="Leyenda ${index + 1} de ${escapeHtml(layerConfig.shortLabel || layerConfig.label)}">`).join('');
+  const items = Array.isArray(layerConfig.legendItems) ? `<div class="climate-raster-legend-items">${layerConfig.legendItems.map(item => `<span class="legend-${escapeHtml(item.emphasis || 'secondary')}"><i style="--legend-color:${escapeHtml(item.color)}"></i>${escapeHtml(item.label)}</span>`).join('')}</div>` : '';
   const guideByLayer = {
     operaS1: 'Extensión dinámica de agua superficial derivada de radar Sentinel-1.',
     nasaViirsFlood: 'Agua superficial e inundación combinada de los últimos 3 días.',
@@ -2093,11 +2099,12 @@ function renderClimateExternalLegend(layerConfig) {
 function climatePointBoundaryStyle(feature) {
   const department = normalizeClimateDepartment(feature?.properties?.department || feature?.properties?.officialName);
   const selected = state.climateMap.selectedDepartment === department;
+  const overSatellite = state.climateMap.activeHydrologyLayer !== 'none';
   return {
     className: 'climate-boundary',
-    color: selected ? '#064d58' : '#5d716d',
-    weight: selected ? 3 : 1.15,
-    opacity: selected ? 1 : 0.72,
+    color: selected ? '#063f47' : (overSatellite ? '#334d4a' : '#5d716d'),
+    weight: selected ? 3.2 : (overSatellite ? 1.8 : 1.15),
+    opacity: selected ? 1 : (overSatellite ? 0.95 : 0.72),
     fillColor: '#dfe9e5',
     fillOpacity: selected ? 0.04 : 0,
     lineCap: 'round',
@@ -2315,7 +2322,7 @@ function renderMapPointDetail(detail, action = null) {
     const territorial = state.climateMap.statuses.get(normalizeClimateDepartment(detail.department)) || {};
     rows = [['Lluvia registrada', detail.value], ['Acumulado 7 días', formatClimateMm(territorial.rain7dMm)], ['Acumulado 30 días', formatClimateMm(territorial.rain30dMm)], ['Última actualización', detail.updated || detail.date]];
   } else if (kind === 'satellite') {
-    rows = [['Estado observado', detail.status], ['Fecha', detail.date], ['Fuente', detail.source], ['Observación', detail.context]];
+    rows = [['Qué muestra esta capa', detail.value || detail.status], ['Fecha', detail.date], ['Fuente', detail.source], ['Observación', detail.context]];
   } else if (kind === 'forecast') {
     rows = [['Fuente', detail.source], ['Tendencia esperada', detail.value || detail.status], ['Horizonte temporal', detail.date]];
   } else {

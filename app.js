@@ -15,7 +15,7 @@ const CLIMATE_MAP_VARIABLES = Object.freeze({
   monthlyDifferencePct: { label: 'Desvío mensual vs histórico', unit: '%', scale: 'difference' },
   monthlyCategory: { label: 'Categoría mensual descriptiva', unit: '', scale: 'category' }
 });
-const state = { rainfall: [], monthlyRainfall: [], monthlySourceStats: {}, operationalDailyRecords: [], dailyRecords: [], dailyDataSource: 'operational', stations: [], metadata: {}, charts: {}, tableRows: [], filterConfigs: {}, temporalFiltersExplicit: { years: false, months: false }, climateMetrics: new Set(['temperature','humidity','wind','rain24Total']), climateMap: { map: null, geoLayer: null, resizeObserver: null, refreshTimer: null, statuses: new Map(), selectedDepartment: null, mode: 'departments', variable: 'rain7dMm', externalConfig: {}, pointCache: null, provinceGeojson: null, satelliteStatus: null, pointLayers: new Map(), pointCounts: new Map(), pointData: new Map(), pointRequests: new Set(), wmsLayers: new Map(), activeHydrologyLayer: 'none', preferredHydrologyLayer: 'none', satelliteOpacity: 0.65, satelliteTimeline: { enabled: false, scenes: [] }, geoglowsForecasts: new Map(), refreshingPrimaryHeights: false, refreshingSatelliteStatus: false, primaryProxyUnavailable: false, satelliteProxyUnavailable: false, hydrologyLiveStarted: false, detailAction: null } };
+const state = { rainfall: [], monthlyRainfall: [], monthlySourceStats: {}, operationalDailyRecords: [], dailyRecords: [], dailyDataSource: 'operational', stations: [], metadata: {}, charts: {}, tableRows: [], filterConfigs: {}, temporalFiltersExplicit: { years: false, months: false }, climateMetrics: new Set(['temperature','humidity','wind','rain24Total']), climateMap: { map: null, geoLayer: null, resizeObserver: null, refreshTimer: null, statuses: new Map(), selectedDepartment: null, mode: 'departments', variable: 'rain7dMm', externalConfig: {}, pointCache: null, provinceGeojson: null, satelliteStatus: null, pointLayers: new Map(), pointCounts: new Map(), pointData: new Map(), pointRequests: new Set(), wmsLayers: new Map(), activeHydrologyLayer: 'none', preferredHydrologyLayer: 'none', satelliteOpacity: 0.65, satelliteOpacities: new Map(), satelliteTimeline: { enabled: false, scenes: [] }, geoglowsForecasts: new Map(), refreshingPrimaryHeights: false, refreshingSatelliteStatus: false, primaryProxyUnavailable: false, satelliteProxyUnavailable: false, hydrologyLiveStarted: false, detailAction: null } };
 const sourceAudit = { catalog: new Map(), health: new Map(), selectedId: null };
 const $ = id => document.getElementById(id);
 const format = value => new Intl.NumberFormat('es-AR', { maximumFractionDigits: 1 }).format(value || 0);
@@ -889,12 +889,17 @@ function wireClimatePointControls() {
   document.addEventListener('fullscreenchange', () => setTimeout(() => state.climateMap.map?.invalidateSize(), 80));
 }
 
-function setClimateSatelliteOpacity(value) {
-  state.climateMap.satelliteOpacity = Math.max(0.1, Math.min(1, Number(value) || 0.65));
-  state.climateMap.wmsLayers.forEach(({ layer }) => layer.setOpacity(state.climateMap.satelliteOpacity));
+function setClimateSatelliteOpacity(value, { layerId = state.climateMap.activeHydrologyLayer, updateUrl = true } = {}) {
+  const entry = state.climateMap.wmsLayers.get(layerId);
+  const fallback = Number(entry?.config?.opacity) || 0.65;
+  state.climateMap.satelliteOpacity = Math.max(0.1, Math.min(1, Number(value) || fallback));
+  if (entry) {
+    state.climateMap.satelliteOpacities.set(layerId, state.climateMap.satelliteOpacity);
+    entry.layer.setOpacity(state.climateMap.satelliteOpacity);
+  }
   if ($('climateSatelliteOpacity')) $('climateSatelliteOpacity').value = String(Math.round(state.climateMap.satelliteOpacity * 100));
   if ($('climateSatelliteOpacityValue')) $('climateSatelliteOpacityValue').textContent = `${Math.round(state.climateMap.satelliteOpacity * 100)} %`;
-  updateClimateViewUrl();
+  if (updateUrl) updateClimateViewUrl();
 }
 
 async function toggleClimateMapFullscreen() {
@@ -944,9 +949,9 @@ function applyClimateViewFromUrl(params = new URLSearchParams(location.search)) 
   const satellite = params.get('mapSatellite');
   const opacity = Number(params.get('mapOpacity'));
   if (CLIMATE_MAP_VARIABLES[variable]) { state.climateMap.variable = variable; if ($('climateMapVariable')) $('climateMapVariable').value = variable; }
-  if (Number.isFinite(opacity) && opacity >= 10 && opacity <= 100) setClimateSatelliteOpacity(opacity / 100);
   if (mode === 'hydrology') applyClimateMapMode('hydrology');
   if (satellite && state.climateMap.wmsLayers.has(satellite)) selectClimateHydrologyLayer(satellite);
+  if (Number.isFinite(opacity) && opacity >= 10 && opacity <= 100) setClimateSatelliteOpacity(opacity / 100);
   return { department: state.climateMap.statuses.has(department) ? department : null };
 }
 
@@ -1916,27 +1921,28 @@ async function mapWithConcurrency(items, limit, mapper) {
 function initializePointRasterLayers() {
   const select = $('climateHydrologyLayer');
   state.climateMap.wmsLayers = new Map();
+  state.climateMap.satelliteOpacities = new Map();
   if (!select) return;
   select.innerHTML = '<option value="none">Sin imagen de inundación</option>';
   (state.climateMap.externalConfig?.wmsLayers || []).forEach(layerConfig => {
     const satelliteStatus = state.climateMap.satelliteStatus?.layers?.[layerConfig.statusKey || layerConfig.id] || null;
+    const initialOpacity = Math.max(0.1, Math.min(1, Number(layerConfig.opacity) || 0.65));
+    const resolvedWmsTime = layerConfig.timeMode === 'source-status' && satelliteStatus?.date && layerConfig.usesTimeParameter !== false ? satelliteStatus.date : null;
     const options = {
       layers: layerConfig.layers,
       styles: '',
       format: layerConfig.format || 'image/png',
       transparent: layerConfig.transparent !== false,
       version: layerConfig.version || '1.1.1',
-      opacity: state.climateMap.satelliteOpacity,
+      opacity: initialOpacity,
       crossOrigin: 'anonymous',
       pane: 'climateRasterPane',
       attribution: layerConfig.attribution || layerConfig.shortLabel || layerConfig.label
     };
-    if (layerConfig.timeMode === 'source-status' && satelliteStatus?.date && layerConfig.usesTimeParameter !== false) {
-      options.time = satelliteStatus.date;
-    }
+    if (resolvedWmsTime) options.time = resolvedWmsTime;
     const runtimeConfig = {
       ...layerConfig,
-      resolvedTime: satelliteStatus?.date || options.time || null,
+      resolvedTime: resolvedWmsTime,
       acquiredAt: satelliteStatus?.acquiredAt || null,
       sceneId: satelliteStatus?.sceneId || '',
       available: satelliteStatus?.available !== false,
@@ -1945,6 +1951,7 @@ function initializePointRasterLayers() {
     const layer = L.tileLayer.wms(layerConfig.serviceUrl, options);
     layer.on('tileerror', () => showClimateMapMessage(`La capa ${layerConfig.shortLabel || layerConfig.label} no devolvió una o más teselas.`, 5000));
     state.climateMap.wmsLayers.set(layerConfig.id, { layer, config: runtimeConfig });
+    state.climateMap.satelliteOpacities.set(layerConfig.id, initialOpacity);
     const option = document.createElement('option');
     option.value = layerConfig.id;
     option.textContent = layerConfig.shortLabel || layerConfig.label;
@@ -1961,14 +1968,16 @@ function applySatelliteStatusToRasterLayers(payload) {
   state.climateMap.wmsLayers.forEach(entry => {
     const status = payload.layers[entry.config.statusKey || entry.config.id];
     if (!status) return;
-    entry.config.resolvedTime = status.date || null;
+    const resolvedWmsTime = status.date && entry.config.usesTimeParameter !== false ? status.date : null;
+    entry.config.resolvedTime = resolvedWmsTime;
     entry.config.acquiredAt = status.acquiredAt || null;
     entry.config.sceneId = status.sceneId || '';
     entry.config.available = status.available !== false;
     entry.config.sourceUrl = status.sourceUrl || '';
-    if (status.date && entry.config.usesTimeParameter !== false) entry.layer.setParams({ time: status.date });
+    if (resolvedWmsTime) entry.layer.setParams({ time: resolvedWmsTime });
   });
   const selected = state.climateMap.wmsLayers.get(state.climateMap.activeHydrologyLayer);
+  if (selected) renderSatelliteLayerDetail(selected.config);
   renderClimateExternalLegend(selected?.config || null);
   updateClimatePointSummary();
 }
@@ -2020,6 +2029,10 @@ function selectClimateHydrologyLayer(layerId) {
   state.climateMap.activeHydrologyLayer = state.climateMap.wmsLayers.has(layerId) ? layerId : 'none';
   if (state.climateMap.activeHydrologyLayer !== 'none') state.climateMap.preferredHydrologyLayer = state.climateMap.activeHydrologyLayer;
   const selected = state.climateMap.wmsLayers.get(state.climateMap.activeHydrologyLayer);
+  if (selected) {
+    const selectedOpacity = state.climateMap.satelliteOpacities.get(state.climateMap.activeHydrologyLayer) ?? Number(selected.config.opacity) ?? 0.65;
+    setClimateSatelliteOpacity(selectedOpacity, { updateUrl: false });
+  }
   if (selected && state.climateMap.mode === 'hydrology') selected.layer.addTo(state.climateMap.map);
   if ($('climateHydrologyLayer')) $('climateHydrologyLayer').value = state.climateMap.activeHydrologyLayer;
   renderClimateExternalLegend(selected?.config || null);
@@ -2029,7 +2042,7 @@ function selectClimateHydrologyLayer(layerId) {
 }
 
 function renderSatelliteLayerDetail(layerConfig) {
-  const hasDate = Boolean(layerConfig.acquiredAt || layerConfig.resolvedTime);
+  const hasDate = layerConfig.displayTimeMode === 'wms-date' ? Boolean(layerConfig.resolvedTime) : Boolean(layerConfig.acquiredAt || layerConfig.resolvedTime);
   const available = layerConfig.available !== false && hasDate;
   renderMapPointDetail({
     presentationType: 'satellite',
@@ -2041,40 +2054,39 @@ function renderSatelliteLayerDetail(layerConfig) {
     availability: available ? 'Escena disponible' : 'Datos insuficientes',
     type: 'Observación satelital',
     value: available ? 'Se identifican sectores con presencia de agua superficial.' : 'Datos insuficientes',
-    date: layerConfig.acquiredAt ? formatApiDateTime(layerConfig.acquiredAt) : (layerConfig.resolvedTime ? formatDate(layerConfig.resolvedTime) : 'Datos insuficientes'),
+    date: layerConfig.displayTimeMode === 'wms-date' ? (layerConfig.resolvedTime ? formatDate(layerConfig.resolvedTime) : 'Datos insuficientes') : (layerConfig.acquiredAt ? formatApiDateTime(layerConfig.acquiredAt) : (layerConfig.resolvedTime ? formatDate(layerConfig.resolvedTime) : 'Datos insuficientes')),
     location: 'Área de Corrientes intersectada por la escena',
     status: available ? 'Presencia de agua superficial observada' : 'Datos insuficientes',
     context: available ? 'La imagen evidencia áreas con agua superficial dentro del área visualizada.' : 'No hay información suficiente para interpretar la imagen seleccionada.',
-    updated: layerConfig.acquiredAt || layerConfig.resolvedTime || ''
+    updated: layerConfig.displayTimeMode === 'wms-date' ? (layerConfig.resolvedTime || '') : (layerConfig.acquiredAt || layerConfig.resolvedTime || '')
   });
 }
 
 function renderClimateExternalLegend(layerConfig) {
   const element = $('climateExternalLegend');
   if (!element) return;
-  element.hidden = true;
-  element.innerHTML = '';
-  return;
   if (!layerConfig) {
     element.hidden = true;
     element.innerHTML = '';
     return;
   }
   const method = 'Naturaleza: satelital · disponibilidad: capa remota con metadatos en respaldo local. No se convierte en estaciones ni en una estimación de hectáreas.';
-  const image = layerConfig.legendUrl ? `<img src="${escapeHtml(layerConfig.legendUrl)}" alt="Leyenda de ${escapeHtml(layerConfig.shortLabel || layerConfig.label)}">` : '';
+  const legendUrls = Array.isArray(layerConfig.legendUrls) ? layerConfig.legendUrls : (layerConfig.legendUrl ? [layerConfig.legendUrl] : []);
+  const images = legendUrls.map((url, index) => `<img src="${escapeHtml(url)}" alt="Leyenda ${index + 1} de ${escapeHtml(layerConfig.shortLabel || layerConfig.label)}">`).join('');
+  const items = Array.isArray(layerConfig.legendItems) ? `<div class="climate-raster-legend-items">${layerConfig.legendItems.map(item => `<span><i style="--legend-color:${escapeHtml(item.color)}"></i>${escapeHtml(item.label)}</span>`).join('')}</div>` : '';
   const guideByLayer = {
     operaS1: 'Extensión dinámica de agua superficial derivada de radar Sentinel-1.',
     nasaViirsFlood: 'Agua superficial e inundación combinada de los últimos 3 días.',
     gfmObservedFlood: 'Extensión observada por el Global Flood Monitoring de Copernicus.'
   };
   const floodGuide = guideByLayer[layerConfig.id] || method;
-  const date = layerConfig.acquiredAt
+  const date = layerConfig.displayTimeMode !== 'wms-date' && layerConfig.acquiredAt
     ? ` · escena ${formatApiDateTime(layerConfig.acquiredAt)}`
     : (layerConfig.resolvedTime ? ` · fecha ${formatDate(layerConfig.resolvedTime)}` : ' · fecha no verificada');
   const scene = layerConfig.sceneId ? ` · ID ${layerConfig.sceneId}` : '';
   const resolution = ` · resolución ${layerConfig.spatialResolution || 'Datos insuficientes'}`;
   const sufficiency = layerConfig.available === false || !layerConfig.resolvedTime ? ' Datos insuficientes para verificar una escena vigente.' : '';
-  element.innerHTML = `<strong>${escapeHtml(layerConfig.label)}</strong>${image}<small>${escapeHtml(floodGuide + date + scene + resolution)}<br>${escapeHtml(method)} La escena intersecta el área de Corrientes, pero eso no garantiza cobertura provincial completa.${escapeHtml(sufficiency)}</small>`;
+  element.innerHTML = `<strong>${escapeHtml(layerConfig.label)}</strong>${items}${images}<small>${escapeHtml(floodGuide + date + scene + resolution)}<br>${escapeHtml(method)} La escena intersecta el área de Corrientes, pero eso no garantiza cobertura provincial completa.${escapeHtml(sufficiency)}</small>`;
   element.hidden = false;
 }
 

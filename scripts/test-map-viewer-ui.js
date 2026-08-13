@@ -18,6 +18,11 @@ for (const label of ['Lluvia registrada','Acumulado 7 días','Acumulado 30 días
   if (!app.includes(label)) throw Error(`El panel no contempla ${label}`);
 }
 if (!app.includes('renderSatelliteLayerDetail') || !app.includes('exportClimateMapPng')) throw Error('Falta una función visible central del visor');
+if (app.includes("element.hidden = true;\n  element.innerHTML = '';\n  return;\n  if (!layerConfig)")) throw Error('La leyenda satelital permanece bloqueada');
+const satelliteConfig = fs.readFileSync('data/external-api-config.json', 'utf8');
+for (const category of ['Surface Water','Recurring Flood','Flood','Insufficient Data']) {
+  if (!satelliteConfig.includes(category)) throw Error(`Falta la clase oficial VIIRS ${category}`);
+}
 for (const category of ['Precipitaciones','Hidrometría','Observación satelital','Modelos y pronósticos']) {
   if (!html.includes(category) || !app.includes(category)) throw Error(`Falta la categoría visual ${category}`);
 }

@@ -766,6 +766,30 @@ main {
   background: #fff;
 }
 
+.climate-raster-legend-items {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px 8px;
+  margin: 4px 0 7px;
+  color: #385c57;
+  font-size: .58rem;
+}
+
+.climate-raster-legend-items span {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.climate-raster-legend-items i {
+  width: 9px;
+  height: 9px;
+  flex: 0 0 9px;
+  border: 1px solid rgba(37, 67, 63, .25);
+  border-radius: 2px;
+  background: var(--legend-color);
+}
+
 .climate-map-legend strong {
   display: block;
   margin-bottom: 7px;

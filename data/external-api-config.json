@@ -88,7 +88,7 @@
       "layers": "OPERA_L3_Dynamic_Surface_Water_Extent-Sentinel-1",
       "format": "image/png",
       "transparent": true,
-      "opacity": 0.72,
+      "opacity": 0.8,
       "spatialResolution": "30 m",
       "crsLabel": "WMS compatible con EPSG:3857 y EPSG:4326",
       "attribution": "NASA EOSDIS GIBS",
@@ -103,15 +103,24 @@
       "shortLabel": "GFM observado (ráster)",
       "kind": "observed",
       "serviceUrl": "https://geoserver.gfm.eodc.eu/geoserver/gfm/wms",
-      "layers": "observed_flood_extent_group_layer",
-      "legendUrl": "https://geoserver.gfm.eodc.eu/geoserver/gfm/wms?REQUEST=GetLegendGraphic&VERSION=1.0.0&FORMAT=image%2Fpng&LAYER=observed_flood_extent_group_layer",
-      "opacity": 0.62,
+      "layers": "observed_water_extent,observed_flood_extent,observed_flood_extent_footprint",
+      "componentLayers": ["observed_water_extent", "observed_flood_extent", "observed_flood_extent_footprint"],
+      "legendUrls": [
+        "https://geoserver.gfm.eodc.eu/geoserver/gfm/wms?REQUEST=GetLegendGraphic&VERSION=1.0.0&FORMAT=image%2Fpng&LAYER=observed_water_extent",
+        "https://geoserver.gfm.eodc.eu/geoserver/gfm/wms?REQUEST=GetLegendGraphic&VERSION=1.0.0&FORMAT=image%2Fpng&LAYER=observed_flood_extent",
+        "https://geoserver.gfm.eodc.eu/geoserver/gfm/wms?REQUEST=GetLegendGraphic&VERSION=1.0.0&FORMAT=image%2Fpng&LAYER=observed_flood_extent_footprint"
+      ],
+      "format": "image/png",
+      "transparent": true,
+      "version": "1.3.0",
+      "opacity": 0.8,
       "spatialResolution": "20 m (producto Sentinel-1)",
       "crsLabel": "WMS Copernicus GFM compatible con EPSG:3857 y EPSG:4326",
       "attribution": "Copernicus GFM",
       "statusKey": "gfmObservedFlood",
       "timeMode": "source-status",
-      "usesTimeParameter": false
+      "usesTimeParameter": true,
+      "displayTimeMode": "wms-date"
     },
     {
       "id": "nasaViirsFlood",
@@ -122,14 +131,20 @@
       "layers": "VIIRS_Combined_Flood_3-Day",
       "format": "image/png",
       "transparent": true,
-      "opacity": 0.68,
+      "opacity": 1.0,
       "spatialResolution": "375 m (sensor VIIRS)",
       "crsLabel": "WMS compatible con EPSG:3857 y EPSG:4326",
       "attribution": "NASA EOSDIS GIBS",
       "statusKey": "nasaViirsFlood",
       "timeMode": "source-status",
       "usesTimeParameter": true,
-      "legendUrl": "https://gibs.earthdata.nasa.gov/legends/MODIS_Flood_H.png"
+      "legendUrl": "https://gibs.earthdata.nasa.gov/legends/MODIS_Flood_H.png",
+      "legendItems": [
+        { "label": "Surface Water", "color": "#32d2f5" },
+        { "label": "Recurring Flood", "color": "#ffff00" },
+        { "label": "Flood", "color": "#fa1e24" },
+        { "label": "Insufficient Data", "color": "#afafaf" }
+      ]
     }
   ]
 }

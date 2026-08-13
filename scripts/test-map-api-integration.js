@@ -122,15 +122,21 @@ for (const id of ["operaS1", "gfmObservedFlood", "nasaViirsFlood"]) {
   if (!wmsById.has(id)) throw new Error(`Falta la capa observada ${id}.`);
   if (wmsById.get(id).kind !== "observed") throw new Error(`${id} no está identificada como observación.`);
 }
-if (wmsById.get("gfmObservedFlood").layers !== "observed_flood_extent_group_layer") {
-  throw new Error("GFM usa un nombre WMS obsoleto o inexistente.");
+const gfm = wmsById.get("gfmObservedFlood");
+const expectedGfmLayers = ["observed_water_extent", "observed_flood_extent", "observed_flood_extent_footprint"];
+if (gfm.layers !== expectedGfmLayers.join(",") || JSON.stringify(gfm.componentLayers) !== JSON.stringify(expectedGfmLayers)) {
+  throw new Error("GFM no utiliza las tres capas individuales oficiales.");
 }
+if (gfm.usesTimeParameter !== true || gfm.timeMode !== "source-status") throw new Error("GFM no vincula la fecha STAC con TIME del WMS.");
+if (gfm.opacity !== 0.8) throw new Error("GFM no inicia con 80 % de opacidad.");
 if (wmsById.get("operaS1").layers !== "OPERA_L3_Dynamic_Surface_Water_Extent-Sentinel-1") {
   throw new Error("La capa OPERA Sentinel-1 no coincide con GIBS.");
 }
+if (wmsById.get("operaS1").opacity !== 0.8) throw new Error("OPERA no inicia con 80 % de opacidad.");
 if (wmsById.get("nasaViirsFlood").layers !== "VIIRS_Combined_Flood_3-Day") {
   throw new Error("La capa VIIRS de tres días no coincide con GIBS.");
 }
+if (wmsById.get("nasaViirsFlood").opacity !== 1) throw new Error("VIIRS no inicia con 100 % de opacidad.");
 
 if (cache.schemaVersion !== 3) throw new Error("map-point-sources.json usa un esquema inesperado.");
 const referenceCounts = config.qualityReferenceCounts || {};

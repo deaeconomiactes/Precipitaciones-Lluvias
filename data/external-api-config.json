@@ -88,14 +88,21 @@
       "layers": "OPERA_L3_Dynamic_Surface_Water_Extent-Sentinel-1",
       "format": "image/png",
       "transparent": true,
-      "opacity": 0.72,
+      "opacity": 0.8,
       "spatialResolution": "30 m",
       "crsLabel": "WMS compatible con EPSG:3857 y EPSG:4326",
       "attribution": "NASA EOSDIS GIBS",
       "statusKey": "operaS1",
       "timeMode": "source-status",
       "usesTimeParameter": true,
-      "legendUrl": "https://gibs.earthdata.nasa.gov/legends/OPERA_Dynamic_Surface_Water_Extent_S1_H.png"
+      "legendUrl": "https://gibs.earthdata.nasa.gov/legends/OPERA_Dynamic_Surface_Water_Extent_S1_H.png",
+      "hideLegendImage": true,
+      "legendItems": [
+        { "label": "Agua abierta", "color": "#0000ff", "emphasis": "primary" },
+        { "label": "Vegetación inundada", "color": "#00ff00", "emphasis": "primary" },
+        { "label": "Sin agua", "color": "#ffffff", "emphasis": "auxiliary" },
+        { "label": "Datos no disponibles / máscaras", "color": "#9b9b9b", "emphasis": "auxiliary" }
+      ]
     },
     {
       "id": "gfmObservedFlood",
@@ -103,15 +110,30 @@
       "shortLabel": "GFM observado (ráster)",
       "kind": "observed",
       "serviceUrl": "https://geoserver.gfm.eodc.eu/geoserver/gfm/wms",
-      "layers": "observed_flood_extent_group_layer",
-      "legendUrl": "https://geoserver.gfm.eodc.eu/geoserver/gfm/wms?REQUEST=GetLegendGraphic&VERSION=1.0.0&FORMAT=image%2Fpng&LAYER=observed_flood_extent_group_layer",
-      "opacity": 0.62,
+      "layers": "observed_water_extent,observed_flood_extent,observed_flood_extent_footprint",
+      "componentLayers": ["observed_water_extent", "observed_flood_extent", "observed_flood_extent_footprint"],
+      "legendUrls": [
+        "https://geoserver.gfm.eodc.eu/geoserver/gfm/wms?REQUEST=GetLegendGraphic&VERSION=1.0.0&FORMAT=image%2Fpng&LAYER=observed_water_extent",
+        "https://geoserver.gfm.eodc.eu/geoserver/gfm/wms?REQUEST=GetLegendGraphic&VERSION=1.0.0&FORMAT=image%2Fpng&LAYER=observed_flood_extent",
+        "https://geoserver.gfm.eodc.eu/geoserver/gfm/wms?REQUEST=GetLegendGraphic&VERSION=1.0.0&FORMAT=image%2Fpng&LAYER=observed_flood_extent_footprint"
+      ],
+      "format": "image/png",
+      "transparent": true,
+      "version": "1.3.0",
+      "opacity": 0.8,
       "spatialResolution": "20 m (producto Sentinel-1)",
       "crsLabel": "WMS Copernicus GFM compatible con EPSG:3857 y EPSG:4326",
       "attribution": "Copernicus GFM",
       "statusKey": "gfmObservedFlood",
       "timeMode": "source-status",
-      "usesTimeParameter": false
+      "usesTimeParameter": true,
+      "displayTimeMode": "wms-date",
+      "hideLegendImage": true,
+      "legendItems": [
+        { "label": "Extensión de inundación observada", "color": "#e84c78", "emphasis": "primary" },
+        { "label": "Agua observada", "color": "#3499b0", "emphasis": "secondary" },
+        { "label": "Cobertura / footprint", "color": "#ff760d", "emphasis": "auxiliary" }
+      ]
     },
     {
       "id": "nasaViirsFlood",
@@ -122,14 +144,21 @@
       "layers": "VIIRS_Combined_Flood_3-Day",
       "format": "image/png",
       "transparent": true,
-      "opacity": 0.68,
+      "opacity": 1.0,
       "spatialResolution": "375 m (sensor VIIRS)",
       "crsLabel": "WMS compatible con EPSG:3857 y EPSG:4326",
       "attribution": "NASA EOSDIS GIBS",
       "statusKey": "nasaViirsFlood",
       "timeMode": "source-status",
       "usesTimeParameter": true,
-      "legendUrl": "https://gibs.earthdata.nasa.gov/legends/MODIS_Flood_H.png"
+      "legendUrl": "https://gibs.earthdata.nasa.gov/legends/MODIS_Flood_H.png",
+      "hideLegendImage": true,
+      "legendItems": [
+        { "label": "Inundación detectada", "color": "#fa1e24", "emphasis": "primary" },
+        { "label": "Agua superficial", "color": "#32d2f5", "emphasis": "secondary" },
+        { "label": "Inundación recurrente", "color": "#ffff00", "emphasis": "secondary" },
+        { "label": "Datos insuficientes", "color": "#afafaf", "emphasis": "auxiliary" }
+      ]
     }
   ]
 }

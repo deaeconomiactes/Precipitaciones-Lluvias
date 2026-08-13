@@ -351,6 +351,7 @@ main {
 .climate-map-card {
   grid-column: 1 / -1;
   min-width: 0;
+  scroll-margin-top: calc(var(--section-nav-height, 57px) + var(--global-filters-height, 88px) + 12px);
 }
 
 .climate-map-heading {
@@ -618,12 +619,17 @@ main {
   display: grid;
   grid-template-columns: minmax(0, 1.8fr) minmax(300px, .7fr);
   gap: 10px;
-  align-items: stretch;
+  align-items: start;
+  min-width: 0;
 }
 
 .climate-map-visual {
   position: relative;
+  isolation: isolate;
+  z-index: 0;
+  width: 100%;
   min-width: 0;
+  align-self: start;
   overflow: hidden;
   border: 1px solid #b9cbd4;
   border-radius: 14px;
@@ -766,6 +772,59 @@ main {
   background: #fff;
 }
 
+.climate-raster-legend-items {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px 8px;
+  margin: 4px 0 7px;
+  color: #385c57;
+  font-size: .58rem;
+}
+
+.climate-raster-legend-items .legend-primary {
+  grid-column: 1 / -1;
+  color: #173f3a;
+  font-size: .64rem;
+  font-weight: 800;
+}
+
+.climate-raster-legend-items .legend-primary i {
+  width: 11px;
+  height: 11px;
+  flex-basis: 11px;
+  box-shadow: 0 0 0 2px rgba(255,255,255,.9), 0 0 0 3px rgba(37,67,63,.18);
+}
+
+.climate-raster-legend-items .legend-secondary {
+  color: #385c57;
+  font-weight: 650;
+}
+
+.climate-raster-legend-items .legend-auxiliary {
+  color: #71827f;
+  font-size: .54rem;
+  opacity: .68;
+}
+
+.climate-raster-legend-items .legend-auxiliary i {
+  opacity: .48;
+}
+
+.climate-raster-legend-items span {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.climate-raster-legend-items i {
+  width: 9px;
+  height: 9px;
+  flex: 0 0 9px;
+  border: 1px solid rgba(37, 67, 63, .25);
+  border-radius: 2px;
+  background: var(--legend-color);
+}
+
 .climate-map-legend strong {
   display: block;
   margin-bottom: 7px;
@@ -820,6 +879,9 @@ main {
 }
 
 .climate-map-detail {
+  width: 100%;
+  min-width: 0;
+  align-self: start;
   padding: 14px;
   border: 1px solid var(--border);
   border-radius: 14px;
@@ -860,6 +922,28 @@ main {
   cursor: wait;
   opacity: .65;
 }
+
+.ina-current-summary { margin-bottom: 12px; }
+.ina-history-panel { padding-top: 12px; border-top: 1px solid var(--border); }
+.ina-history-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+.ina-history-head h4 { margin: 0 0 2px; color: var(--deep); font-size: .84rem; }
+.ina-history-head small,
+.ina-history-status,
+.ina-history-notice { color: var(--muted); font-size: .6rem; line-height: 1.45; }
+.ina-history-window { display: inline-flex; flex: 0 0 auto; padding: 2px; border: 1px solid var(--border); border-radius: 8px; background: rgba(255,255,255,.75); }
+.ina-history-window button { padding: 5px 7px; border: 0; border-radius: 6px; color: var(--muted); background: transparent; font: 750 .58rem Inter, sans-serif; cursor: pointer; }
+.ina-history-window button.is-active { color: #fff; background: #087d94; }
+.ina-history-window button:disabled { cursor: wait; opacity: .7; }
+.ina-history-status { min-height: 1.35em; margin: 8px 0 5px; }
+.ina-history-chart-wrap { position: relative; width: 100%; min-width: 0; height: 260px; }
+.ina-history-chart-wrap canvas { display: block; max-width: 100% !important; }
+.ina-threshold-legend { display: flex; flex-wrap: wrap; gap: 5px 9px; margin-top: 8px; color: var(--muted); font-size: .55rem; line-height: 1.4; }
+.ina-threshold-legend span { display: inline-flex; align-items: center; gap: 4px; }
+.ina-threshold-legend .ina-threshold-source { flex-basis: 100%; font-weight: 750; }
+.ina-threshold-legend i { width: 13px; border-top: 2px dashed var(--threshold-color); }
+.ina-history-notice { margin: 8px 0 0; padding: 6px 7px; border-left: 3px solid #d9931a; background: rgba(217,147,26,.08); }
+.ina-history-source { display: inline-block; margin-top: 8px; color: var(--blue); font-size: .57rem; font-weight: 750; text-decoration: none; }
+.ina-history-source:hover { text-decoration: underline; }
 
 .climate-api-card {
   min-width: 0;
@@ -1866,6 +1950,8 @@ footer {
     margin-left: 0;
   }
 
+  .ina-history-chart-wrap { height: 300px; }
+
   .climate-api-grid {
     grid-template-columns: 1fr;
   }
@@ -1940,6 +2026,15 @@ footer {
 
   .climate-map-layout {
     grid-template-columns: 1fr;
+  }
+
+  .climate-map-card { scroll-margin-top: 12px; }
+
+  .climate-map-layout > .climate-map-visual,
+  .climate-map-layout > .climate-map-detail {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
   }
 
   .climate-detail-list {

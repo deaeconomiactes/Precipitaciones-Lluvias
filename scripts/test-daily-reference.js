@@ -127,11 +127,72 @@ const curuzuSignals = vm.runInContext(`[
   dailyReferenceSignal(curuzuRecords, ["Curuzu Cuatia"], curuzuLatestDate, 15, "base diaria combinada"),
   dailyReferenceSignal(curuzuRecords, ["Curuzu Cuatia"], curuzuLatestDate, 30, "base diaria combinada")
 ]`, context);
-if (context.curuzuLatestDate !== context.inputLatestDate || curuzuSignals.some(signal => signal.departmentsComparable !== 1)) {
+const invalidCuruzuSignals = curuzuSignals.filter(signal =>
+  signal.departmentsRequested !== 1 ||
+  signal.departmentsComparable !== 1 ||
+  signal.singleDepartment !== true ||
+  signal.periodEnd !== context.curuzuLatestDate
+);
+if (invalidCuruzuSignals.length) {
   throw new Error(`Curuzu Cuatia no se recalculo como departamento unico: ${JSON.stringify(curuzuSignals)}`);
 }
 if (curuzuSignals.some(signal => signal.yearsComparable.length < 3)) {
   throw new Error("Curuzu Cuatia quedo sin suficientes años comparables.");
+}
+
+function territorialFreshness(records) {
+  const latestByDepartment = new Map();
+  records.forEach(record => {
+    if (!record.date || !record.department) return;
+    const current = latestByDepartment.get(record.department);
+    if (!current || record.date > current) latestByDepartment.set(record.department, record.date);
+  });
+  const globalLatestDate = [...latestByDepartment.values()].reduce((latest, date) => date > latest ? date : latest, "");
+  const globalTimestamp = Date.parse(`${globalLatestDate}T00:00:00Z`);
+  const laggingDepartments = [...latestByDepartment.entries()]
+    .filter(([, latestDate]) => latestDate < globalLatestDate)
+    .map(([department, latestDate]) => ({
+      department,
+      globalLatestDate,
+      latestDate,
+      lagDays: Math.round((globalTimestamp - Date.parse(`${latestDate}T00:00:00Z`)) / 86400000)
+    }))
+    .sort((a, b) => b.lagDays - a.lagDays || a.department.localeCompare(b.department, "es"));
+  return { globalLatestDate, laggingDepartments };
+}
+
+const freshness = territorialFreshness(context.inputRecords);
+if (freshness.laggingDepartments.length) {
+  console.warn(`Advertencia de frescura territorial: ${freshness.laggingDepartments.length} departamento(s) rezagado(s) respecto de ${freshness.globalLatestDate}: ${JSON.stringify(freshness.laggingDepartments)}`);
+}
+
+context.controlledGlobalLatestDate = vm.runInContext(`addDays(curuzuLatestDate, 1)`, context);
+context.controlledRecords = [
+  ...context.curuzuRecords,
+  { department: "Control Provincial", date: context.controlledGlobalLatestDate, rainfallMm: 0 }
+];
+context.controlledCuruzuRecords = context.controlledRecords.filter(record => record.department === "Curuzu Cuatia");
+const controlledCuruzuSignals = vm.runInContext(`[7, 15, 30].map(days =>
+  dailyReferenceSignal(controlledCuruzuRecords, ["Curuzu Cuatia"], curuzuLatestDate, days, "base diaria combinada")
+)`, context);
+const controlledFreshness = territorialFreshness(context.controlledRecords);
+const invalidControlledSignals = controlledCuruzuSignals.filter(signal =>
+  signal.departmentsRequested !== 1 ||
+  signal.departmentsComparable !== 1 ||
+  signal.singleDepartment !== true ||
+  signal.periodEnd !== context.curuzuLatestDate
+);
+const controlledCuruzuFreshness = controlledFreshness.laggingDepartments.find(item => item.department === "Curuzu Cuatia");
+if (
+  controlledFreshness.globalLatestDate !== context.controlledGlobalLatestDate ||
+  !controlledCuruzuFreshness ||
+  controlledCuruzuFreshness.latestDate !== context.curuzuLatestDate ||
+  controlledCuruzuFreshness.lagDays !== 1
+) {
+  throw new Error(`La validacion separada de frescura territorial no detecto el rezago controlado: ${JSON.stringify(controlledFreshness)}`);
+}
+if (invalidControlledSignals.length) {
+  throw new Error(`Curuzu Cuatia no se recalculo como departamento unico con fecha provincial posterior: ${JSON.stringify(controlledCuruzuSignals)}`);
 }
 
 const workflow = fs.readFileSync(".github/workflows/deploy-pages.yml", "utf8");
@@ -151,5 +212,7 @@ console.log("Filtros Año/Mes: no recortan la referencia diaria 2015-2026.");
 console.log(`Referencia real: ventanas 7/15/30 con ${realSignals[0].yearsComparable.length} años; año actual excluido.`);
 console.log(`Todos los departamentos: promedio de ${realSignals[0].departmentsComparable} comparables, sin suma provincial.`);
 console.log(`Curuzu Cuatia: ventanas recalculadas con ${curuzuSignals[0].yearsComparable.length} años comparables.`);
+console.log("Frescura territorial: rezagos informados por separado, sin alterar la fecha de referencia departamental.");
+console.log("Caso controlado: fecha provincial posterior compatible con recalculo departamental 7/15/30.");
 console.log("GitHub Pages: base histórica y combinada incluidas y verificadas.");
 console.log("Pruebas de referencia diaria completadas sin errores.");

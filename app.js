@@ -421,79 +421,142 @@ function render() {
 
 function updateKpis(f) {
   const summary = monthlySummaryComparison(f);
-  $('kpiReferenceMonth').textContent = summary.period ? `${MONTHS_FULL[summary.period.month]} ${summary.period.year}` : 'Sin dato';
-  $('kpiReferenceDetail').textContent = summary.usesExplicitFilters ? 'según filtros activos' : 'último mes mensual disponible';
-  $('kpiObserved').textContent = formatNullable(summary.observedMm);
-  $('kpiObservedDetail').textContent = summary.singleDepartment ? 'observado del departamento seleccionado' : `promedio departamental observado (${summary.observedCount} depto.)`;
-  $('kpiHistorical').textContent = formatNullable(summary.historicalAverageMm);
+  $('kpiReferenceMonth').textContent = `${MONTHS_FULL[summary.period.month]} ${summary.period.year}`;
+  $('kpiReferenceDetail').textContent = summary.period.reason;
+  $('kpiObserved').textContent = formatSummaryRainfall(summary.observedMm);
+  $('kpiObservedDetail').textContent = summary.observedDetail;
+  $('kpiHistorical').textContent = formatSummaryRainfall(summary.historicalAverageMm);
   $('kpiHistoricalDetail').textContent = summary.singleDepartment ? 'histórico del departamento para ese mes' : `promedio histórico departamental (${summary.historicalCount} depto.)`;
-  $('kpiDifference').textContent = formatSignedMm(summary.differenceMm);
-  $('kpiProgress').textContent = formatProgress(summary.progressPct);
-  $('kpiProgressDetail').textContent = Number.isFinite(summary.progressPct) && summary.progressPct >= 100 ? 'avance sobre promedio histórico' : 'del promedio histórico mensual';
-  $('kpiMonthlyCategory').textContent = summary.category;
+  $('kpiDifference').textContent = formatSummarySignedMm(summary.differenceMm);
+  $('kpiAnnualAverageLabel').textContent = `Promedio del año ${summary.selectedYear}`;
+  $('kpiAnnualAverage').textContent = formatSummaryRainfall(summary.annualAverageMm);
+  $('kpiAnnualAverageDetail').textContent = summary.annualDetail;
+  $('kpiComparableHistorical').textContent = formatSummaryRainfall(summary.comparableHistoricalMm);
+  $('kpiComparableHistoricalDetail').textContent = summary.comparableHistoricalDetail;
 }
 
-function monthlySummaryComparison(f) {
+function monthlySummaryComparison(f, today = new Date()) {
   const departments = state.metadata.departments.filter(department => matchesSelection(department, f.departments));
-  const period = getSummaryReferencePeriod(departments, f);
-  if (!period) {
-    return {
-      period: null,
-      observedMm: null,
-      historicalAverageMm: null,
-      differenceMm: null,
-      progressPct: null,
-      category: 'Sin referencia',
-      observedCount: 0,
-      historicalCount: 0,
-      singleDepartment: departments.length === 1,
-      usesExplicitFilters: state.temporalFiltersExplicit.years || state.temporalFiltersExplicit.months
-    };
-  }
-  const observedEntries = departments
-    .map(department => ({ department, value: monthlyValue(department, period.year, period.month) }))
-    .filter(entry => Number.isFinite(entry.value));
-  const observedValues = observedEntries.map(entry => entry.value);
-  const historicalValues = observedEntries
-    .map(entry => getMonthlyHistoricalAverage(entry.department, period.month))
+  const period = getSummaryReferencePeriod(departments, f, today);
+  const monthlyObservation = summaryProvincialMonth(departments, period.year, period.month);
+  const observedEntries = monthlyObservation.valid ? monthlyObservation.entries : [];
+  const historicalDepartments = observedEntries.length ? observedEntries.map(entry => entry.department) : departments;
+  const historicalValues = historicalDepartments
+    .map(department => getMonthlyHistoricalAverage(department, period.month))
     .filter(Number.isFinite);
-  const observedMm = observedValues.length ? average(observedValues) : null;
+  const observedMm = monthlyObservation.valid ? monthlyObservation.value : null;
   const historicalAverageMm = historicalValues.length ? average(historicalValues) : null;
   const differenceMm = Number.isFinite(observedMm) && Number.isFinite(historicalAverageMm) ? observedMm - historicalAverageMm : null;
-  const progressPct = Number.isFinite(observedMm) && historicalAverageMm > 0 ? (observedMm / historicalAverageMm) * 100 : null;
+  const annual = summaryAnnualComparison(departments, period.year);
+  const partialDate = monthlyObservation.valid ? summaryPartialMonthDate(observedEntries, period) : null;
+  const observedScope = departments.length === 1
+    ? 'observado del departamento seleccionado'
+    : `promedio departamental observado (${observedEntries.length} depto.)`;
   return {
     period,
+    selectedYear: period.year,
     observedMm,
     historicalAverageMm,
     differenceMm,
-    progressPct,
-    category: classifyHistoricalProgress(progressPct),
-    observedCount: observedValues.length,
+    observedCount: observedEntries.length,
     historicalCount: historicalValues.length,
     singleDepartment: departments.length === 1,
-    usesExplicitFilters: state.temporalFiltersExplicit.years || state.temporalFiltersExplicit.months
+    observedDetail: partialDate ? `Acumulado parcial al ${formatSummaryDate(partialDate)} · ${observedScope}` : observedScope,
+    ...annual
   };
 }
 
-function getSummaryReferencePeriod(departments, f) {
-  const years = state.temporalFiltersExplicit.years ? f.years : null;
-  const months = state.temporalFiltersExplicit.months ? selectedMonths(f) : ALL_MONTHS;
+function getSummaryReferencePeriod(departments, f, today = new Date()) {
+  const availableYears = [...new Set(monthlyRows().map(row => row.year).filter(Number.isFinite))];
+  const selectedYear = f.years?.length
+    ? Math.max(...f.years)
+    : (availableYears.includes(today.getFullYear()) ? today.getFullYear() : Math.max(...availableYears));
+  if (f.months?.length) {
+    return { year: selectedYear, month: Math.max(...f.months), reason: 'según el mes seleccionado' };
+  }
+  if (selectedYear === today.getFullYear()) {
+    return { year: selectedYear, month: today.getMonth(), reason: 'mes calendario actual' };
+  }
+  const latestValidMonth = [...ALL_MONTHS].reverse()
+    .find(month => summaryProvincialMonth(departments, selectedYear, month).valid);
+  return {
+    year: selectedYear,
+    month: latestValidMonth ?? 11,
+    reason: latestValidMonth === undefined ? 'sin observaciones mensuales válidas en el año' : 'último mes válido del año seleccionado'
+  };
+}
+
+function summaryProvincialMonth(departments, year, month) {
+  const entries = departments
+    .map(department => {
+      const row = monthlyRows().find(item => item.department === department && item.year === year);
+      return { department, row, value: row?.months?.[month] };
+    })
+    .filter(entry => Number.isFinite(entry.value));
   const minimumCoverage = Math.ceil(departments.length * 0.8);
-  const periods = new Map();
-  monthlyRows().forEach(row => {
-    if (!departments.includes(row.department)) return;
-    if (!matchesSelection(row.year, years)) return;
-    row.months.forEach((value, month) => {
-      if (!months.includes(month)) return;
-      if (!Number.isFinite(value)) return;
-      const key = `${row.year}-${month}`;
-      if (!periods.has(key)) periods.set(key, { year: row.year, month, departments: new Set() });
-      periods.get(key).departments.add(row.department);
-    });
+  const valid = departments.length > 0 && entries.length >= minimumCoverage;
+  return { entries, valid, value: valid ? average(entries.map(entry => entry.value)) : null, minimumCoverage };
+}
+
+function summaryPartialMonthDate(entries, period) {
+  const derivedEntries = entries.filter(entry => entry.row?.monthSources?.[period.month] === 'daily_derived');
+  if (!derivedEntries.length) return null;
+  const incomplete = derivedEntries.some(entry => {
+    const meta = entry.row.dailyDerivedMeta?.[period.month];
+    return meta && meta.daysWithRecords < meta.daysInMonth;
   });
-  return [...periods.values()]
-    .filter(period => period.departments.size >= minimumCoverage)
-    .sort((a, b) => b.year - a.year || b.month - a.month)[0] || null;
+  if (!incomplete) return null;
+  const departments = new Set(derivedEntries.map(entry => entry.department));
+  return state.operationalDailyRecords
+    .filter(record => departments.has(record.department) && Number(record.date?.slice(0, 4)) === period.year && Number(record.date?.slice(5, 7)) === period.month + 1)
+    .reduce((latest, record) => record.date > latest ? record.date : latest, '');
+}
+
+function summaryAnnualComparison(departments, selectedYear) {
+  const observedMonths = ALL_MONTHS.map(month => ({ month, observation: summaryProvincialMonth(departments, selectedYear, month) }))
+    .filter(item => item.observation.valid);
+  const includedMonths = observedMonths.map(item => item.month);
+  const annualAverageMm = observedMonths.length ? average(observedMonths.map(item => item.observation.value)) : null;
+  const historicalYears = [...new Set(monthlyRows().map(row => row.year))]
+    .filter(year => year !== selectedYear)
+    .sort((a, b) => a - b);
+  const comparableYears = includedMonths.length ? historicalYears.map(year => {
+    const observations = includedMonths.map(month => summaryProvincialMonth(departments, year, month));
+    return observations.every(observation => observation.valid)
+      ? { year, value: average(observations.map(observation => observation.value)) }
+      : null;
+  }).filter(Boolean) : [];
+  const comparableHistoricalMm = comparableYears.length ? average(comparableYears.map(item => item.value)) : null;
+  const periodLabel = formatSummaryMonthSet(includedMonths);
+  const partialDates = observedMonths
+    .map(item => summaryPartialMonthDate(item.observation.entries, { year: selectedYear, month: item.month }))
+    .filter(Boolean)
+    .sort();
+  const partialSuffix = partialDates.length ? ` · incluye parcial al ${formatSummaryDate(partialDates[partialDates.length - 1])}` : '';
+  return {
+    annualAverageMm,
+    comparableHistoricalMm,
+    annualMonths: includedMonths,
+    comparableYears: comparableYears.map(item => item.year),
+    annualDetail: includedMonths.length ? `${periodLabel} · ${includedMonths.length} ${includedMonths.length === 1 ? 'mes' : 'meses'} con datos${partialSuffix}` : 'Sin meses con observaciones válidas',
+    comparableHistoricalDetail: includedMonths.length
+      ? `Promedio histórico para el mismo período · ${comparableYears.length} ${comparableYears.length === 1 ? 'año comparable' : 'años comparables'}`
+      : 'Sin período observado comparable'
+  };
+}
+
+function formatSummaryMonthSet(months) {
+  if (!months.length) return 'Sin período';
+  const sorted = [...months].sort((a, b) => a - b);
+  const contiguous = sorted.every((month, index) => index === 0 || month === sorted[index - 1] + 1);
+  if (contiguous && sorted.length > 1) return `${MONTHS_FULL[sorted[0]]}–${MONTHS_FULL[sorted[sorted.length - 1]].toLowerCase()}`;
+  return sorted.map((month, index) => index === 0 ? MONTHS_FULL[month] : MONTHS_FULL[month].toLowerCase()).join(', ');
+}
+
+function formatSummaryDate(value) {
+  if (!value) return '';
+  const [year, month, day] = value.split('-');
+  return `${day.padStart(2, '0')}/${month.padStart(2, '0')}/${year}`;
 }
 
 function monthlyValue(department, year, month) {
@@ -3692,6 +3755,14 @@ function signedPercent(value) {
 
 function formatNullable(value) {
   return Number.isFinite(value) ? `${format(value)} mm` : 'Sin dato';
+}
+
+function formatSummaryRainfall(value) {
+  return Number.isFinite(value) ? `${format(value)} mm` : 'Sin dato disponible';
+}
+
+function formatSummarySignedMm(value) {
+  return Number.isFinite(value) ? `${value > 0 ? '+' : ''}${format(value)} mm` : 'Sin dato disponible';
 }
 
 function formatTableRainfall(value) {

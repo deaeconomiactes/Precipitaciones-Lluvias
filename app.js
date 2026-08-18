@@ -4,18 +4,19 @@ const COLORS = ['#1677a6','#25a9b5','#7667a8','#d9931a','#c34f59','#3d9a6b','#7b
 const ALL_MONTHS = MONTHS.map((_, index) => index);
 const DAILY_WINDOWS = [1, 7, 15, 30];
 const DAILY_REFERENCE_WINDOWS = [7, 15, 30];
+const DAILY_TIME_ZONE = 'America/Argentina/Buenos_Aires';
 const MINIMUM_COMPARABLE_YEARS = 3;
 const CACHE_VERSION = '20260812-5';
 const CLIMATE_MAP_NEUTRAL = '#d7dedd';
 const CLIMATE_MAP_VARIABLES = Object.freeze({
-  rainLastDateMm: { label: 'Lluvia última fecha', unit: 'mm', scale: 'rain' },
+  rainLastDateMm: { label: 'Lluvia del día de referencia', unit: 'mm', scale: 'rain' },
   rain7dMm: { label: 'Acumulado 7 días', unit: 'mm', scale: 'rain' },
   rain15dMm: { label: 'Acumulado 15 días', unit: 'mm', scale: 'rain' },
   rain30dMm: { label: 'Acumulado 30 días', unit: 'mm', scale: 'rain' },
   monthlyDifferencePct: { label: 'Desvío mensual vs histórico', unit: '%', scale: 'difference' },
   monthlyCategory: { label: 'Categoría mensual descriptiva', unit: '', scale: 'category' }
 });
-const state = { rainfall: [], monthlyRainfall: [], monthlySourceStats: {}, operationalDailyRecords: [], dailyRecords: [], dailyDataSource: 'operational', stations: [], metadata: {}, charts: {}, tableRows: [], filterConfigs: {}, temporalFiltersExplicit: { years: false, months: false }, climateMetrics: new Set(['temperature','humidity','wind','rain24Total']), climateMap: { map: null, geoLayer: null, resizeObserver: null, layoutInvalidateTimer: null, refreshTimer: null, statuses: new Map(), selectedDepartment: null, mode: 'departments', variable: 'rain7dMm', externalConfig: {}, pointCache: null, provinceGeojson: null, satelliteStatus: null, pointLayers: new Map(), pointCounts: new Map(), pointData: new Map(), pointRequests: new Set(), wmsLayers: new Map(), activeHydrologyLayer: 'none', preferredHydrologyLayer: 'none', satelliteOpacity: 0.65, satelliteOpacities: new Map(), satelliteTimeline: { enabled: false, scenes: [] }, geoglowsForecasts: new Map(), inaHistory: { cache: new Map(), requests: new Map(), selectionToken: 0, chart: null }, refreshingPrimaryHeights: false, refreshingSatelliteStatus: false, primaryProxyUnavailable: false, satelliteProxyUnavailable: false, hydrologyLiveStarted: false, detailAction: null } };
+const state = { rainfall: [], monthlyRainfall: [], monthlySourceStats: {}, operationalDailyRecords: [], dailyRecords: [], dailyDataSource: 'operational', dailyGeneratedAt: null, dailyDateMax: null, stations: [], metadata: {}, charts: {}, tableRows: [], filterConfigs: {}, temporalFiltersExplicit: { years: false, months: false }, climateMetrics: new Set(['temperature','humidity','wind','rain24Total']), climateMap: { map: null, geoLayer: null, resizeObserver: null, layoutInvalidateTimer: null, refreshTimer: null, statuses: new Map(), selectedDepartment: null, mode: 'departments', variable: 'rain7dMm', externalConfig: {}, pointCache: null, provinceGeojson: null, satelliteStatus: null, pointLayers: new Map(), pointCounts: new Map(), pointData: new Map(), pointRequests: new Set(), wmsLayers: new Map(), activeHydrologyLayer: 'none', preferredHydrologyLayer: 'none', satelliteOpacity: 0.65, satelliteOpacities: new Map(), satelliteTimeline: { enabled: false, scenes: [] }, geoglowsForecasts: new Map(), inaHistory: { cache: new Map(), requests: new Map(), selectionToken: 0, chart: null }, refreshingPrimaryHeights: false, refreshingSatelliteStatus: false, primaryProxyUnavailable: false, satelliteProxyUnavailable: false, hydrologyLiveStarted: false, detailAction: null } };
 const sourceAudit = { catalog: new Map(), health: new Map(), selectedId: null };
 const $ = id => document.getElementById(id);
 const format = value => new Intl.NumberFormat('es-AR', { maximumFractionDigits: 1 }).format(value || 0);
@@ -29,7 +30,7 @@ document.addEventListener('DOMContentLoaded', init);
 
 async function init() {
   try {
-    const [rainfall, operationalDailyRecords, combinedDailyResult, stations, metadata] = await Promise.all([
+    const [rainfall, operationalDailyRecords, combinedDailyResult, dailySummary, stations, metadata] = await Promise.all([
       fetchDataFile('rainfall.json'),
       fetchDataFile('rainfall-daily.json'),
       fetchDataFile('rainfall-daily-combined.json')
@@ -38,6 +39,10 @@ async function init() {
           console.warn(`${error.message}. Se usara rainfall-daily.json como respaldo.`);
           return null;
         }),
+      fetchDataFile('rainfall-daily-summary.json').catch(error => {
+        console.warn(`${error.message}. La actualización del dataset diario no estará disponible.`);
+        return null;
+      }),
       fetchDataFile('stations.json'),
       fetchDataFile('metadata.json')
     ]);
@@ -47,6 +52,8 @@ async function init() {
       operationalDailyRecords,
       dailyRecords,
       dailyDataSource: combinedDailyResult?.source || 'operational',
+      dailyGeneratedAt: typeof dailySummary?.generatedAt === 'string' ? dailySummary.generatedAt : null,
+      dailyDateMax: typeof dailySummary?.dateMax === 'string' ? dailySummary.dateMax : null,
       stations,
       metadata
     });
@@ -409,6 +416,7 @@ function monthlyObservations(records, months) {
 function render() {
   const f = filters();
   const rows = filteredRainfall(f);
+  updateClimateDailyStatuses(f);
   updateKpis(f);
   renderAnnual(f);
   renderMonthly(rows, f);
@@ -416,6 +424,7 @@ function render() {
     renderHeatmap(rows, f);
   renderDaily(f);
   renderClimate(f);
+  refreshClimateDepartmentMap();
   renderDepartmentDetail(getDepartmentMonthlyDeviationRows(f), f);
 }
 
@@ -438,16 +447,23 @@ function updateKpis(f) {
 function monthlySummaryComparison(f, today = new Date()) {
   const departments = state.metadata.departments.filter(department => matchesSelection(department, f.departments));
   const period = getSummaryReferencePeriod(departments, f, today);
-  const monthlyObservation = summaryProvincialMonth(departments, period.year, period.month);
+  const current = dailyCalendarParts(today);
+  const isCurrentMonth = period.year === current.year && period.month === current.month;
+  const monthlyObservation = isCurrentMonth
+    ? summaryCurrentMonthFromDaily(departments, period.year, period.month, current.isoDate)
+    : summaryProvincialMonth(departments, period.year, period.month);
   const observedEntries = monthlyObservation.valid ? monthlyObservation.entries : [];
   const historicalDepartments = observedEntries.length ? observedEntries.map(entry => entry.department) : departments;
   const historicalValues = historicalDepartments
-    .map(department => getMonthlyHistoricalAverage(department, period.month))
+    .map(department => isCurrentMonth
+      ? getCurrentMonthHistoricalAverage(department, current.isoDate)
+      : getMonthlyHistoricalAverage(department, period.month))
     .filter(Number.isFinite);
   const observedMm = monthlyObservation.valid ? monthlyObservation.value : null;
   const historicalAverageMm = historicalValues.length ? average(historicalValues) : null;
   const differenceMm = Number.isFinite(observedMm) && Number.isFinite(historicalAverageMm) ? observedMm - historicalAverageMm : null;
-  const annual = summaryAnnualComparison(departments, period.year);
+  const differencePct = Number.isFinite(differenceMm) && historicalAverageMm > 0 ? differenceMm / historicalAverageMm * 100 : null;
+  const annual = summaryAnnualComparison(departments, period.year, today);
   const partialDate = monthlyObservation.valid ? summaryPartialMonthDate(observedEntries, period) : null;
   const observedScope = departments.length === 1
     ? 'observado del departamento seleccionado'
@@ -458,24 +474,29 @@ function monthlySummaryComparison(f, today = new Date()) {
     observedMm,
     historicalAverageMm,
     differenceMm,
+    differencePct,
+    category: classifyMonthlyDeviation(differencePct),
     observedCount: observedEntries.length,
     historicalCount: historicalValues.length,
     singleDepartment: departments.length === 1,
-    observedDetail: partialDate ? `Acumulado parcial al ${formatSummaryDate(partialDate)} · ${observedScope}` : observedScope,
+    observedDetail: isCurrentMonth
+      ? `Acumulado parcial al ${formatSummaryDate(current.isoDate)} · ${observedScope} · cobertura real ${monthlyObservation.observedDays}/${monthlyObservation.possibleDays} días-departamento`
+      : (partialDate ? `Acumulado parcial al ${formatSummaryDate(partialDate)} · ${observedScope}` : observedScope),
     ...annual
   };
 }
 
 function getSummaryReferencePeriod(departments, f, today = new Date()) {
+  const current = dailyCalendarParts(today);
   const availableYears = [...new Set(monthlyRows().map(row => row.year).filter(Number.isFinite))];
   const selectedYear = f.years?.length
     ? Math.max(...f.years)
-    : (availableYears.includes(today.getFullYear()) ? today.getFullYear() : Math.max(...availableYears));
+    : (availableYears.includes(current.year) ? current.year : Math.max(...availableYears));
   if (f.months?.length) {
     return { year: selectedYear, month: Math.max(...f.months), reason: 'según el mes seleccionado' };
   }
-  if (selectedYear === today.getFullYear()) {
-    return { year: selectedYear, month: today.getMonth(), reason: 'mes calendario actual' };
+  if (selectedYear === current.year) {
+    return { year: selectedYear, month: current.month, reason: 'mes calendario actual · período parcial hasta hoy' };
   }
   const latestValidMonth = [...ALL_MONTHS].reverse()
     .find(month => summaryProvincialMonth(departments, selectedYear, month).valid);
@@ -498,6 +519,39 @@ function summaryProvincialMonth(departments, year, month) {
   return { entries, valid, value: valid ? average(entries.map(entry => entry.value)) : null, minimumCoverage };
 }
 
+function summaryCurrentMonthFromDaily(departments, year, month, referenceDate) {
+  const monthStart = `${year}-${String(month + 1).padStart(2, '0')}-01`;
+  const entries = departments.map(department => {
+    const records = state.dailyRecords.filter(record =>
+      record.department === department &&
+      record.date >= monthStart &&
+      record.date <= referenceDate &&
+      Number.isFinite(record.rainfallMm)
+    );
+    return {
+      department,
+      row: null,
+      value: records.reduce((sum, record) => sum + record.rainfallMm, 0),
+      daysWithRecords: new Set(records.map(record => record.date)).size
+    };
+  });
+  const daysElapsed = Number(referenceDate.slice(8, 10));
+  return {
+    entries,
+    valid: departments.length > 0,
+    value: departments.length ? average(entries.map(entry => entry.value)) : null,
+    minimumCoverage: departments.length,
+    observedDays: entries.reduce((sum, entry) => sum + entry.daysWithRecords, 0),
+    possibleDays: daysElapsed * departments.length,
+    operationalPartial: true
+  };
+}
+
+function getCurrentMonthHistoricalAverage(department, referenceDate) {
+  const daysElapsed = Number(referenceDate.slice(8, 10));
+  return dailyHistoricalWindowReference(state.dailyRecords, department, referenceDate, daysElapsed).averageMm;
+}
+
 function summaryPartialMonthDate(entries, period) {
   const derivedEntries = entries.filter(entry => entry.row?.monthSources?.[period.month] === 'daily_derived');
   if (!derivedEntries.length) return null;
@@ -512,8 +566,14 @@ function summaryPartialMonthDate(entries, period) {
     .reduce((latest, record) => record.date > latest ? record.date : latest, '');
 }
 
-function summaryAnnualComparison(departments, selectedYear) {
-  const observedMonths = ALL_MONTHS.map(month => ({ month, observation: summaryProvincialMonth(departments, selectedYear, month) }))
+function summaryAnnualComparison(departments, selectedYear, today = new Date()) {
+  const current = dailyCalendarParts(today);
+  const observedMonths = ALL_MONTHS.map(month => ({
+    month,
+    observation: selectedYear === current.year && month === current.month
+      ? summaryCurrentMonthFromDaily(departments, selectedYear, month, current.isoDate)
+      : summaryProvincialMonth(departments, selectedYear, month)
+  }))
     .filter(item => item.observation.valid);
   const includedMonths = observedMonths.map(item => item.month);
   const annualAverageMm = observedMonths.length ? average(observedMonths.map(item => item.observation.value)) : null;
@@ -532,7 +592,10 @@ function summaryAnnualComparison(departments, selectedYear) {
     .map(item => summaryPartialMonthDate(item.observation.entries, { year: selectedYear, month: item.month }))
     .filter(Boolean)
     .sort();
-  const partialSuffix = partialDates.length ? ` · incluye parcial al ${formatSummaryDate(partialDates[partialDates.length - 1])}` : '';
+  const includesCurrentPartial = selectedYear === current.year && includedMonths.includes(current.month);
+  const partialSuffix = includesCurrentPartial
+    ? ` · incluye parcial al ${formatSummaryDate(current.isoDate)}`
+    : (partialDates.length ? ` · incluye parcial al ${formatSummaryDate(partialDates[partialDates.length - 1])}` : '');
   return {
     annualAverageMm,
     comparableHistoricalMm,
@@ -769,6 +832,26 @@ function formatClimateUpdatedAt(value) {
   if (!value) return 'Sin dato';
   const parsed = new Date(value);
   return Number.isNaN(parsed.getTime()) ? value : parsed.toLocaleString('es-AR');
+}
+
+function formatDailyDatasetUpdatedAt(value) {
+  const timestamp = String(value || '').trim();
+  if (!timestamp) return 'Actualización no disponible';
+  const normalized = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?$/.test(timestamp)
+    ? `${timestamp}Z`
+    : timestamp;
+  const parsed = new Date(normalized);
+  if (Number.isNaN(parsed.getTime())) return 'Actualización no disponible';
+  const parts = Object.fromEntries(new Intl.DateTimeFormat('en-CA', {
+    timeZone: DAILY_TIME_ZONE,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23'
+  }).formatToParts(parsed).filter(part => part.type !== 'literal').map(part => [part.type, part.value]));
+  return `${parts.day}/${parts.month}/${parts.year} · ${parts.hour}:${parts.minute}`;
 }
 // Implementación puntual del mapa. Las declaraciones siguientes reemplazan la
 // vista coroplética anterior sin modificar los análisis departamentales del resto
@@ -2623,7 +2706,7 @@ function renderClimateDepartmentDetail(status) {
     mapDetailCoverage: [status.coverage7d, status.coverage15d, status.coverage30d].every(Boolean) ? `${status.coverage7d} · ${status.coverage15d} · ${status.coverage30d}` : 'Sin dato',
     mapDetailMonthlyReference: status.monthlyReference || 'Sin dato', mapDetailMonthlyObserved: formatClimateMm(status.monthlyObservedMm), mapDetailMonthlyHistorical: formatClimateMm(status.monthlyHistoricalAvgMm),
     mapDetailMonthlyDifference: formatClimateSigned(status.monthlyDifferenceMm, 'mm'), mapDetailMonthlyDifferencePct: formatClimateSigned(status.monthlyDifferencePct, '%'), mapDetailMonthlyCategory: status.monthlyCategory || 'Sin dato',
-    mapDetailSource: status.sourceDaily || status.sourceMonthly ? `Diaria: ${status.sourceDaily || 'Sin dato'} · Mensual: ${status.sourceMonthly || 'Sin dato'}` : 'Sin dato', mapDetailUpdated: formatClimateUpdatedAt(status.updatedAt)
+    mapDetailSource: status.sourceDaily || status.sourceMonthly ? `Diaria: ${status.sourceDaily || 'Sin dato'} · Mensual: ${status.sourceMonthly || 'Sin dato'}` : 'Sin dato', mapDetailUpdated: formatDailyDatasetUpdatedAt(state.dailyGeneratedAt)
   };
   Object.entries(values).forEach(([id, value]) => { if ($(id)) $(id).textContent = value; });
   updateClimateDepartmentReference();
@@ -2733,40 +2816,62 @@ function validDailyReferenceRecords(f = filters()) {
     .sort((a, b) => a.date.localeCompare(b.date) || a.department.localeCompare(b.department, 'es'));
 }
 
-function renderDaily(f) {
+function dailyCalendarParts(date = new Date()) {
+  const parts = Object.fromEntries(new Intl.DateTimeFormat('en-CA', {
+    timeZone: DAILY_TIME_ZONE,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  }).formatToParts(date).filter(part => part.type !== 'literal').map(part => [part.type, part.value]));
+  return {
+    year: Number(parts.year),
+    month: Number(parts.month) - 1,
+    day: Number(parts.day),
+    isoDate: `${parts.year}-${parts.month}-${parts.day}`
+  };
+}
+
+function dailyReferenceDate(f, today = new Date()) {
+  const current = dailyCalendarParts(today);
+  const selectedYear = f.years?.length ? Math.max(...f.years) : current.year;
+  const selectedMonth = f.months?.length ? Math.max(...f.months) : null;
+  if (selectedYear === current.year && (selectedMonth === null || selectedMonth === current.month)) return current.isoDate;
+  if (selectedMonth !== null) {
+    return `${selectedYear}-${String(selectedMonth + 1).padStart(2, '0')}-${String(daysInMonth(selectedYear, selectedMonth)).padStart(2, '0')}`;
+  }
+  return `${selectedYear}-12-31`;
+}
+
+function dailyScopeDepartments(f, includeAll = false) {
+  const departments = state.metadata.departments || [];
+  return includeAll || f.departments === null
+    ? [...departments]
+    : departments.filter(department => f.departments.includes(department));
+}
+
+function renderDaily(f, today = new Date()) {
   const records = validDailyRecords(f);
   const referenceRecords = validDailyReferenceRecords(f);
-  const referenceLatestDate = referenceRecords.length ? referenceRecords[referenceRecords.length - 1].date : null;
-  if (!records.length) {
-    $('dailyLatestDate').textContent = '\u2014';
-    $('dailyCoverage').textContent = 'Sin observaciones diarias para los filtros activos';
-    ['dailyRain24','dailyRain7','dailyRain30','dailyTopDepartment','dailyWetDepartments','dailyMaxRecord'].forEach(id => $(id).textContent = 'Sin dato');
-    ['dailyRain24Detail','dailyRain7Detail','dailyRain30Detail','dailyTopDepartmentDetail','dailyWetDepartmentsDetail','dailyMaxRecordDetail'].forEach(id => $(id).textContent = 'sin observaciones');
-    $('dailyRankingTable').innerHTML = '';
-    $('dailyTable').innerHTML = '<tr><td colspan="5">No hay observaciones diarias para los filtros activos.</td></tr>';
-    renderDailyHistoricalSignals(referenceRecords, referenceLatestDate, f);
-    chart('dailySeriesChart', 'line', { labels: [], datasets: [] }, lineOptions('mm', 'Lluvia diaria (mm)'));
-    updateDailyQuickStats(f);
-    return;
-  }
-
-  const latestDate = records[records.length - 1].date;
+  const referenceDate = dailyReferenceDate(f, today);
+  const departments = dailyScopeDepartments(f);
   const selectedWindow = +$('dailyWindowFilter').value || 7;
-  const rows = dailyOperationalRows(records, latestDate);
-  const selectedRows = rows.filter(row => row.observations[selectedWindow] > 0);
+  const rows = dailyOperationalRows(records, referenceDate, departments);
+  const selectedRows = rows.filter(row => row.windows[selectedWindow] > 0);
   const sortDirection = $('dailySortFilter')?.value === 'asc' ? 1 : -1;
   const rankingRows = [...rows].sort((a, b) => sortDirection * (a.windows[selectedWindow] - b.windows[selectedWindow]) || a.department.localeCompare(b.department, 'es'));
   const matrixRows = sortDailyMatrixRows(rows, $('dailyMatrixSortFilter')?.value || '7');
   const topDepartment = selectedRows.length ? [...selectedRows].sort((a, b) => b.windows[selectedWindow] - a.windows[selectedWindow] || a.department.localeCompare(b.department, 'es'))[0] : null;
-  const maxRecord = dailyMaxRecord(records, latestDate, selectedWindow);
+  const maxRecord = dailyMaxRecord(records, referenceDate, selectedWindow);
   const singleDepartment = f.departments?.length === 1;
 
-  $('dailyLatestDate').textContent = formatDate(latestDate);
+  $('dailyLatestDate').textContent = formatDate(referenceDate);
   const sourceLabel = state.dailyDataSource === 'combined' ? 'base diaria combinada' : 'base diaria operativa de respaldo';
-  $('dailyCoverage').textContent = `${records[0].date} a ${latestDate} - ${records.length} observaciones departamentales (${sourceLabel})`;
-  updateDailyKpis(rows, latestDate, topDepartment, maxRecord, selectedWindow, singleDepartment);
-  renderDailyHistoricalSignals(referenceRecords, referenceLatestDate, f);
-  renderDailySeries(records, latestDate, f, selectedWindow);
+  const observed = rows.reduce((sum, row) => sum + row.observations[selectedWindow], 0);
+  const possible = selectedWindow * rows.length;
+  $('dailyCoverage').textContent = `Referencia ${formatDate(referenceDate)} · cobertura real ${observed}/${possible} días-departamento · ${sourceLabel}`;
+  updateDailyKpis(rows, referenceDate, topDepartment, maxRecord, selectedWindow, singleDepartment);
+  renderDailyHistoricalSignals(referenceRecords, referenceDate, f);
+  renderDailySeries(records, referenceDate, f, selectedWindow, departments);
   $('dailyRankingTable').innerHTML = rankingRows.map(row => `
     <tr>
       <td>${row.department}</td>
@@ -2783,20 +2888,20 @@ function renderDaily(f) {
       <td>${dailyWindowDisplay(row, 7)}</td>
       <td>${dailyWindowDisplay(row, 30)}</td>
     </tr>`).join('');
-  updateDailyQuickStats(f);
+  updateDailyQuickStats(f, today);
 }
 
-function dailyOperationalRows(records, latestDate) {
-  const departments = [...new Set(records.map(record => record.department))].sort((a, b) => a.localeCompare(b, 'es'));
+function dailyOperationalRows(records, referenceDate, departments = [...new Set(records.map(record => record.department))]) {
   return departments.map(department => {
     const departmentRecords = records.filter(record => record.department === department);
-    const windows = Object.fromEntries(DAILY_WINDOWS.map(days => [days, dailyWindowTotal(departmentRecords, latestDate, days)]));
-    const observations = Object.fromEntries(DAILY_WINDOWS.map(days => [days, dailyWindowRecords(departmentRecords, latestDate, days).length]));
-    const recentRecords = dailyWindowRecords(departmentRecords, latestDate, 30);
-    const lastRecord = departmentRecords[departmentRecords.length - 1];
+    const windows = Object.fromEntries(DAILY_WINDOWS.map(days => [days, dailyWindowTotal(departmentRecords, referenceDate, days)]));
+    const observations = Object.fromEntries(DAILY_WINDOWS.map(days => [days, dailyWindowCoverage(departmentRecords, referenceDate, days).daysWithRecords]));
+    const recentRecords = dailyWindowRecords(departmentRecords, referenceDate, 30);
+    const recordsUntilReference = departmentRecords.filter(record => record.date <= referenceDate);
+    const lastRecord = recordsUntilReference[recordsUntilReference.length - 1];
     return {
       department,
-      lastDate: lastRecord.date,
+      lastDate: lastRecord?.date || null,
       rain24: windows[1],
       windows,
       observations,
@@ -2809,10 +2914,11 @@ function updateDailyKpis(rows, latestDate, topDepartment, maxRecord, selectedWin
   [1, 7, 30].forEach(days => {
     const id = days === 1 ? 'dailyRain24' : `dailyRain${days}`;
     const detailId = days === 1 ? 'dailyRain24Detail' : `dailyRain${days}Detail`;
-    const rowsWithData = rows.filter(row => row.observations[days] > 0);
-    const value = rowsWithData.length ? (singleDepartment ? rowsWithData[0].windows[days] : average(rowsWithData.map(row => row.windows[days]))) : null;
+    const value = rows.length ? (singleDepartment ? rows[0].windows[days] : average(rows.map(row => row.windows[days]))) : null;
+    const observed = rows.reduce((sum, row) => sum + row.observations[days], 0);
+    const possible = rows.length * days;
     $(id).textContent = Number.isFinite(value) ? `${format(value)} mm` : 'Sin dato';
-    $(detailId).textContent = singleDepartment ? 'acumulado temporal del departamento seleccionado' : `promedio departamental de acumulados (${rowsWithData.length} depto.)`;
+    $(detailId).textContent = `${singleDepartment ? 'acumulado temporal del departamento seleccionado' : `promedio departamental de acumulados (${rows.length} depto.)`} · cobertura ${observed}/${possible}`;
   });
   $('dailyTopDepartment').textContent = topDepartment ? topDepartment.department : 'Sin dato';
   $('dailyTopDepartmentDetail').textContent = topDepartment ? `${format(topDepartment.windows[selectedWindow])} mm acumulados en ${dailyWindowLabel(selectedWindow)}` : `sin lluvia mayor a 0 mm en ${dailyWindowLabel(selectedWindow)}`;
@@ -2824,7 +2930,7 @@ function updateDailyKpis(rows, latestDate, topDepartment, maxRecord, selectedWin
 }
 
 function dailyWindowDisplay(row, days) {
-  return row.observations[days] > 0 ? `${format(row.windows[days])} mm` : formatTableRainfall(null);
+  return `${format(row.windows[days])} mm`;
 }
 
 function sortDailyMatrixRows(rows, criterion) {
@@ -2841,15 +2947,38 @@ function sortDailyMatrixRows(rows, criterion) {
   }
   const days = criterion === '30' ? 30 : 7;
   return [...rows].sort((a, b) => {
-    const aHasData = a.observations[days] > 0;
-    const bHasData = b.observations[days] > 0;
-    if (aHasData !== bHasData) return aHasData ? -1 : 1;
-    if (aHasData && a.windows[days] !== b.windows[days]) return b.windows[days] - a.windows[days];
+    if (a.windows[days] !== b.windows[days]) return b.windows[days] - a.windows[days];
     return alphabetical(a, b);
   });
 }
 
-function renderDailySeries(records, latestDate, f, selectedWindow) {
+function updateClimateDailyStatuses(f, today = new Date()) {
+  if (!state.metadata.departments?.length) return;
+  const referenceDate = dailyReferenceDate(f, today);
+  const records = validDailyReferenceRecords({ ...f, departments: null });
+  const rows = dailyOperationalRows(records, referenceDate, dailyScopeDepartments(f, true));
+  rows.forEach(row => {
+    const key = normalizeClimateDepartment(row.department);
+    const previous = state.climateMap.statuses.get(key) || { department: row.department };
+    state.climateMap.statuses.set(key, {
+      ...previous,
+      department: row.department,
+      referenceDateDaily: referenceDate,
+      rainLastDateMm: row.windows[1],
+      rain7dMm: row.windows[7],
+      coverage7d: `${row.observations[7]}/7`,
+      rain15dMm: row.windows[15],
+      coverage15d: `${row.observations[15]}/15`,
+      rain30dMm: row.windows[30],
+      coverage30d: `${row.observations[30]}/30`,
+      sourceDaily: `${state.dailyDataSource === 'combined' ? 'rainfall-daily-combined' : 'rainfall-daily'} · cálculo operativo en memoria`
+    });
+  });
+  const selected = state.climateMap.statuses.get(state.climateMap.selectedDepartment);
+  if (selected && $('mapDetailDepartment')) renderClimateDepartmentDetail(selected);
+}
+
+function renderDailySeries(records, latestDate, f, selectedWindow, departments = dailyScopeDepartments(f)) {
   const windowDays = Number.isFinite(selectedWindow) && selectedWindow > 0 ? selectedWindow : 30;
   const startDate = addDays(latestDate, 1 - windowDays);
   const seriesRecords = records.filter(record => record.date >= startDate && record.date <= latestDate);
@@ -2857,12 +2986,13 @@ function renderDailySeries(records, latestDate, f, selectedWindow) {
   const singleDepartment = f.departments?.length === 1;
   const values = dates.map(date => {
     const dayRecords = seriesRecords.filter(record => record.date === date);
-    if (!dayRecords.length) return null;
-    return singleDepartment ? dayRecords[0].rainfallMm : average(dayRecords.map(record => record.rainfallMm));
+    if (singleDepartment) return dayRecords[0]?.rainfallMm ?? 0;
+    const valuesByDepartment = new Map(dayRecords.map(record => [record.department, record.rainfallMm]));
+    return departments.length ? average(departments.map(department => valuesByDepartment.get(department) ?? 0)) : 0;
   });
   $('dailySeriesDescription').textContent = singleDepartment
-    ? 'Lluvia diaria del departamento seleccionado. Los días sin observación se muestran como sin dato y no se imputan como 0 mm.'
-    : 'Promedio departamental diario entre departamentos con registro. Los días sin observación se muestran como sin dato y no se imputan como 0 mm.';
+    ? 'Lluvia diaria operativa del departamento seleccionado. Las fechas sin registro se calculan como 0 mm en memoria; la cobertura conserva solo observaciones reales.'
+    : 'Promedio departamental diario operativo sobre todos los departamentos seleccionados. Las fechas sin registro se calculan como 0 mm en memoria.';
   chart('dailySeriesChart', 'bar', {
     labels: dates.map(formatShortDate),
     datasets: [dataset(singleDepartment ? 'Lluvia diaria departamental' : 'Promedio departamental diario', values, COLORS[0], false, 'mm')]
@@ -2870,15 +3000,24 @@ function renderDailySeries(records, latestDate, f, selectedWindow) {
 }
 
 // Ventana inclusiva y acumulativa: [fecha de referencia - (dias - 1), fecha de referencia].
-// Solo se incluyen observaciones existentes; los dias faltantes no se imputan como 0 mm.
+// Los acumulados operativos equivalen a una grilla completa con 0 mm para los
+// registros departamento-fecha ausentes. La cobertura cuenta solo fechas reales.
 function dailyWindowRecords(records, latestDate, days) {
   const startDate = addDays(latestDate, 1 - days);
   return records.filter(record => record.date >= startDate && record.date <= latestDate);
 }
 
+function dailyWindowGrid(records, referenceDate, days) {
+  const startDate = addDays(referenceDate, 1 - days);
+  const byDate = new Map(dailyWindowRecords(records, referenceDate, days).map(record => [record.date, record.rainfallMm]));
+  return Array.from({ length: days }, (_, index) => {
+    const date = addDays(startDate, index);
+    return { date, rainfallMm: byDate.get(date) ?? 0, observed: byDate.has(date) };
+  });
+}
+
 function dailyWindowTotal(records, latestDate, days) {
-  const values = dailyWindowRecords(records, latestDate, days).map(record => record.rainfallMm).filter(Number.isFinite);
-  return values.length ? values.reduce((sum, value) => sum + value, 0) : 0;
+  return dailyWindowGrid(records, latestDate, days).reduce((sum, record) => sum + record.rainfallMm, 0);
 }
 
 function dailyWindowCoverage(records, latestDate, days) {
@@ -2923,8 +3062,8 @@ function renderDailyHistoricalSignals(records, latestDate, f) {
   const container = $('dailyHistoricalSignals');
   const scope = $('dailyReferenceScope');
   if (!container || !scope) return;
-  const departments = [...new Set(records.map(record => record.department))].sort((a, b) => a.localeCompare(b, 'es'));
-  const selectedDepartments = f.departments?.length ? f.departments.filter(department => departments.includes(department)) : departments;
+  const departments = dailyScopeDepartments(f);
+  const selectedDepartments = [...departments].sort((a, b) => a.localeCompare(b, 'es'));
   const sourceLabel = state.dailyDataSource === 'combined' ? 'base diaria combinada' : 'base diaria operativa de respaldo';
 
   if (!latestDate || !selectedDepartments.length) {
@@ -2975,7 +3114,6 @@ function dailyReferenceSignal(records, departments, latestDate, days, sourceLabe
     };
   });
   const comparable = departmentStats.filter(item =>
-    item.observedDays > 0 &&
     item.reference.yearsComparable.length >= MINIMUM_COMPARABLE_YEARS &&
     Number.isFinite(item.reference.averageMm) &&
     item.reference.averageMm > 0
@@ -3116,7 +3254,7 @@ function addDays(dateString, offset) {
 }
 
 function dailyWindowLabel(days) {
-  return days === 1 ? 'última fecha disponible' : `${days} días`;
+  return days === 1 ? 'día de referencia' : `${days} días`;
 }
 
 function formatShortDate(value) {
@@ -3132,21 +3270,13 @@ function escapeAttr(value) {
     .replace(/>/g, '&gt;');
 }
 
-function updateDailyQuickStats(f) {
+function updateDailyQuickStats(f, today = new Date()) {
   const records = validDailyRecords(f);
-  if (!records.length) {
-    [1, 7, 30].forEach(days => {
-      const id = days === 1 ? 'quickRain24' : `quickRain${days}`;
-      $(id).textContent = 'No disponible';
-    });
-    return;
-  }
-  const latestDate = records[records.length - 1].date;
-  const rows = dailyOperationalRows(records, latestDate);
+  const referenceDate = dailyReferenceDate(f, today);
+  const rows = dailyOperationalRows(records, referenceDate, dailyScopeDepartments(f));
   [1, 7, 30].forEach(days => {
-    const rowsWithData = rows.filter(row => row.observations[days] > 0);
     const id = days === 1 ? 'quickRain24' : `quickRain${days}`;
-    const value = rowsWithData.length ? average(rowsWithData.map(row => row.windows[days])) : null;
+    const value = rows.length ? average(rows.map(row => row.windows[days])) : null;
     $(id).textContent = Number.isFinite(value) ? `${format(value)} mm` : 'No disponible';
   });
 }
@@ -3663,12 +3793,18 @@ function classifyMonthlyDeviation(differencePct) {
   return 'Muy por encima';
 }
 
-function getDepartmentMonthlyDeviationRows(f) {
+function getDepartmentMonthlyDeviationRows(f, today = new Date()) {
   const departments = state.metadata.departments.filter(department => matchesSelection(department, f.departments));
+  const current = dailyCalendarParts(today);
   return departments.map(department => {
     const latest = getLatestMonthlyPeriodForDepartment(department, f);
-    const observedMm = latest ? latest.observedMm : null;
-    const historicalAverageMm = latest ? getMonthlyHistoricalAverage(department, latest.month) : null;
+    const isCurrentMonth = latest?.year === current.year && latest.month === current.month;
+    const observedMm = isCurrentMonth
+      ? summaryCurrentMonthFromDaily([department], latest.year, latest.month, current.isoDate).value
+      : (latest ? latest.observedMm : null);
+    const historicalAverageMm = isCurrentMonth
+      ? getCurrentMonthHistoricalAverage(department, current.isoDate)
+      : (latest ? getMonthlyHistoricalAverage(department, latest.month) : null);
     const differenceMm = Number.isFinite(observedMm) && Number.isFinite(historicalAverageMm) ? observedMm - historicalAverageMm : null;
     const differencePct = Number.isFinite(differenceMm) && historicalAverageMm > 0 ? (differenceMm / historicalAverageMm) * 100 : null;
     return {

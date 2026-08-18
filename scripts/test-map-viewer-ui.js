@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 const fs = require('fs');
+const vm = require('vm');
 
 const html = fs.readFileSync('index.html', 'utf8');
 const app = fs.readFileSync('app.js', 'utf8');
@@ -49,6 +50,51 @@ const css = fs.readFileSync('operational.css', 'utf8');
 for (const requirement of ['align-items: start', 'isolation: isolate', 'scroll-margin-top:', '.ina-history-chart-wrap canvas']) {
   if (!css.includes(requirement)) throw Error(`Falta el resguardo de layout del mapa: ${requirement}`);
 }
+for (const label of ['Lluvia del día de referencia','Fecha diaria de referencia']) {
+  if (!html.includes(label) || !app.includes(label)) throw Error(`Falta la etiqueta temporal territorial: ${label}`);
+}
+for (const requirement of ['function updateClimateDailyStatuses', 'coverage7d: `${row.observations[7]}/7`']) {
+  if (!app.includes(requirement)) throw Error(`El mapa no recalcula la lluvia diaria operativa: ${requirement}`);
+}
+if (!app.includes("fetchDataFile('rainfall-daily-summary.json').catch") || !app.includes('dailyGeneratedAt: typeof dailySummary?.generatedAt')) {
+  throw Error('La metadata de actualización diaria no se carga con fallback opcional.');
+}
+if (!html.includes('<dt>Actualización de datos</dt>')) throw Error('Falta la etiqueta Actualización de datos.');
+const territorialDetailSource = app.slice(app.indexOf('function renderClimateDepartmentDetail'), app.indexOf('function formatClimateMapValue'));
+if (territorialDetailSource.includes('status.updatedAt') || !territorialDetailSource.includes('state.dailyGeneratedAt')) {
+  throw Error('El detalle territorial todavía depende de status.updatedAt.');
+}
+
+const detailElements = new Map();
+const context = {
+  document: {
+    addEventListener() {},
+    getElementById(id) {
+      if (!detailElements.has(id)) detailElements.set(id, { textContent: '' });
+      return detailElements.get(id);
+    }
+  },
+  Intl,
+  Date,
+  Map,
+  console,
+  setTimeout,
+  clearTimeout
+};
+vm.createContext(context);
+vm.runInContext(app, context);
+const timestampChecks = vm.runInContext(`(() => {
+  state.climateMap.statuses = new Map();
+  state.dailyGeneratedAt = '2026-08-13T10:56:09';
+  renderClimateDepartmentDetail({ department: 'Capital', referenceDateDaily: '2026-08-18', updatedAt: '2026-08-11T10:16:18' });
+  const loaded = { updated: document.getElementById('mapDetailUpdated').textContent, reference: document.getElementById('mapDetailDailyDate').textContent };
+  state.dailyGeneratedAt = null;
+  renderClimateDepartmentDetail({ department: 'Capital', referenceDateDaily: '2026-08-18', updatedAt: '2026-08-11T10:16:18' });
+  return { ...loaded, fallback: document.getElementById('mapDetailUpdated').textContent };
+})()`, context);
+if (timestampChecks.updated !== '13/08/2026 · 07:56') throw Error(`Formato horario argentino incorrecto: ${timestampChecks.updated}`);
+if (timestampChecks.fallback !== 'Actualización no disponible') throw Error(`Fallback incorrecto: ${timestampChecks.fallback}`);
+if (timestampChecks.reference !== '18/8/2026') throw Error(`La fecha diaria de referencia dejó de ser independiente: ${timestampChecks.reference}`);
 if (app.includes("element.hidden = true;\n  element.innerHTML = '';\n  return;\n  if (!layerConfig)")) throw Error('La leyenda satelital permanece bloqueada');
 const satelliteConfig = fs.readFileSync('data/external-api-config.json', 'utf8');
 for (const category of ['Agua superficial','Inundación recurrente','Inundación detectada','Datos insuficientes']) {

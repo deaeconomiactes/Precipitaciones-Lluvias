@@ -29,11 +29,11 @@ const checks = vm.runInContext(`(() => {
   state.monthlyRainfall = [
     row("A", 2023, { 0: 80 }),
     row("B", 2023, { 0: 100, 2: 140 }),
-    row("A", 2024, { 0: 100, 2: 140, 4: 120, 7: 60, 9: 180, 11: 200 }),
+    row("A", 2024, { 0: 100, 2: 140, 4: 120, 5: 40, 7: 60, 9: 180, 11: 200 }),
     row("B", 2024, { 0: 120, 2: 160, 4: 140, 7: 80, 9: 220, 11: 240 }),
-    row("A", 2025, { 0: 120, 2: 180, 4: 120, 7: 80, 9: 200, 11: 220 }),
+    row("A", 2025, { 0: 120, 2: 180, 4: 120, 5: 60, 7: 80, 9: 200, 11: 220 }),
     row("B", 2025, { 0: 140, 2: 200, 4: 140, 7: 100, 9: 240, 11: 260 }),
-    row("A", 2026, { 0: 140, 2: 220, 4: 90, 7: 999 }),
+    row("A", 2026, { 0: 140, 2: 220, 4: 90, 5: 30, 7: 999 }),
     row("B", 2026, { 0: 160, 2: 240, 4: 110, 7: 999 })
   ];
   state.operationalDailyRecords = [];
@@ -76,6 +76,7 @@ const checks = vm.runInContext(`(() => {
     closedDecember,
     annualAverage: august.annualAverageMm,
     annualMonths: august.annualMonths,
+    annualDetail: august.annualDetail,
     comparableHistorical: august.comparableHistoricalMm,
     comparableYears: august.comparableYears,
     octoberPeriod: october.period,
@@ -113,13 +114,16 @@ if (checks.octoberPeriod.month !== 9 || checks.octoberObserved !== null) {
 if (checks.historicalPeriod.year !== 2024 || checks.historicalPeriod.month !== 11) {
   throw new Error(`El año histórico no usó su último mes válido: ${JSON.stringify(checks.historicalPeriod)}`);
 }
-if (checks.annualAverage !== 121.25 || JSON.stringify(checks.annualMonths) !== JSON.stringify([0, 2, 4, 7])) {
-  throw new Error(`El promedio 2026 no incorporó el parcial diario de agosto: ${JSON.stringify(checks)}`);
+if (checks.annualAverage !== 103 || JSON.stringify(checks.annualMonths) !== JSON.stringify([0, 2, 4, 5, 7])) {
+  throw new Error(`El promedio 2026 no incorporó todos los meses con datos: ${JSON.stringify(checks)}`);
 }
-if (checks.comparableHistorical !== 125 || JSON.stringify(checks.comparableYears) !== JSON.stringify([2024, 2025])) {
+if (!checks.annualDetail.includes("cobertura 1–2 de 2 deptos.")) {
+  throw new Error(`El promedio anual no informa su cobertura territorial variable: ${checks.annualDetail}`);
+}
+if (checks.comparableHistorical !== 110 || JSON.stringify(checks.comparableYears) !== JSON.stringify([2024, 2025])) {
   throw new Error(`El histórico anual no usó el mismo conjunto de meses: ${JSON.stringify(checks)}`);
 }
-if (Math.abs(checks.historicalAnnual - 146.66666666666666) > 1e-9) {
+if (Math.abs(checks.historicalAnnual - 131.42857142857142) > 1e-9) {
   throw new Error(`Las métricas anuales no respondieron al año 2024: ${checks.historicalAnnual}`);
 }
 if (!checks.partialDetail.includes("Acumulado parcial al 10/01/2027")) {
@@ -154,9 +158,12 @@ const realCurrentYear = vm.runInContext(`(() => {
   state.monthlyRainfall = [];
   buildCombinedMonthlyRainfall();
   const summary = monthlySummaryComparison({ departments: null, years: [2026], months: null }, new Date("2026-08-14T12:00:00-03:00"));
-  return { period: summary.period, annualMonths: summary.annualMonths, annualAverageMm: summary.annualAverageMm };
+  return { period: summary.period, annualMonths: summary.annualMonths, annualAverageMm: summary.annualAverageMm, annualDetail: summary.annualDetail };
 })()`, context);
 if (realCurrentYear.period.year !== 2026 || realCurrentYear.period.month !== 7) {
   throw new Error(`La base real retrocedió desde agosto 2026: ${JSON.stringify(realCurrentYear)}`);
+}
+if (JSON.stringify(realCurrentYear.annualMonths) !== JSON.stringify([0, 1, 2, 3, 4, 5, 6, 7]) || !realCurrentYear.annualDetail.includes("cobertura 5–25 de 25 deptos.")) {
+  throw new Error(`La base real no incorporó todos los meses 2026 con datos: ${JSON.stringify(realCurrentYear)}`);
 }
 console.log(`Base real 2026: agosto permanece como referencia; ${realCurrentYear.annualMonths.length} meses válidos en el promedio anual.`);

@@ -519,6 +519,15 @@ function summaryProvincialMonth(departments, year, month) {
   return { entries, valid, value: valid ? average(entries.map(entry => entry.value)) : null, minimumCoverage };
 }
 
+function summaryAvailableProvincialMonth(departments, year, month) {
+  const observation = summaryProvincialMonth(departments, year, month);
+  return {
+    ...observation,
+    valid: observation.entries.length > 0,
+    value: observation.entries.length ? average(observation.entries.map(entry => entry.value)) : null
+  };
+}
+
 function summaryCurrentMonthFromDaily(departments, year, month, referenceDate) {
   const monthStart = `${year}-${String(month + 1).padStart(2, '0')}-01`;
   const entries = departments.map(department => {
@@ -572,16 +581,17 @@ function summaryAnnualComparison(departments, selectedYear, today = new Date()) 
     month,
     observation: selectedYear === current.year && month === current.month
       ? summaryCurrentMonthFromDaily(departments, selectedYear, month, current.isoDate)
-      : summaryProvincialMonth(departments, selectedYear, month)
+      : summaryAvailableProvincialMonth(departments, selectedYear, month)
   }))
     .filter(item => item.observation.valid);
   const includedMonths = observedMonths.map(item => item.month);
+  const coverageCounts = observedMonths.map(item => item.observation.entries.length);
   const annualAverageMm = observedMonths.length ? average(observedMonths.map(item => item.observation.value)) : null;
   const historicalYears = [...new Set(monthlyRows().map(row => row.year))]
     .filter(year => year !== selectedYear)
     .sort((a, b) => a - b);
   const comparableYears = includedMonths.length ? historicalYears.map(year => {
-    const observations = includedMonths.map(month => summaryProvincialMonth(departments, year, month));
+    const observations = includedMonths.map(month => summaryAvailableProvincialMonth(departments, year, month));
     return observations.every(observation => observation.valid)
       ? { year, value: average(observations.map(observation => observation.value)) }
       : null;
@@ -596,12 +606,17 @@ function summaryAnnualComparison(departments, selectedYear, today = new Date()) 
   const partialSuffix = includesCurrentPartial
     ? ` · incluye parcial al ${formatSummaryDate(current.isoDate)}`
     : (partialDates.length ? ` · incluye parcial al ${formatSummaryDate(partialDates[partialDates.length - 1])}` : '');
+  const minimumDepartmentCoverage = coverageCounts.length ? Math.min(...coverageCounts) : 0;
+  const maximumDepartmentCoverage = coverageCounts.length ? Math.max(...coverageCounts) : 0;
+  const coverageSuffix = coverageCounts.length
+    ? ` · cobertura ${minimumDepartmentCoverage === maximumDepartmentCoverage ? minimumDepartmentCoverage : `${minimumDepartmentCoverage}–${maximumDepartmentCoverage}`} de ${departments.length} deptos.`
+    : '';
   return {
     annualAverageMm,
     comparableHistoricalMm,
     annualMonths: includedMonths,
     comparableYears: comparableYears.map(item => item.year),
-    annualDetail: includedMonths.length ? `${periodLabel} · ${includedMonths.length} ${includedMonths.length === 1 ? 'mes' : 'meses'} con datos${partialSuffix}` : 'Sin meses con observaciones válidas',
+    annualDetail: includedMonths.length ? `${periodLabel} · ${includedMonths.length} ${includedMonths.length === 1 ? 'mes' : 'meses'} con datos${coverageSuffix}${partialSuffix}` : 'Sin meses con observaciones válidas',
     comparableHistoricalDetail: includedMonths.length
       ? `Promedio histórico para el mismo período · ${comparableYears.length} ${comparableYears.length === 1 ? 'año comparable' : 'años comparables'}`
       : 'Sin período observado comparable'

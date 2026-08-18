@@ -15,6 +15,7 @@ vm.createContext(context);
 vm.runInContext(fs.readFileSync("app.js", "utf8"), context);
 
 const checks = vm.runInContext(`(() => {
+  const argentinaNoon = isoDate => new Date(isoDate + "T12:00:00-03:00");
   const row = (department, year, values, sources = {}, meta = {}) => {
     const months = Array(12).fill(null);
     const monthSources = Array(12).fill(null);
@@ -49,11 +50,11 @@ const checks = vm.runInContext(`(() => {
     { department: "A", date: "2026-08-01", rainfallMm: 10 },
     { department: "A", date: "2026-08-02", rainfallMm: 0 }
   ];
-  const august = monthlySummaryComparison({ departments: null, years: [2026], months: null }, new Date(2026, 7, 18));
-  const augustDepartments = getDepartmentMonthlyDeviationRows({ departments: null, years: [2026], months: null }, new Date(2026, 7, 18));
-  const closedDecember = getDepartmentMonthlyDeviationRows({ departments: ["A"], years: [2024], months: [11] }, new Date(2026, 7, 18));
-  const october = monthlySummaryComparison({ departments: null, years: [2026], months: [9] }, new Date(2026, 7, 18));
-  const historical = monthlySummaryComparison({ departments: null, years: [2024], months: null }, new Date(2026, 7, 18));
+  const august = monthlySummaryComparison({ departments: null, years: [2026], months: null }, argentinaNoon("2026-08-18"));
+  const augustDepartments = getDepartmentMonthlyDeviationRows({ departments: null, years: [2026], months: null }, argentinaNoon("2026-08-18"));
+  const closedDecember = getDepartmentMonthlyDeviationRows({ departments: ["A"], years: [2024], months: [11] }, argentinaNoon("2026-08-18"));
+  const october = monthlySummaryComparison({ departments: null, years: [2026], months: [9] }, argentinaNoon("2026-08-18"));
+  const historical = monthlySummaryComparison({ departments: null, years: [2024], months: null }, argentinaNoon("2026-08-18"));
   state.monthlyRainfall.push(
     row("A", 2027, { 0: 20 }, { 0: "daily_derived" }, { 0: { daysWithRecords: 10, daysInMonth: 31 } }),
     row("B", 2027, { 0: 40 }, { 0: "daily_derived" }, { 0: { daysWithRecords: 10, daysInMonth: 31 } })
@@ -63,7 +64,7 @@ const checks = vm.runInContext(`(() => {
     { department: "B", date: "2027-01-10", rainfallMm: 40 }
   ];
   state.dailyRecords = [...state.operationalDailyRecords];
-  const partial = monthlySummaryComparison({ departments: null, years: [2027], months: [0] }, new Date(2027, 0, 10));
+  const partial = monthlySummaryComparison({ departments: null, years: [2027], months: [0] }, argentinaNoon("2027-01-10"));
   return {
     augustPeriod: august.period,
     augustObserved: august.observedMm,
@@ -82,6 +83,9 @@ const checks = vm.runInContext(`(() => {
     historicalPeriod: historical.period,
     historicalAnnual: historical.annualAverageMm,
     partialDetail: partial.observedDetail,
+    partialHistorical: partial.historicalAverageMm,
+    partialDifference: partial.differenceMm,
+    partialCategory: partial.category,
     augustDetail: august.observedDetail
   };
 })()`, context);
@@ -121,6 +125,9 @@ if (Math.abs(checks.historicalAnnual - 146.66666666666666) > 1e-9) {
 if (!checks.partialDetail.includes("Acumulado parcial al 10/01/2027")) {
   throw new Error(`El acumulado diario incompleto no quedó rotulado como parcial: ${checks.partialDetail}`);
 }
+if (checks.partialHistorical !== null || checks.partialDifference !== null || checks.partialCategory !== "Sin referencia") {
+  throw new Error(`La falta de histórico diario comparable activó una referencia silenciosa: ${JSON.stringify(checks)}`);
+}
 if (!checks.augustDetail.includes("Acumulado parcial al 18/08/2026") || !checks.augustDetail.includes("cobertura real 2/36")) {
   throw new Error(`El mes actual no informa corte y cobertura real: ${checks.augustDetail}`);
 }
@@ -146,7 +153,7 @@ const realCurrentYear = vm.runInContext(`(() => {
   state.metadata = realMetadata;
   state.monthlyRainfall = [];
   buildCombinedMonthlyRainfall();
-  const summary = monthlySummaryComparison({ departments: null, years: [2026], months: null }, new Date(2026, 7, 14));
+  const summary = monthlySummaryComparison({ departments: null, years: [2026], months: null }, new Date("2026-08-14T12:00:00-03:00"));
   return { period: summary.period, annualMonths: summary.annualMonths, annualAverageMm: summary.annualAverageMm };
 })()`, context);
 if (realCurrentYear.period.year !== 2026 || realCurrentYear.period.month !== 7) {

@@ -56,19 +56,25 @@
     <section class="dashboard-panel active" id="summaryPanel">
       <div class="panel-intro"><div><span class="eyebrow">Lectura rápida</span><h2>Resumen provincial</h2><p>Qué ocurre, dónde se concentra y qué información falta para decidir.</p></div><span class="status-pill">Último año disponible: <strong id="latestDataYear">—</strong></span></div>
       <section class="kpi-grid operational-kpis">
-        <article class="kpi blue"><span class="kpi-label">Mes de referencia</span><strong id="kpiReferenceMonth">—</strong><small id="kpiReferenceDetail">base mensual combinada</small></article>
-        <article class="kpi cyan"><span class="kpi-label">Observado del mes</span><strong id="kpiObserved">—</strong><small id="kpiObservedDetail">—</small></article>
-        <article class="kpi purple"><span class="kpi-label">Promedio histórico del mes</span><strong id="kpiHistorical">—</strong><small id="kpiHistoricalDetail">—</small></article>
-        <article class="kpi amber"><span class="kpi-label">Diferencia vs. histórico</span><strong id="kpiDifference">—</strong><small>observado - promedio histórico</small></article>
-        <article class="kpi rose"><span class="kpi-label" id="kpiAnnualAverageLabel">Promedio del año</span><strong id="kpiAnnualAverage">—</strong><small id="kpiAnnualAverageDetail">—</small></article>
-        <article class="kpi neutral"><span class="kpi-label">Promedio histórico anual comparable</span><strong id="kpiComparableHistorical">—</strong><small id="kpiComparableHistoricalDetail">Promedio histórico para el mismo período</small></article>
+        <article class="kpi blue"><span class="kpi-label">Período analizado</span><strong id="kpiReferenceMonth">—</strong><small id="kpiReferenceDetail">—</small></article>
+        <article class="kpi cyan"><span class="kpi-label" id="kpiObservedLabel">Lluvia acumulada promedio por departamento</span><strong id="kpiObserved">—</strong><small id="kpiObservedDetail">—</small></article>
+        <article class="kpi purple"><span class="kpi-label" id="kpiHistoricalLabel">Lluvia habitual por departamento</span><strong id="kpiHistorical">—</strong><small id="kpiHistoricalDetail">—</small></article>
+        <article class="kpi blue executive-comparison"><span class="kpi-label">Comparación con lo habitual</span><strong id="kpiDifference">—</strong><small id="kpiDifferenceDetail">—</small></article>
+        <article class="kpi rose"><span class="kpi-label" id="kpiAnnualAverageLabel">Lluvia acumulada promedio por departamento en el año</span><strong id="kpiAnnualAverage">—</strong><small id="kpiAnnualAverageDetail">—</small></article>
+        <article class="kpi purple executive-comparison"><span class="kpi-label">Comparación anual con lo habitual</span><strong id="kpiAnnualComparison">—</strong><small id="kpiAnnualComparisonDetail">—</small></article>
       </section>
-      <section class="method-callout compact"><strong>Nota metodológica</strong><p>Este indicador compara la lluvia observada del mes contra el promedio histórico del mismo mes calendario. Cuando se muestran todos los departamentos, se informa el promedio departamental en mm. El promedio del año incorpora todos los meses con al menos un departamento con dato; cada mes pesa por igual y la tarjeta informa la cobertura territorial utilizada. No se suman milímetros entre departamentos.</p></section>
-      <section class="availability-strip" aria-label="Indicadores operativos pendientes">
-        <div><span>Lluvia del día de referencia</span><strong id="quickRain24">No disponible</strong></div>
-        <div><span>Lluvia últimos 7 días</span><strong id="quickRain7">No disponible</strong></div>
-        <div><span>Lluvia últimos 30 días</span><strong id="quickRain30">No disponible</strong></div>
-        <div><span>Zonas inundadas observadas</span><strong>GFM / OPERA / VIIRS · fecha visible</strong></div>
+      <section class="executive-reading" aria-live="polite">
+        <span class="eyebrow" id="kpiExecutiveReadingTitle">Lectura provincial</span>
+        <p id="kpiExecutiveReading">—</p>
+      </section>
+      <section class="recent-situation" aria-labelledby="recentSituationTitle">
+        <h3 id="recentSituationTitle">Situación reciente</h3>
+        <div class="availability-strip">
+          <div><span>Lluvia del día</span><strong id="quickRain24">No disponible</strong></div>
+          <div><span>Últimos 7 días</span><strong id="quickRain7">No disponible</strong></div>
+          <div><span>Últimos 30 días</span><strong id="quickRain30">No disponible</strong></div>
+          <div><span>Observación satelital</span><strong>GFM / OPERA / VIIRS</strong></div>
+        </div>
       </section>
       <section class="decision-grid">
         <article class="card climate-map-card">
@@ -88,7 +94,7 @@
             <details class="climate-source-group" open><summary>Registros propios</summary><div class="climate-source-content"><label class="climate-source-toggle source-rain"><input id="climateRainToggle" data-point-source="rain" type="checkbox"><i aria-hidden="true"></i><span>Lluvias registradas <strong id="climateRainCount">—</strong></span></label><small>Observado propio · ubicación pública aproximada.</small></div></details>
             <details class="climate-source-group" open><summary>Hidrometría</summary><div class="climate-source-content climate-source-toggles"><label class="climate-source-toggle source-ina"><input id="climateInaToggle" data-point-source="ina" type="checkbox" checked><i aria-hidden="true"></i><span>Altura del río · INA <strong id="climateInaCount">—</strong></span></label><label class="climate-source-toggle source-snih"><input id="climateSnihToggle" data-point-source="snih" type="checkbox" checked><i aria-hidden="true"></i><span>Altura del río · SNIH <strong id="climateSnihCount">—</strong></span></label><label class="climate-source-toggle source-salto"><input id="climateSaltoToggle" data-point-source="salto" type="checkbox" checked><i aria-hidden="true"></i><span>Altura · Salto Grande <strong id="climateSaltoCount">—</strong></span></label><small>Observaciones externas; SNIH se identifica como preliminar.</small></div></details>
             <details class="climate-source-group"><summary>Satélite</summary><div class="climate-source-content"><label class="climate-raster-select"><span>Capa visible</span><select id="climateHydrologyLayer"><option value="none">Sin referencia satelital</option></select></label><label class="climate-opacity-control"><span>Opacidad <output id="climateSatelliteOpacityValue">65 %</output></span><input id="climateSatelliteOpacity" type="range" min="10" max="100" step="5" value="65"></label><small>Imagen satelital correspondiente a la fecha seleccionada.</small></div></details>
-            <details class="climate-source-group"><summary>Modelos</summary><div class="climate-source-content climate-source-toggles"><label class="climate-source-toggle source-nasa"><input id="climateNasaToggle" data-point-source="nasa" type="checkbox"><i aria-hidden="true"></i><span>Precipitación NASA POWER <strong id="climateNasaCount">—</strong></span></label><label class="climate-source-toggle source-geoglows"><input id="climateGeoglowsToggle" data-point-source="geoglows" type="checkbox"><i aria-hidden="true"></i><span>Pronóstico de caudal <strong id="climateGeoglowsCount">—</strong></span></label><small>Grilla modelada y pronóstico; no equivalen a mediciones puntuales.</small></div></details>
+            <details class="climate-source-group"><summary>Modelos</summary><div class="climate-source-content climate-source-toggles"><label class="climate-source-toggle source-nasa"><input id="climateNasaToggle" data-point-source="nasa" type="checkbox"><i aria-hidden="true"></i><span>Precipitación modelada · NASA POWER <strong id="climateNasaCount">—</strong></span></label><label class="climate-source-toggle source-geoglows"><input id="climateGeoglowsToggle" data-point-source="geoglows" type="checkbox"><i aria-hidden="true"></i><span>Caudal pronosticado · GEOGLOWS <strong id="climateGeoglowsCount">—</strong></span></label><small>Grilla modelada y pronóstico; no equivalen a mediciones puntuales.</small></div></details>
             <details class="climate-source-group climate-source-group-future"><summary>Administrativo (preparado)</summary><div class="climate-source-content"><label class="climate-source-toggle"><input type="checkbox" disabled><i aria-hidden="true"></i><span>Capas institucionales validadas · próximamente</span></label></div></details>
             <span class="climate-map-reference" id="climateHydrologyReference">Instantánea local disponible; las consultas externas se activan al abrir este modo.</span>
           </div>
@@ -97,7 +103,7 @@
               <div class="climate-map-actions"><button id="climateFullscreenButton" type="button" title="Pantalla completa">⛶ <span>Pantalla completa</span></button><button id="climateExportPngButton" type="button" title="Exportar vista como PNG">↓ <span>PNG</span></button></div>
               <div id="climateMap" role="application" aria-label="Mapa climático interactivo de Corrientes por departamentos y fuentes puntuales"></div>
               <div class="climate-map-legend" id="climateMapLegend" aria-label="Leyenda del mapa"></div>
-              <div class="climate-nature-legend" aria-label="Categorías de información"><strong>Tipo de información</strong><span><i class="category-precipitation"></i>Precipitaciones</span><span><i class="category-hydrometry"></i>Hidrometría</span><span><i class="category-satellite"></i>Observación satelital</span><span><i class="category-models"></i>Modelos y pronósticos</span></div>
+              <div class="climate-nature-legend" aria-label="Categorías de información"><strong>Tipo de información</strong><span><i class="category-precipitation"></i>Precipitaciones</span><span><i class="category-hydrometry"></i>Altura de ríos</span><span><i class="category-models"></i>Modelos / pronósticos</span><span><i class="category-satellite"></i>Observación satelital</span></div>
               <div class="climate-external-legend" id="climateExternalLegend" aria-label="Leyenda de la capa hidrológica externa" hidden></div>
               <div class="climate-map-message" id="climateMapMessage" hidden></div>
             </div>
@@ -105,11 +111,11 @@
               <span class="eyebrow">Detalle territorial</span>
               <h3 id="mapDetailDepartment">Seleccioná un departamento</h3>
               <dl class="climate-detail-list">
-                <div><dt>Fecha diaria de referencia</dt><dd id="mapDetailDailyDate">Sin dato</dd></div><div><dt>Lluvia del día de referencia</dt><dd id="mapDetailLastRain">Sin dato</dd></div>
-                <div><dt>Acumulado 7 días</dt><dd id="mapDetailRain7">Sin dato</dd></div><div><dt>Acumulado 15 días</dt><dd id="mapDetailRain15">Sin dato</dd></div><div><dt>Acumulado 30 días</dt><dd id="mapDetailRain30">Sin dato</dd></div>
-                <div class="climate-detail-wide"><dt>Cobertura 7 / 15 / 30 días</dt><dd id="mapDetailCoverage">Sin dato</dd></div><div class="climate-detail-wide"><dt>Último mes disponible</dt><dd id="mapDetailMonthlyReference">Sin dato</dd></div>
-                <div><dt>Observado mensual</dt><dd id="mapDetailMonthlyObserved">Sin dato</dd></div><div><dt>Promedio histórico mensual</dt><dd id="mapDetailMonthlyHistorical">Sin dato</dd></div><div><dt>Diferencia</dt><dd id="mapDetailMonthlyDifference">Sin dato</dd></div><div><dt>Diferencia porcentual</dt><dd id="mapDetailMonthlyDifferencePct">Sin dato</dd></div>
-                <div class="climate-detail-wide"><dt>Categoría descriptiva</dt><dd id="mapDetailMonthlyCategory">Sin dato</dd></div><div class="climate-detail-wide"><dt>Fuente</dt><dd id="mapDetailSource">Sin dato</dd></div><div class="climate-detail-wide"><dt>Actualización de datos</dt><dd id="mapDetailUpdated">Sin dato</dd></div>
+                <div class="climate-detail-wide"><dt>Período comparable</dt><dd id="mapDetailComparablePeriod">Sin dato</dd></div>
+                <div><dt>Observado del período</dt><dd id="mapDetailMonthlyObserved">Sin dato</dd></div><div><dt>Promedio histórico comparable</dt><dd id="mapDetailMonthlyHistorical">Sin dato</dd></div>
+                <div><dt>Mínimo histórico comparable</dt><dd id="mapDetailMonthlyMinimum">Sin dato</dd></div><div><dt>Máximo histórico comparable</dt><dd id="mapDetailMonthlyMaximum">Sin dato</dd></div>
+                <div><dt>Diferencia</dt><dd id="mapDetailMonthlyDifference">Sin dato</dd></div><div><dt>Diferencia porcentual</dt><dd id="mapDetailMonthlyDifferencePct">Sin dato</dd></div>
+                <div class="climate-detail-wide"><dt>Actualización de datos</dt><dd id="mapDetailUpdated">Sin dato</dd></div>
               </dl>
             </aside>
             <aside class="climate-map-detail" id="climatePointDetail" aria-live="polite" hidden>

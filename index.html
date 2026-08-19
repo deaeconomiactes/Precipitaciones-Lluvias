@@ -56,19 +56,25 @@
     <section class="dashboard-panel active" id="summaryPanel">
       <div class="panel-intro"><div><span class="eyebrow">Lectura rápida</span><h2>Resumen provincial</h2><p>Qué ocurre, dónde se concentra y qué información falta para decidir.</p></div><span class="status-pill">Último año disponible: <strong id="latestDataYear">—</strong></span></div>
       <section class="kpi-grid operational-kpis">
-        <article class="kpi blue"><span class="kpi-label">Mes de referencia</span><strong id="kpiReferenceMonth">—</strong><small id="kpiReferenceDetail">base mensual combinada</small></article>
-        <article class="kpi cyan"><span class="kpi-label">Observado del mes</span><strong id="kpiObserved">—</strong><small id="kpiObservedDetail">—</small></article>
-        <article class="kpi purple"><span class="kpi-label">Promedio histórico del mes</span><strong id="kpiHistorical">—</strong><small id="kpiHistoricalDetail">—</small></article>
-        <article class="kpi amber"><span class="kpi-label">Diferencia vs. histórico</span><strong id="kpiDifference">—</strong><small>observado - promedio histórico</small></article>
-        <article class="kpi rose"><span class="kpi-label" id="kpiAnnualAverageLabel">Promedio del año</span><strong id="kpiAnnualAverage">—</strong><small id="kpiAnnualAverageDetail">—</small></article>
-        <article class="kpi neutral"><span class="kpi-label">Promedio histórico anual comparable</span><strong id="kpiComparableHistorical">—</strong><small id="kpiComparableHistoricalDetail">Promedio histórico para el mismo período</small></article>
+        <article class="kpi blue"><span class="kpi-label">Período analizado</span><strong id="kpiReferenceMonth">—</strong><small id="kpiReferenceDetail">—</small></article>
+        <article class="kpi cyan"><span class="kpi-label" id="kpiObservedLabel">Lluvia acumulada promedio por departamento</span><strong id="kpiObserved">—</strong><small id="kpiObservedDetail">—</small></article>
+        <article class="kpi purple"><span class="kpi-label" id="kpiHistoricalLabel">Lluvia habitual por departamento</span><strong id="kpiHistorical">—</strong><small id="kpiHistoricalDetail">—</small></article>
+        <article class="kpi blue executive-comparison"><span class="kpi-label">Comparación con lo habitual</span><strong id="kpiDifference">—</strong><small id="kpiDifferenceDetail">—</small></article>
+        <article class="kpi rose"><span class="kpi-label" id="kpiAnnualAverageLabel">Lluvia acumulada promedio por departamento en el año</span><strong id="kpiAnnualAverage">—</strong><small id="kpiAnnualAverageDetail">—</small></article>
+        <article class="kpi purple executive-comparison"><span class="kpi-label">Comparación anual con lo habitual</span><strong id="kpiAnnualComparison">—</strong><small id="kpiAnnualComparisonDetail">—</small></article>
       </section>
-      <section class="method-callout compact"><strong>Nota metodológica</strong><p>Este indicador compara la lluvia observada del mes contra el promedio histórico del mismo mes calendario. Cuando se muestran todos los departamentos, se informa el promedio departamental en mm. El promedio del año incorpora todos los meses con al menos un departamento con dato; cada mes pesa por igual y la tarjeta informa la cobertura territorial utilizada. No se suman milímetros entre departamentos.</p></section>
-      <section class="availability-strip" aria-label="Indicadores operativos pendientes">
-        <div><span>Lluvia del día de referencia</span><strong id="quickRain24">No disponible</strong></div>
-        <div><span>Lluvia últimos 7 días</span><strong id="quickRain7">No disponible</strong></div>
-        <div><span>Lluvia últimos 30 días</span><strong id="quickRain30">No disponible</strong></div>
-        <div><span>Zonas inundadas observadas</span><strong>GFM / OPERA / VIIRS · fecha visible</strong></div>
+      <section class="executive-reading" aria-live="polite">
+        <span class="eyebrow" id="kpiExecutiveReadingTitle">Lectura provincial</span>
+        <p id="kpiExecutiveReading">—</p>
+      </section>
+      <section class="recent-situation" aria-labelledby="recentSituationTitle">
+        <h3 id="recentSituationTitle">Situación reciente</h3>
+        <div class="availability-strip">
+          <div><span>Lluvia del día</span><strong id="quickRain24">No disponible</strong></div>
+          <div><span>Últimos 7 días</span><strong id="quickRain7">No disponible</strong></div>
+          <div><span>Últimos 30 días</span><strong id="quickRain30">No disponible</strong></div>
+          <div><span>Observación satelital</span><strong>GFM / OPERA / VIIRS</strong></div>
+        </div>
       </section>
       <section class="decision-grid">
         <article class="card climate-map-card">

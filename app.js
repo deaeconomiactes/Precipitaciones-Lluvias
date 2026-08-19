@@ -429,19 +429,120 @@ function render() {
 }
 
 function updateKpis(f) {
-  const summary = monthlySummaryComparison(f);
-  $('kpiReferenceMonth').textContent = `${MONTHS_FULL[summary.period.month]} ${summary.period.year}`;
-  $('kpiReferenceDetail').textContent = summary.period.reason;
+  const today = new Date();
+  const summary = monthlySummaryComparison(f, today);
+  const presentation = summaryExecutivePresentation(summary, f, today);
+  $('kpiReferenceMonth').textContent = presentation.periodValue;
+  $('kpiReferenceDetail').textContent = presentation.periodDetail;
+  $('kpiObservedLabel').textContent = presentation.observedTitle;
   $('kpiObserved').textContent = formatSummaryRainfall(summary.observedMm);
-  $('kpiObservedDetail').textContent = summary.observedDetail;
+  $('kpiObservedDetail').textContent = presentation.observedDetail;
+  $('kpiHistoricalLabel').textContent = presentation.historicalTitle;
   $('kpiHistorical').textContent = formatSummaryRainfall(summary.historicalAverageMm);
-  $('kpiHistoricalDetail').textContent = summary.singleDepartment ? 'histórico del departamento para ese mes' : `promedio histórico departamental (${summary.historicalCount} depto.)`;
-  $('kpiDifference').textContent = formatSummarySignedMm(summary.differenceMm);
-  $('kpiAnnualAverageLabel').textContent = `Promedio del año ${summary.selectedYear}`;
+  $('kpiHistoricalDetail').textContent = presentation.historicalDetail;
+  $('kpiDifference').textContent = presentation.monthComparisonValue;
+  $('kpiDifferenceDetail').textContent = presentation.monthComparisonDetail;
+  $('kpiAnnualAverageLabel').textContent = presentation.annualTitle;
   $('kpiAnnualAverage').textContent = formatSummaryRainfall(summary.annualAverageMm);
-  $('kpiAnnualAverageDetail').textContent = summary.annualDetail;
-  $('kpiComparableHistorical').textContent = formatSummaryRainfall(summary.comparableHistoricalMm);
-  $('kpiComparableHistoricalDetail').textContent = summary.comparableHistoricalDetail;
+  $('kpiAnnualAverageDetail').textContent = presentation.annualDetail;
+  $('kpiAnnualComparison').textContent = presentation.annualComparisonValue;
+  $('kpiAnnualComparisonDetail').textContent = presentation.annualComparisonDetail;
+  $('kpiExecutiveReadingTitle').textContent = presentation.readingTitle;
+  $('kpiExecutiveReading').textContent = presentation.reading;
+}
+
+function summaryExecutivePresentation(summary, f, today = new Date()) {
+  const current = dailyCalendarParts(today);
+  const monthName = MONTHS_FULL[summary.period.month];
+  const monthNameLower = monthName.toLowerCase();
+  const isCurrentPartial = summary.period.year === current.year && summary.period.month === current.month;
+  const department = summary.singleDepartment ? f.departments?.[0] || '' : '';
+  const shortPeriod = isCurrentPartial ? `1–${current.day} de ${monthNameLower}` : monthNameLower;
+  const periodValue = isCurrentPartial ? `${shortPeriod} de ${summary.period.year}` : `${monthName} ${summary.period.year}`;
+  const annualDifferenceMm = Number.isFinite(summary.annualAverageMm) && Number.isFinite(summary.comparableHistoricalMm)
+    ? summary.annualAverageMm - summary.comparableHistoricalMm
+    : null;
+  const annualDifferencePct = Number.isFinite(annualDifferenceMm) && summary.comparableHistoricalMm > 0
+    ? annualDifferenceMm / summary.comparableHistoricalMm * 100
+    : null;
+  const monthComparison = executiveComparison(summary.observedMm, summary.historicalAverageMm, summary.differenceMm, summary.differencePct, 'promedio histórico');
+  const annualComparison = executiveComparison(summary.annualAverageMm, summary.comparableHistoricalMm, annualDifferenceMm, annualDifferencePct, 'promedio histórico para el mismo período');
+  const periodLead = isCurrentPartial ? `Entre el 1 y el ${current.day} de ${monthNameLower}` : `En ${monthNameLower} de ${summary.period.year}`;
+
+  return {
+    periodValue,
+    periodDetail: isCurrentPartial ? 'Período parcial' : 'Mes completo',
+    observedTitle: department ? `Lluvia acumulada en ${department}` : 'Lluvia acumulada promedio por departamento',
+    observedDetail: isCurrentPartial
+      ? `${department ? 'Entre' : 'Acumulada entre'} el 1 y el ${current.day} de ${monthNameLower}`
+      : `${department ? 'Durante' : 'Acumulada durante'} ${monthNameLower}`,
+    historicalTitle: department ? `Lluvia habitual en ${department}` : 'Lluvia habitual por departamento',
+    historicalDetail: isCurrentPartial ? `Para el mismo período: ${shortPeriod}` : `Para ${monthNameLower} completo`,
+    monthComparisonValue: monthComparison.value,
+    monthComparisonDetail: monthComparison.detail,
+    annualTitle: department
+      ? `Lluvia acumulada en ${department} en ${summary.selectedYear}`
+      : `Lluvia acumulada promedio por departamento en ${summary.selectedYear}`,
+    annualDetail: summary.selectedYear === current.year
+      ? `Acumulada desde enero hasta el ${current.day} de ${MONTHS_FULL[current.month].toLowerCase()}`
+      : `Acumulada durante los meses disponibles de ${summary.selectedYear}`,
+    annualComparisonValue: annualComparison.value,
+    annualComparisonDetail: annualComparison.detail,
+    readingTitle: department ? `Lectura de ${department}` : 'Lectura provincial',
+    reading: executiveSummaryReading({
+      periodLead,
+      department,
+      selectedYear: summary.selectedYear,
+      observedMm: summary.observedMm,
+      monthDifferencePct: summary.differencePct,
+      annualAverageMm: summary.annualAverageMm,
+      annualDifferencePct
+    })
+  };
+}
+
+function executiveComparison(observed, historical, differenceMm, differencePct, referenceLabel) {
+  if (!Number.isFinite(observed)) return { value: 'Sin dato disponible', detail: 'No hay un valor calculable para el período' };
+  if (!Number.isFinite(historical) || !Number.isFinite(differencePct)) {
+    return { value: 'Sin referencia histórica', detail: 'No hay referencia histórica suficiente para comparar' };
+  }
+  if (Math.abs(differencePct) < 0.05) {
+    return { value: '0 %', detail: `En línea con el ${referenceLabel}` };
+  }
+  const direction = differencePct > 0 ? 'por encima' : 'por debajo';
+  return {
+    value: `${differencePct > 0 ? '+' : '−'}${format(Math.abs(differencePct))} %`,
+    detail: `${format(Math.abs(differenceMm))} mm ${direction} del ${referenceLabel}`
+  };
+}
+
+function executiveSummaryReading({ periodLead, department, selectedYear, observedMm, monthDifferencePct, annualAverageMm, annualDifferencePct }) {
+  if (!Number.isFinite(observedMm) && !Number.isFinite(annualAverageMm)) return 'No hay datos disponibles para construir una lectura ejecutiva.';
+  const monthHasReference = Number.isFinite(monthDifferencePct);
+  const annualHasReference = Number.isFinite(annualDifferencePct);
+  if (!monthHasReference && !annualHasReference) return 'No hay referencia histórica suficiente para realizar la comparación.';
+
+  const sentences = [];
+  if (!Number.isFinite(observedMm)) {
+    sentences.push(`${periodLead}, no hay datos disponibles para el período.`);
+  } else if (!monthHasReference) {
+    sentences.push(`${periodLead}, no hay referencia histórica suficiente para comparar las precipitaciones.`);
+  } else {
+    const monthDirection = Math.abs(monthDifferencePct) < 0.05 ? 'en línea con' : monthDifferencePct > 0 ? `${format(Math.abs(monthDifferencePct))} % por encima de` : `${format(Math.abs(monthDifferencePct))} % por debajo de`;
+    const subject = department ? `${department} registra precipitaciones` : 'las precipitaciones se ubican';
+    sentences.push(`${periodLead}, ${subject} ${monthDirection} lo habitual.`);
+  }
+
+  if (!Number.isFinite(annualAverageMm)) {
+    sentences.push(`No hay datos disponibles para resumir ${selectedYear}.`);
+  } else if (!annualHasReference) {
+    sentences.push(`En lo que va de ${selectedYear}, no hay referencia histórica suficiente para realizar la comparación anual.`);
+  } else {
+    const annualDirection = Math.abs(annualDifferencePct) < 0.05 ? 'en línea con' : annualDifferencePct > 0 ? `${format(Math.abs(annualDifferencePct))} % por encima de` : `${format(Math.abs(annualDifferencePct))} % por debajo de`;
+    const annualSubject = department ? `la lluvia acumulada de ${department}` : 'la lluvia promedio por departamento';
+    sentences.push(`En lo que va de ${selectedYear}, ${annualSubject} se mantiene ${annualDirection} su referencia histórica.`);
+  }
+  return sentences.join(' ');
 }
 
 function monthlySummaryComparison(f, today = new Date()) {

@@ -55,6 +55,36 @@ const checks = vm.runInContext(`(() => {
   const closedDecember = getDepartmentMonthlyDeviationRows({ departments: ["A"], years: [2024], months: [11] }, argentinaNoon("2026-08-18"));
   const october = monthlySummaryComparison({ departments: null, years: [2026], months: [9] }, argentinaNoon("2026-08-18"));
   const historical = monthlySummaryComparison({ departments: null, years: [2024], months: null }, argentinaNoon("2026-08-18"));
+  const augustPresentation = summaryExecutivePresentation(august, { departments: null, years: [2026], months: null }, argentinaNoon("2026-08-18"));
+  const departmentAugust = monthlySummaryComparison({ departments: ["A"], years: [2026], months: null }, argentinaNoon("2026-08-18"));
+  const departmentPresentation = summaryExecutivePresentation(departmentAugust, { departments: ["A"], years: [2026], months: null }, argentinaNoon("2026-08-18"));
+  const closedSummary = monthlySummaryComparison({ departments: null, years: [2024], months: [11] }, argentinaNoon("2026-08-18"));
+  const closedPresentation = summaryExecutivePresentation(closedSummary, { departments: null, years: [2024], months: [11] }, argentinaNoon("2026-08-18"));
+  const positiveMonthNegativeYear = summaryExecutivePresentation({
+    ...august,
+    observedMm: 110,
+    historicalAverageMm: 100,
+    differenceMm: 10,
+    differencePct: 10,
+    annualAverageMm: 80,
+    comparableHistoricalMm: 100
+  }, { departments: null, years: [2026], months: null }, argentinaNoon("2026-08-18"));
+  const negativeMonthPositiveYear = summaryExecutivePresentation({
+    ...august,
+    observedMm: 80,
+    historicalAverageMm: 100,
+    differenceMm: -20,
+    differencePct: -20,
+    annualAverageMm: 120,
+    comparableHistoricalMm: 100
+  }, { departments: null, years: [2026], months: null }, argentinaNoon("2026-08-18"));
+  const noReferencePresentation = summaryExecutivePresentation({
+    ...august,
+    historicalAverageMm: null,
+    differenceMm: null,
+    differencePct: null,
+    comparableHistoricalMm: null
+  }, { departments: null, years: [2026], months: null }, argentinaNoon("2026-08-18"));
   state.monthlyRainfall.push(
     row("A", 2027, { 0: 20 }, { 0: "daily_derived" }, { 0: { daysWithRecords: 10, daysInMonth: 31 } }),
     row("B", 2027, { 0: 40 }, { 0: "daily_derived" }, { 0: { daysWithRecords: 10, daysInMonth: 31 } })
@@ -87,7 +117,13 @@ const checks = vm.runInContext(`(() => {
     partialHistorical: partial.historicalAverageMm,
     partialDifference: partial.differenceMm,
     partialCategory: partial.category,
-    augustDetail: august.observedDetail
+    augustDetail: august.observedDetail,
+    augustPresentation,
+    departmentPresentation,
+    closedPresentation,
+    positiveMonthNegativeYear,
+    negativeMonthPositiveYear,
+    noReferencePresentation
   };
 })()`, context);
 
@@ -135,14 +171,41 @@ if (checks.partialHistorical !== null || checks.partialDifference !== null || ch
 if (!checks.augustDetail.includes("Acumulado parcial al 18/08/2026") || !checks.augustDetail.includes("cobertura real 2/36")) {
   throw new Error(`El mes actual no informa corte y cobertura real: ${checks.augustDetail}`);
 }
+if (checks.augustPresentation.periodValue !== "1–18 de agosto de 2026" || checks.augustPresentation.periodDetail !== "Período parcial") {
+  throw new Error(`El período parcial ejecutivo es incorrecto: ${JSON.stringify(checks.augustPresentation)}`);
+}
+if (checks.augustPresentation.observedTitle !== "Lluvia acumulada promedio por departamento" || checks.augustPresentation.historicalTitle !== "Lluvia habitual por departamento" || checks.augustPresentation.annualTitle !== "Lluvia acumulada promedio por departamento en 2026") {
+  throw new Error(`Los títulos provinciales no son ejecutivos: ${JSON.stringify(checks.augustPresentation)}`);
+}
+if (checks.departmentPresentation.observedTitle !== "Lluvia acumulada en A" || checks.departmentPresentation.historicalTitle !== "Lluvia habitual en A" || checks.departmentPresentation.annualTitle !== "Lluvia acumulada en A en 2026" || checks.departmentPresentation.readingTitle !== "Lectura de A") {
+  throw new Error(`Los títulos departamentales no responden al filtro: ${JSON.stringify(checks.departmentPresentation)}`);
+}
+if (checks.closedPresentation.periodValue !== "Diciembre 2024" || checks.closedPresentation.periodDetail !== "Mes completo" || checks.closedPresentation.historicalDetail !== "Para diciembre completo") {
+  throw new Error(`El mes cerrado no tiene una presentación limpia: ${JSON.stringify(checks.closedPresentation)}`);
+}
+if (checks.positiveMonthNegativeYear.monthComparisonValue !== "+10 %" || !checks.positiveMonthNegativeYear.monthComparisonDetail.includes("por encima") || !checks.positiveMonthNegativeYear.annualComparisonValue.startsWith("−20")) {
+  throw new Error(`La comparación positiva mensual / negativa anual es incorrecta: ${JSON.stringify(checks.positiveMonthNegativeYear)}`);
+}
+if (checks.negativeMonthPositiveYear.monthComparisonValue !== "−20 %" || !checks.negativeMonthPositiveYear.monthComparisonDetail.includes("por debajo") || !checks.negativeMonthPositiveYear.annualComparisonValue.startsWith("+20")) {
+  throw new Error(`La comparación negativa mensual / positiva anual es incorrecta: ${JSON.stringify(checks.negativeMonthPositiveYear)}`);
+}
+if (!checks.positiveMonthNegativeYear.reading.includes("10 % por encima") || !checks.positiveMonthNegativeYear.reading.includes("20 % por debajo")) {
+  throw new Error(`La lectura ejecutiva no combina mes y año: ${checks.positiveMonthNegativeYear.reading}`);
+}
+if (checks.noReferencePresentation.monthComparisonValue !== "Sin referencia histórica" || checks.noReferencePresentation.annualComparisonValue !== "Sin referencia histórica" || checks.noReferencePresentation.reading !== "No hay referencia histórica suficiente para realizar la comparación.") {
+  throw new Error(`El caso sin referencia no está resguardado: ${JSON.stringify(checks.noReferencePresentation)}`);
+}
 
 const html = fs.readFileSync("index.html", "utf8");
-for (const removed of ["Avance sobre histórico", "id=\"kpiMonthlyCategory\""]) {
-  if (html.includes(removed)) throw new Error(`La tarjeta eliminada sigue presente: ${removed}`);
+const summaryMarkup = html.slice(html.indexOf('class="kpi-grid operational-kpis"'), html.indexOf('class="decision-grid"'));
+for (const removed of ["Avance sobre histórico", "id=\"kpiMonthlyCategory\"", "Mes de referencia", "Observado del mes", "Diferencia vs. histórico", "Promedio histórico anual comparable", "Nota metodológica"]) {
+  if (summaryMarkup.includes(removed)) throw new Error(`El detalle metodológico anterior sigue en la portada: ${removed}`);
 }
-for (const required of ["Promedio del año", "Promedio histórico anual comparable"]) {
-  if (!html.includes(required)) throw new Error(`Falta la tarjeta: ${required}`);
+for (const required of ["Período analizado", "Lluvia acumulada promedio por departamento", "Lluvia habitual por departamento", "Comparación con lo habitual", "Comparación anual con lo habitual", "Lectura provincial", "Situación reciente", "Observación satelital"]) {
+  if (!summaryMarkup.includes(required)) throw new Error(`Falta el elemento ejecutivo: ${required}`);
 }
+const css = fs.readFileSync("operational.css", "utf8");
+if (!css.includes('.operational-kpis .executive-comparison strong')) throw new Error('Las comparaciones principales no tienen mayor jerarquía visual.');
 
 console.log("Resumen provincial: período actual/seleccionado y faltantes validados.");
 console.log("Promedios anuales: meses válidos y referencia histórica comparable validados.");

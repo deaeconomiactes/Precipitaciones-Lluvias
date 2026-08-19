@@ -284,6 +284,46 @@ main {
   grid-template-columns: repeat(6, minmax(0, 1fr));
 }
 
+.operational-kpis .executive-comparison {
+  background: linear-gradient(145deg, #eef7fa, #ffffff 72%);
+  border-color: rgba(11,111,141,.24);
+  box-shadow: 0 14px 30px rgba(11,111,141,.12);
+}
+
+.operational-kpis .executive-comparison strong {
+  font-size: 1.68rem;
+  letter-spacing: -.035em;
+}
+
+.executive-reading {
+  margin: 0 0 18px;
+  padding: 16px 18px;
+  border: 1px solid rgba(11,111,141,.16);
+  border-left: 5px solid var(--blue);
+  border-radius: 16px;
+  background: linear-gradient(135deg, #f4fafb, #ffffff);
+  box-shadow: 0 9px 22px rgba(22,61,56,.06);
+}
+
+.executive-reading p {
+  margin-top: 6px;
+  color: var(--text);
+  font-size: .9rem;
+  line-height: 1.55;
+}
+
+.recent-situation {
+  margin-bottom: 20px;
+}
+
+.recent-situation h3 {
+  margin: 0 0 9px;
+  color: #5d756f;
+  font-size: .68rem;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+
 .daily-kpi-grid {
   display: grid;
   gap: 14px;
@@ -294,7 +334,7 @@ main {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 12px;
-  margin: 0 0 20px;
+  margin: 0;
 }
 
 .availability-strip div {
@@ -317,7 +357,8 @@ main {
 }
 
 .availability-strip strong {
-  color: #8a5b07;
+  color: var(--text);
+  font-size: .76rem;
 }
 
 .kpi,

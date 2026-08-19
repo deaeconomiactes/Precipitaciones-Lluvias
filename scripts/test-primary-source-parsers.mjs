@@ -7,7 +7,7 @@ import {
   parseSaltoStations,
   selectSnihStations
 } from '../lib/primary-hydrology.mjs';
-import { fetchSatelliteFloodStatus, granuleNominalDate } from '../lib/satellite-flood.mjs';
+import { fetchSatelliteFloodStatus, granuleNominalDate, recentAvailableDates } from '../lib/satellite-flood.mjs';
 
 function assert(condition, message) {
   if (!condition) throw new Error(message);
@@ -80,29 +80,35 @@ assert(saltoObservation?.valueM === 4.25 && saltoObservation.previousValueM === 
 assert(saltoObservation.trend === 'sube' && saltoObservation.timeseries.length === 2, 'Salto Grande no construyó correctamente tendencia y serie.');
 
 const cmrEntries = {
-  'C2949811996-POCLOUD': {
-    producer_granule_id: 'OPERA_SCENE',
-    time_start: '2026-08-09T09:13:00Z',
-    time_end: '2026-08-09T09:14:00Z'
-  },
-  'C4064643747-LANCEMODIS': {
-    producer_granule_id: 'VCDWD_L3_F3_NRT.A2026230.h12v11.002.tif',
-    time_start: '2026-08-18T23:00:00Z',
-    time_end: '2026-08-19T23:00:00Z'
-  }
+  'C2949811996-POCLOUD': [
+    { producer_granule_id: 'OPERA_SCENE', time_start: '2026-08-09T09:13:00Z', time_end: '2026-08-09T09:14:00Z' },
+    { producer_granule_id: 'OPERA_OLDER', time_start: '2026-08-06T08:00:00Z', time_end: '2026-08-06T08:01:00Z' }
+  ],
+  'C4064643747-LANCEMODIS': [
+    { producer_granule_id: 'VCDWD_L3_F3_NRT.A2026230.h12v11.002.tif', time_start: '2026-08-18T23:00:00Z', time_end: '2026-08-19T23:00:00Z' },
+    { producer_granule_id: 'VCDWD_L3_F3_NRT.A2026229.h12v11.002.tif', time_start: '2026-08-17T23:00:00Z', time_end: '2026-08-18T23:00:00Z' },
+    { producer_granule_id: 'VCDWD_L3_F3_NRT.A2026223.h12v11.002.tif', time_start: '2026-08-11T23:00:00Z', time_end: '2026-08-12T23:00:00Z' },
+    { producer_granule_id: 'VCDWD_L3_F3_NRT.A2026222.h12v11.002.tif', time_start: '2026-08-10T23:00:00Z', time_end: '2026-08-11T23:00:00Z' }
+  ]
 };
 const fetchImpl = async (url, options = {}) => {
   if (String(url).includes('cmr.earthdata.nasa.gov')) {
     const collectionId = new URL(url).searchParams.get('collection_concept_id');
     assert(String(url).includes('bounding_box=-59.9%2C-30.8%2C-55.5%2C-27'), 'NASA CMR no recibió el área de Corrientes.');
-    return { ok: true, json: async () => ({ feed: { entry: [cmrEntries[collectionId]] } }) };
+    assert(new URL(url).searchParams.get('page_size') === '200', 'NASA CMR no solicita suficientes escenas recientes.');
+    return { ok: true, json: async () => ({ feed: { entry: cmrEntries[collectionId] } }) };
   }
   if (String(url).includes('stac.eodc.eu')) {
     const body = JSON.parse(options.body);
     assert(body.collections[0] === 'GFM' && body.bbox.join(',') === '-59.9,-30.8,-55.5,-27', 'GFM STAC no recibió colección y área correctas.');
+    if (body.limit === 100) assert(body.datetime?.includes('2026-08-04') && body.datetime.includes('2026-08-12'), 'GFM STAC no acotó la consulta a siete días desde la última escena.');
     return {
       ok: true,
-      json: async () => ({ features: [{ id: 'GFM_SCENE', properties: { datetime: '2026-08-11T08:57:00Z' } }] })
+      json: async () => ({ features: [
+        { id: 'GFM_SCENE', properties: { datetime: '2026-08-11T08:57:00Z' } },
+        { id: 'GFM_OLDER', properties: { datetime: '2026-08-08T08:57:00Z' } },
+        { id: 'GFM_OUTSIDE_WINDOW', properties: { datetime: '2026-08-03T08:57:00Z' } }
+      ] })
     };
   }
   throw new Error(`URL simulada inesperada: ${url}`);
@@ -115,6 +121,10 @@ assert(granuleNominalDate('VCDWD_L3_F3_NRT.A2026230.h12v11.002.tif') === '2026-0
 assert(satellite.layers.nasaViirsFlood.date === '2026-08-18', 'VIIRS no usa la fecha nominal/inicial como fecha WMS.');
 assert(satellite.layers.nasaViirsFlood.date === satellite.layers.nasaViirsFlood.acquiredAt.slice(0, 10), 'La fecha visible de VIIRS y TIME quedaron desfasados.');
 assert(satellite.layers.nasaViirsFlood.date !== satellite.layers.nasaViirsFlood.endAt.slice(0, 10), 'VIIRS volvió a usar time_end como fecha WMS.');
+assert(JSON.stringify(satellite.layers.nasaViirsFlood.availableDates) === JSON.stringify(['2026-08-18', '2026-08-17', '2026-08-11']), 'VIIRS no limita sus fechas reales a siete días hacia atrás.');
+assert(JSON.stringify(satellite.layers.operaS1.availableDates) === JSON.stringify(['2026-08-09', '2026-08-06']), 'OPERA fabricó fechas intermedias o perdió escenas reales.');
+assert(JSON.stringify(satellite.layers.gfmObservedFlood.availableDates) === JSON.stringify(['2026-08-11', '2026-08-08']), 'GFM fabricó fechas intermedias o excedió la ventana operativa.');
+assert(JSON.stringify(recentAvailableDates(['2026-08-18', '2026-08-11', '2026-08-10'])) === JSON.stringify(['2026-08-18', '2026-08-11']), 'El límite temporal no incluye exactamente siete días ni excluye fechas anteriores.');
 assert(satellite.layers.gfmObservedFlood.sceneId === 'GFM_SCENE', 'GFM perdió el identificador STAC.');
 
 console.log('Parsers primarios: filtros SNIH, SOAP Salto Grande y centinelas validados.');

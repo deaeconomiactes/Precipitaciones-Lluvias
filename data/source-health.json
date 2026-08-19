@@ -2,17 +2,17 @@
   {
     "id": "rain",
     "status": "OK",
-    "lastUpdate": "2026-08-16",
-    "lastValidation": "2026-08-18T11:51:13.136Z",
+    "lastUpdate": "2026-08-18",
+    "lastValidation": "2026-08-19T11:51:01.526Z",
     "responseTimeMs": null,
     "availability": "Instantánea local disponible",
-    "message": "45 registros propios"
+    "message": "48 registros propios"
   },
   {
     "id": "ina",
     "status": "OK",
-    "lastUpdate": "2026-08-17T11:50:39Z",
-    "lastValidation": "2026-08-18T11:51:13.136Z",
+    "lastUpdate": "2026-08-19T11:50:53Z",
+    "lastValidation": "2026-08-19T11:51:01.526Z",
     "responseTimeMs": null,
     "availability": "Instantánea local disponible",
     "message": "36 lecturas observadas"
@@ -20,17 +20,17 @@
   {
     "id": "snih",
     "status": "OK",
-    "lastUpdate": "2026-08-17T11:50:39Z",
-    "lastValidation": "2026-08-18T11:51:13.136Z",
+    "lastUpdate": "2026-08-19T11:50:53Z",
+    "lastValidation": "2026-08-19T11:51:01.526Z",
     "responseTimeMs": null,
     "availability": "Instantánea local disponible",
-    "message": "26 lecturas preliminares"
+    "message": "24 lecturas preliminares"
   },
   {
     "id": "salto",
     "status": "OK",
-    "lastUpdate": "2026-08-17T11:50:39Z",
-    "lastValidation": "2026-08-18T11:51:13.136Z",
+    "lastUpdate": "2026-08-19T11:50:53Z",
+    "lastValidation": "2026-08-19T11:51:01.526Z",
     "responseTimeMs": null,
     "availability": "Instantánea local disponible",
     "message": "11 lecturas observadas"
@@ -39,7 +39,7 @@
     "id": "nasa",
     "status": "OK",
     "lastUpdate": "2026-08-15",
-    "lastValidation": "2026-08-18T11:51:13.136Z",
+    "lastValidation": "2026-08-19T11:51:01.526Z",
     "responseTimeMs": null,
     "availability": "Instantánea local disponible",
     "message": "28 celdas modeladas"
@@ -47,8 +47,8 @@
   {
     "id": "geoglows",
     "status": "OK",
-    "lastUpdate": "2026-08-17T11:50:39Z",
-    "lastValidation": "2026-08-18T11:51:13.136Z",
+    "lastUpdate": "2026-08-19T11:50:53Z",
+    "lastValidation": "2026-08-19T11:51:01.526Z",
     "responseTimeMs": null,
     "availability": "Instantánea local disponible",
     "message": "48 nodos disponibles"
@@ -56,8 +56,8 @@
   {
     "id": "viirs",
     "status": "OK",
-    "lastUpdate": "2026-08-17",
-    "lastValidation": "2026-08-18T11:51:13.136Z",
+    "lastUpdate": "2026-08-19",
+    "lastValidation": "2026-08-19T11:51:01.526Z",
     "responseTimeMs": null,
     "availability": "Instantánea local disponible",
     "message": "1 referencia satelital"
@@ -66,7 +66,7 @@
     "id": "opera",
     "status": "OK",
     "lastUpdate": "2026-08-16",
-    "lastValidation": "2026-08-18T11:51:13.136Z",
+    "lastValidation": "2026-08-19T11:51:01.526Z",
     "responseTimeMs": null,
     "availability": "Instantánea local disponible",
     "message": "1 referencia satelital"
@@ -75,7 +75,7 @@
     "id": "gfm",
     "status": "OK",
     "lastUpdate": "2026-08-16",
-    "lastValidation": "2026-08-18T11:51:13.136Z",
+    "lastValidation": "2026-08-19T11:51:01.526Z",
     "responseTimeMs": null,
     "availability": "Instantánea local disponible",
     "message": "1 referencia satelital"

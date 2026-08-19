@@ -2539,6 +2539,107 @@ async function mapWithConcurrency(items, limit, mapper) {
   return results;
 }
 
+function emptyViirsRasterCounts() {
+  return { tileCount: 0, transparent: 0, surfaceWater: 0, recurringFlood: 0, flood: 0, insufficientData: 0, other: 0 };
+}
+
+function analyzeViirsRasterTile(tile) {
+  const canvas = document.createElement('canvas');
+  canvas.width = tile.naturalWidth || tile.width || 256;
+  canvas.height = tile.naturalHeight || tile.height || 256;
+  const context = canvas.getContext('2d', { willReadFrequently: true });
+  if (!context) return null;
+  try {
+    context.drawImage(tile, 0, 0, canvas.width, canvas.height);
+    const pixels = context.getImageData(0, 0, canvas.width, canvas.height).data;
+    const counts = emptyViirsRasterCounts();
+    counts.tileCount = 1;
+    for (let index = 0; index < pixels.length; index += 4) {
+      const alpha = pixels[index + 3];
+      if (!alpha) {
+        counts.transparent += 1;
+        continue;
+      }
+      const red = pixels[index];
+      const green = pixels[index + 1];
+      const blue = pixels[index + 2];
+      if (red === 50 && green === 210 && blue === 245) counts.surfaceWater += 1;
+      else if (red === 255 && green === 255 && blue === 0) counts.recurringFlood += 1;
+      else if (red === 250 && green === 30 && blue === 36) counts.flood += 1;
+      else if (red === 175 && green === 175 && blue === 175) counts.insufficientData += 1;
+      else counts.other += 1;
+    }
+    return counts;
+  } catch (error) {
+    console.warn(`No se pudo clasificar una tesela VIIRS: ${error.message}`);
+    return null;
+  }
+}
+
+function mergeViirsRasterCounts(target, source) {
+  if (!source) return target;
+  Object.keys(target).forEach(key => { target[key] += Number(source[key]) || 0; });
+  return target;
+}
+
+function classifyViirsRasterCoverage(counts = emptyViirsRasterCounts()) {
+  const classified = counts.surfaceWater + counts.recurringFlood + counts.flood + counts.insufficientData + counts.other;
+  if (!counts.tileCount) {
+    return { state: 'pending', message: 'Producto disponible — verificando cobertura raster para Corrientes.', counts };
+  }
+  if (!classified) {
+    return { state: 'no-coverage', message: 'Producto disponible globalmente — sin cobertura raster para Corrientes en esta fecha.', counts };
+  }
+  const hasWater = counts.surfaceWater > 0;
+  const hasFlood = counts.flood > 0 || counts.recurringFlood > 0;
+  const insufficientDominant = counts.insufficientData / classified >= 0.5;
+  if (insufficientDominant && (hasWater || hasFlood)) {
+    return { state: 'insufficient-with-detections', message: 'Cobertura insuficiente predominante — se observan pequeñas áreas clasificadas como agua e inundación.', counts };
+  }
+  if (insufficientDominant) {
+    return { state: 'insufficient', message: 'Cobertura insuficiente — interpretación limitada.', counts };
+  }
+  if (!hasFlood) {
+    return { state: 'no-relevant-areas', message: 'Producto disponible — sin áreas relevantes detectadas.', counts };
+  }
+  return {
+    state: 'detections',
+    message: hasWater ? 'Se observan áreas clasificadas como agua e inundación.' : 'Se observan áreas clasificadas como inundación.',
+    counts
+  };
+}
+
+function wireViirsRasterCoverage(layer, runtimeConfig) {
+  if (runtimeConfig.id !== 'nasaViirsFlood') return;
+  let aggregate = emptyViirsRasterCounts();
+  const refreshDetail = () => {
+    if (state.climateMap.activeHydrologyLayer === runtimeConfig.id) renderSatelliteLayerDetail(runtimeConfig);
+  };
+  layer.on('loading', () => {
+    aggregate = emptyViirsRasterCounts();
+    runtimeConfig.rasterCoverage = classifyViirsRasterCoverage(aggregate);
+    refreshDetail();
+  });
+  layer.on('tileload', event => mergeViirsRasterCounts(aggregate, analyzeViirsRasterTile(event.tile)));
+  layer.on('load', () => {
+    runtimeConfig.rasterCoverage = classifyViirsRasterCoverage(aggregate);
+    refreshDetail();
+  });
+}
+
+function satelliteLayerUsesWmsDisplayDate(layerConfig) {
+  return layerConfig.id === 'nasaViirsFlood' || layerConfig.displayTimeMode === 'wms-date';
+}
+
+function satelliteLayerDateLabel(layerConfig) {
+  if (satelliteLayerUsesWmsDisplayDate(layerConfig)) {
+    return layerConfig.resolvedTime ? formatDate(layerConfig.resolvedTime) : 'Fecha no disponible';
+  }
+  return layerConfig.acquiredAt
+    ? formatApiDateTime(layerConfig.acquiredAt)
+    : (layerConfig.resolvedTime ? formatDate(layerConfig.resolvedTime) : 'Fecha no disponible');
+}
+
 function initializePointRasterLayers() {
   const select = $('climateHydrologyLayer');
   state.climateMap.wmsLayers = new Map();
@@ -2567,9 +2668,11 @@ function initializePointRasterLayers() {
       acquiredAt: satelliteStatus?.acquiredAt || null,
       sceneId: satelliteStatus?.sceneId || '',
       available: satelliteStatus?.available !== false,
-      sourceUrl: satelliteStatus?.sourceUrl || ''
+      sourceUrl: satelliteStatus?.sourceUrl || '',
+      rasterCoverage: null
     };
     const layer = L.tileLayer.wms(layerConfig.serviceUrl, options);
+    wireViirsRasterCoverage(layer, runtimeConfig);
     layer.on('tileerror', () => showClimateMapMessage(`La capa ${layerConfig.shortLabel || layerConfig.label} no devolvió una o más teselas.`, 5000));
     state.climateMap.wmsLayers.set(layerConfig.id, { layer, config: runtimeConfig });
     state.climateMap.satelliteOpacities.set(layerConfig.id, initialOpacity);
@@ -2595,6 +2698,7 @@ function applySatelliteStatusToRasterLayers(payload) {
     entry.config.sceneId = status.sceneId || '';
     entry.config.available = status.available !== false;
     entry.config.sourceUrl = status.sourceUrl || '';
+    if (entry.config.id === 'nasaViirsFlood') entry.config.rasterCoverage = null;
     if (resolvedWmsTime) entry.layer.setParams({ time: resolvedWmsTime });
   });
   const selected = state.climateMap.wmsLayers.get(state.climateMap.activeHydrologyLayer);
@@ -2664,13 +2768,18 @@ function selectClimateHydrologyLayer(layerId) {
 }
 
 function renderSatelliteLayerDetail(layerConfig) {
-  const hasDate = layerConfig.displayTimeMode === 'wms-date' ? Boolean(layerConfig.resolvedTime) : Boolean(layerConfig.acquiredAt || layerConfig.resolvedTime);
+  const usesWmsDisplayDate = satelliteLayerUsesWmsDisplayDate(layerConfig);
+  const hasDate = usesWmsDisplayDate ? Boolean(layerConfig.resolvedTime) : Boolean(layerConfig.acquiredAt || layerConfig.resolvedTime);
   const available = layerConfig.available !== false && hasDate;
   const executiveDescription = {
     nasaViirsFlood: 'Áreas clasificadas por el satélite como agua superficial, inundación detectada o cobertura insuficiente.',
     operaS1: 'Superficies con agua abierta y vegetación inundada identificadas mediante observación satelital.',
     gfmObservedFlood: 'Áreas donde el producto satelital identifica extensión de inundación y agua observada.'
   }[layerConfig.id] || 'Información clasificada por el producto satelital seleccionado.';
+  const viirsCoverageDescription = layerConfig.id === 'nasaViirsFlood'
+    ? (layerConfig.rasterCoverage?.message || 'Producto disponible — verificando cobertura raster para Corrientes.')
+    : null;
+  const visibleDescription = viirsCoverageDescription || executiveDescription;
   renderMapPointDetail({
     presentationType: 'satellite',
     sourceId: ({ operaS1: 'opera', nasaViirsFlood: 'viirs', gfmObservedFlood: 'gfm' })[layerConfig.id],
@@ -2680,12 +2789,12 @@ function renderSatelliteLayerDetail(layerConfig) {
     nature: 'Satelital',
     availability: available ? 'Escena disponible' : 'Datos insuficientes',
     type: 'Observación satelital',
-    value: available ? executiveDescription : 'Datos insuficientes',
-    date: layerConfig.displayTimeMode === 'wms-date' ? (layerConfig.resolvedTime ? formatDate(layerConfig.resolvedTime) : 'Datos insuficientes') : (layerConfig.acquiredAt ? formatApiDateTime(layerConfig.acquiredAt) : (layerConfig.resolvedTime ? formatDate(layerConfig.resolvedTime) : 'Datos insuficientes')),
+    value: available ? visibleDescription : 'Datos insuficientes',
+    date: hasDate ? satelliteLayerDateLabel(layerConfig) : 'Datos insuficientes',
     location: 'Área de Corrientes intersectada por la escena',
-    status: available ? executiveDescription : 'Datos insuficientes',
-    context: available ? 'La imagen evidencia áreas con agua superficial dentro del área visualizada.' : 'No hay información suficiente para interpretar la imagen seleccionada.',
-    updated: layerConfig.displayTimeMode === 'wms-date' ? (layerConfig.resolvedTime || '') : (layerConfig.acquiredAt || layerConfig.resolvedTime || '')
+    status: available ? visibleDescription : 'Datos insuficientes',
+    context: available ? visibleDescription : 'No hay información suficiente para interpretar la imagen seleccionada.',
+    updated: usesWmsDisplayDate ? (layerConfig.resolvedTime || '') : (layerConfig.acquiredAt || layerConfig.resolvedTime || '')
   });
 }
 
@@ -2702,11 +2811,9 @@ function renderClimateExternalLegend(layerConfig) {
     nasaViirsFlood: 'VIIRS · inundación (3 días)',
     gfmObservedFlood: 'GFM · inundación observada'
   })[layerConfig.id] || layerConfig.shortLabel || layerConfig.label;
-  const date = layerConfig.displayTimeMode !== 'wms-date' && layerConfig.acquiredAt
-    ? formatApiDateTime(layerConfig.acquiredAt)
-    : (layerConfig.resolvedTime ? formatDate(layerConfig.resolvedTime) : 'Fecha no disponible');
+  const date = satelliteLayerDateLabel(layerConfig);
   const relevantItems = Array.isArray(layerConfig.legendItems)
-    ? layerConfig.legendItems.filter(item => item.emphasis !== 'auxiliary')
+    ? layerConfig.legendItems.filter(item => layerConfig.id === 'nasaViirsFlood' || item.emphasis !== 'auxiliary')
     : [];
   const items = relevantItems.length
     ? `<div class="climate-raster-legend-items">${relevantItems.map(item => `<span><i style="--legend-color:${escapeHtml(item.color)}"></i>${escapeHtml(item.label)}</span>`).join('')}</div>`

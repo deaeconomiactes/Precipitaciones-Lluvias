@@ -126,7 +126,7 @@ if (timestampChecks.difference !== '-36 mm' || timestampChecks.differencePct !==
 if (JSON.stringify(timestampChecks.rainColors) !== JSON.stringify(['#dceefa','#a9d3ef','#5aa7d6','#197bb7','#084f83','#d7dedd'])) throw Error(`La escala azul relativa es incorrecta: ${timestampChecks.rainColors}`);
 if (app.includes("element.hidden = true;\n  element.innerHTML = '';\n  return;\n  if (!layerConfig)")) throw Error('La leyenda satelital permanece bloqueada');
 const externalLegendSource = app.slice(app.indexOf('function renderClimateExternalLegend'), app.indexOf('function climatePointBoundaryStyle'));
-for (const requirement of ["item.emphasis !== 'auxiliary'", 'climate-external-legend-head', 'GFM · inundación observada', 'formatApiDateTime(layerConfig.acquiredAt)', 'formatDate(layerConfig.resolvedTime)']) {
+for (const requirement of ["layerConfig.id === 'nasaViirsFlood' || item.emphasis !== 'auxiliary'", 'climate-external-legend-head', 'GFM · inundación observada', 'satelliteLayerDateLabel(layerConfig)']) {
   if (!externalLegendSource.includes(requirement)) throw Error(`La leyenda satelital compacta perdió un dato clave: ${requirement}`);
 }
 for (const removed of ['layerConfig.sceneId','layerConfig.spatialResolution','legendUrls','Naturaleza: satelital','No se convierte en estaciones']) {
@@ -138,6 +138,26 @@ const satelliteConfig = fs.readFileSync('data/external-api-config.json', 'utf8')
 for (const category of ['Agua superficial','Inundación recurrente','Inundación detectada','Datos insuficientes']) {
   if (!satelliteConfig.includes(category)) throw Error(`Falta la clase oficial VIIRS ${category}`);
 }
+const viirsChecks = vm.runInContext(`(() => {
+  const transparent = classifyViirsRasterCoverage({ tileCount: 1, transparent: 65536, surfaceWater: 0, recurringFlood: 0, flood: 0, insufficientData: 0, other: 0 });
+  const insufficient = classifyViirsRasterCoverage({ tileCount: 1, transparent: 100, surfaceWater: 0, recurringFlood: 0, flood: 0, insufficientData: 900, other: 0 });
+  const audited = classifyViirsRasterCoverage({ tileCount: 1, transparent: 100, surfaceWater: 8, recurringFlood: 1, flood: 1, insufficientData: 890, other: 0 });
+  const noRelevant = classifyViirsRasterCoverage({ tileCount: 1, transparent: 100, surfaceWater: 50, recurringFlood: 0, flood: 0, insufficientData: 10, other: 0 });
+  const layerConfig = { id: 'nasaViirsFlood', resolvedTime: '2026-08-18', acquiredAt: '2026-08-18T23:00:00.000Z' };
+  return {
+    transparent,
+    insufficient,
+    audited,
+    noRelevant,
+    displayDate: satelliteLayerDateLabel(layerConfig),
+    time: layerConfig.resolvedTime
+  };
+})()`, context);
+if (viirsChecks.transparent.state !== 'no-coverage' || !viirsChecks.transparent.message.includes('sin cobertura raster')) throw Error('VIIRS no identifica una imagen totalmente transparente.');
+if (viirsChecks.insufficient.state !== 'insufficient' || !viirsChecks.insufficient.message.includes('interpretación limitada')) throw Error('VIIRS no identifica el predominio de Datos insuficientes.');
+if (viirsChecks.audited.state !== 'insufficient-with-detections' || viirsChecks.audited.message !== 'Cobertura insuficiente predominante — se observan pequeñas áreas clasificadas como agua e inundación.') throw Error('VIIRS no describe correctamente el caso auditado del 18/08.');
+if (viirsChecks.noRelevant.state !== 'no-relevant-areas' || !viirsChecks.noRelevant.message.includes('sin áreas relevantes detectadas')) throw Error('VIIRS no distingue cobertura sin Flood/Recurring Flood.');
+if (viirsChecks.displayDate !== '18/8/2026' || viirsChecks.time !== '2026-08-18') throw Error(`La fecha visible y TIME de VIIRS no coinciden: ${JSON.stringify(viirsChecks)}`);
 for (const category of ['Agua abierta','Vegetación inundada','Sin agua','Datos no disponibles / máscaras']) {
   if (!satelliteConfig.includes(category)) throw Error(`Falta la clase ejecutiva OPERA ${category}`);
 }

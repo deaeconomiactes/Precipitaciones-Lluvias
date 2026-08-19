@@ -1154,6 +1154,10 @@ function wireClimatePointControls() {
     });
   });
   $('climateSatelliteOpacity')?.addEventListener('input', event => setClimateSatelliteOpacity(Number(event.target.value) / 100));
+  $('climateSatelliteDate')?.addEventListener('change', event => {
+    selectClimateSatelliteDate(event.target.value || null, { explicit: Boolean(event.target.value) });
+  });
+  $('climateSatelliteLatestButton')?.addEventListener('click', () => selectClimateSatelliteDate(null, { explicit: false }));
   $('climateFullscreenButton')?.addEventListener('click', toggleClimateMapFullscreen);
   $('climateExportPngButton')?.addEventListener('click', exportClimateMapPng);
   document.addEventListener('fullscreenchange', () => scheduleClimateMapInvalidate());
@@ -1208,6 +1212,8 @@ function updateClimateViewUrl() {
   params.set('mapVariable', state.climateMap.variable);
   if (state.climateMap.selectedDepartment) params.set('mapDepartment', state.climateMap.selectedDepartment); else params.delete('mapDepartment');
   if (state.climateMap.activeHydrologyLayer !== 'none') params.set('mapSatellite', state.climateMap.activeHydrologyLayer); else params.delete('mapSatellite');
+  const selectedRaster = state.climateMap.wmsLayers.get(state.climateMap.activeHydrologyLayer);
+  if (selectedRaster?.config?.dateExplicit && selectedRaster.config.resolvedTime) params.set('mapSatelliteDate', selectedRaster.config.resolvedTime); else params.delete('mapSatelliteDate');
   params.set('mapOpacity', String(Math.round(state.climateMap.satelliteOpacity * 100)));
   history.replaceState(null, '', `${location.pathname}?${params}${location.hash}`);
 }
@@ -1217,10 +1223,12 @@ function applyClimateViewFromUrl(params = new URLSearchParams(location.search)) 
   const variable = params.get('mapVariable');
   const department = normalizeClimateDepartment(params.get('mapDepartment') || '');
   const satellite = params.get('mapSatellite');
+  const satelliteDate = params.get('mapSatelliteDate');
   const opacity = Number(params.get('mapOpacity'));
   if (CLIMATE_MAP_VARIABLES[variable]) { state.climateMap.variable = variable; if ($('climateMapVariable')) $('climateMapVariable').value = variable; }
   if (mode === 'hydrology') applyClimateMapMode('hydrology');
   if (satellite && state.climateMap.wmsLayers.has(satellite)) selectClimateHydrologyLayer(satellite);
+  if (satelliteDate && satellite && state.climateMap.activeHydrologyLayer === satellite) selectClimateSatelliteDate(satelliteDate, { explicit: true, updateUrl: false });
   if (Number.isFinite(opacity) && opacity >= 10 && opacity <= 100) setClimateSatelliteOpacity(opacity / 100);
   return { department: state.climateMap.statuses.has(department) ? department : null };
 }
@@ -2609,11 +2617,117 @@ function classifyViirsRasterCoverage(counts = emptyViirsRasterCounts()) {
   };
 }
 
+function satelliteRecentDates(dates, fallbackDate = null, lookbackDays = 7) {
+  const values = [...(Array.isArray(dates) ? dates : []), fallbackDate]
+    .filter(value => /^\d{4}-\d{2}-\d{2}$/.test(String(value)));
+  const unique = [...new Set(values)].sort((left, right) => right.localeCompare(left));
+  if (!unique.length) return [];
+  const latestTime = Date.parse(`${unique[0]}T00:00:00Z`);
+  const minimumTime = latestTime - lookbackDays * 24 * 60 * 60 * 1000;
+  return unique.filter(value => Date.parse(`${value}T00:00:00Z`) >= minimumTime);
+}
+
+function viirsCoverageRequestUrl(layerConfig, date) {
+  const params = new URLSearchParams({
+    service: 'WMS',
+    request: 'GetMap',
+    layers: layerConfig.layers,
+    styles: '',
+    format: layerConfig.format || 'image/png',
+    transparent: String(layerConfig.transparent !== false),
+    version: layerConfig.version || '1.1.1',
+    time: date,
+    width: '512',
+    height: '442',
+    srs: 'EPSG:4326',
+    bbox: '-59.9,-30.8,-55.5,-27.0'
+  });
+  return `${layerConfig.serviceUrl}?${params}`;
+}
+
+function requestViirsCoverageForDate(layerConfig, date) {
+  if (layerConfig.coverageByDate.has(date)) return Promise.resolve(layerConfig.coverageByDate.get(date));
+  if (layerConfig.coverageRequests.has(date)) return layerConfig.coverageRequests.get(date);
+  const request = new Promise(resolve => {
+    const image = new Image();
+    image.crossOrigin = 'anonymous';
+    image.onload = () => resolve(classifyViirsRasterCoverage(analyzeViirsRasterTile(image) || emptyViirsRasterCounts()));
+    image.onerror = () => resolve({ state: 'unavailable', message: 'No fue posible verificar la cobertura raster para esta fecha.', counts: emptyViirsRasterCounts() });
+    image.src = viirsCoverageRequestUrl(layerConfig, date);
+  }).then(coverage => {
+    layerConfig.coverageByDate.set(date, coverage);
+    layerConfig.coverageRequests.delete(date);
+    return coverage;
+  });
+  layerConfig.coverageRequests.set(date, request);
+  return request;
+}
+
+function satelliteCoverageLabel(layerConfig, date) {
+  if (layerConfig.id !== 'nasaViirsFlood') return 'Datos disponibles';
+  const stateName = layerConfig.coverageByDate.get(date)?.state;
+  if (stateName === 'no-coverage') return 'Sin cobertura para Corrientes';
+  if (stateName === 'insufficient' || stateName === 'insufficient-with-detections') return 'Cobertura insuficiente';
+  if (stateName === 'unavailable') return 'No se pudo verificar';
+  if (stateName === 'pending' || !stateName) return 'Verificando cobertura';
+  return 'Datos disponibles';
+}
+
+function latestUsableSatelliteDate(layerConfig) {
+  if (layerConfig.id !== 'nasaViirsFlood') return layerConfig.availableDates[0] || null;
+  return layerConfig.availableDates.find(date => {
+    const coverageState = layerConfig.coverageByDate.get(date)?.state;
+    return coverageState && coverageState !== 'no-coverage' && coverageState !== 'unavailable' && coverageState !== 'pending';
+  }) || null;
+}
+
+function renderSatelliteDateControl(layerConfig = null) {
+  const select = $('climateSatelliteDate');
+  const status = $('climateSatelliteDateStatus');
+  const latestButton = $('climateSatelliteLatestButton');
+  if (!select || !status || !latestButton) return;
+  if (!layerConfig) {
+    select.innerHTML = '<option value="">Última disponible</option>';
+    select.disabled = true;
+    latestButton.disabled = true;
+    status.textContent = 'Seleccioná una capa satelital.';
+    return;
+  }
+  const latestDate = layerConfig.latestUsableDate || layerConfig.availableDates[0] || null;
+  const latestLabel = latestDate ? `Última disponible · ${formatDate(latestDate)}` : 'Última disponible';
+  select.innerHTML = `<option value="">${escapeHtml(latestLabel)}</option>${layerConfig.availableDates.map(date => `<option value="${date}">${escapeHtml(`${formatDate(date)} · ${satelliteCoverageLabel(layerConfig, date)}`)}</option>`).join('')}`;
+  select.disabled = !layerConfig.availableDates.length;
+  select.value = layerConfig.dateExplicit ? layerConfig.resolvedTime : '';
+  latestButton.disabled = !layerConfig.dateExplicit || !latestDate;
+  status.textContent = layerConfig.resolvedTime ? `Estado: ${satelliteCoverageLabel(layerConfig, layerConfig.resolvedTime)}` : 'Sin fechas recientes disponibles.';
+}
+
+async function primeViirsDateCoverage(entry) {
+  if (entry.config.id !== 'nasaViirsFlood' || !entry.config.availableDates.length) return;
+  await mapWithConcurrency(entry.config.availableDates, 2, async date => {
+    const coverage = await requestViirsCoverageForDate(entry.config, date);
+    if (entry.config.resolvedTime === date) {
+      entry.config.rasterCoverage = coverage;
+      if (state.climateMap.activeHydrologyLayer === entry.config.id) renderSatelliteLayerDetail(entry.config);
+    }
+    renderSatelliteDateControl(state.climateMap.activeHydrologyLayer === entry.config.id ? entry.config : null);
+    return coverage;
+  });
+  entry.config.latestUsableDate = latestUsableSatelliteDate(entry.config);
+  if (!entry.config.dateExplicit && entry.config.latestUsableDate && entry.config.resolvedTime !== entry.config.latestUsableDate) {
+    selectClimateSatelliteDate(null, { explicit: false, updateUrl: false });
+  }
+  renderSatelliteDateControl(state.climateMap.activeHydrologyLayer === entry.config.id ? entry.config : null);
+}
+
 function wireViirsRasterCoverage(layer, runtimeConfig) {
   if (runtimeConfig.id !== 'nasaViirsFlood') return;
   let aggregate = emptyViirsRasterCounts();
   const refreshDetail = () => {
-    if (state.climateMap.activeHydrologyLayer === runtimeConfig.id) renderSatelliteLayerDetail(runtimeConfig);
+    if (state.climateMap.activeHydrologyLayer === runtimeConfig.id) {
+      renderSatelliteLayerDetail(runtimeConfig);
+      renderSatelliteDateControl(runtimeConfig);
+    }
   };
   layer.on('loading', () => {
     aggregate = emptyViirsRasterCounts();
@@ -2623,12 +2737,14 @@ function wireViirsRasterCoverage(layer, runtimeConfig) {
   layer.on('tileload', event => mergeViirsRasterCounts(aggregate, analyzeViirsRasterTile(event.tile)));
   layer.on('load', () => {
     runtimeConfig.rasterCoverage = classifyViirsRasterCoverage(aggregate);
+    if (runtimeConfig.resolvedTime) runtimeConfig.coverageByDate.set(runtimeConfig.resolvedTime, runtimeConfig.rasterCoverage);
+    runtimeConfig.latestUsableDate = latestUsableSatelliteDate(runtimeConfig);
     refreshDetail();
   });
 }
 
 function satelliteLayerUsesWmsDisplayDate(layerConfig) {
-  return layerConfig.id === 'nasaViirsFlood' || layerConfig.displayTimeMode === 'wms-date';
+  return Boolean(layerConfig.resolvedTime) && layerConfig.usesTimeParameter !== false;
 }
 
 function satelliteLayerDateLabel(layerConfig) {
@@ -2650,6 +2766,7 @@ function initializePointRasterLayers() {
     const satelliteStatus = state.climateMap.satelliteStatus?.layers?.[layerConfig.statusKey || layerConfig.id] || null;
     const initialOpacity = Math.max(0.1, Math.min(1, Number(layerConfig.opacity) || 0.65));
     const resolvedWmsTime = layerConfig.timeMode === 'source-status' && satelliteStatus?.date && layerConfig.usesTimeParameter !== false ? satelliteStatus.date : null;
+    const availableDates = satelliteRecentDates(satelliteStatus?.availableDates, resolvedWmsTime);
     const options = {
       layers: layerConfig.layers,
       styles: '',
@@ -2669,7 +2786,12 @@ function initializePointRasterLayers() {
       sceneId: satelliteStatus?.sceneId || '',
       available: satelliteStatus?.available !== false,
       sourceUrl: satelliteStatus?.sourceUrl || '',
-      rasterCoverage: null
+      rasterCoverage: null,
+      availableDates,
+      latestUsableDate: layerConfig.id === 'nasaViirsFlood' ? null : (availableDates[0] || null),
+      dateExplicit: false,
+      coverageByDate: new Map(),
+      coverageRequests: new Map()
     };
     const layer = L.tileLayer.wms(layerConfig.serviceUrl, options);
     wireViirsRasterCoverage(layer, runtimeConfig);
@@ -2692,8 +2814,14 @@ function applySatelliteStatusToRasterLayers(payload) {
   state.climateMap.wmsLayers.forEach(entry => {
     const status = payload.layers[entry.config.statusKey || entry.config.id];
     if (!status) return;
-    const resolvedWmsTime = status.date && entry.config.usesTimeParameter !== false ? status.date : null;
+    if (status.available === false && entry.config.availableDates?.length) return;
+    const availableDates = satelliteRecentDates(status.availableDates, status.date);
+    const keepExplicitDate = entry.config.dateExplicit && availableDates.includes(entry.config.resolvedTime);
+    const resolvedWmsTime = entry.config.usesTimeParameter !== false ? (keepExplicitDate ? entry.config.resolvedTime : (availableDates[0] || null)) : null;
     entry.config.resolvedTime = resolvedWmsTime;
+    entry.config.availableDates = availableDates;
+    entry.config.dateExplicit = keepExplicitDate;
+    if (entry.config.id !== 'nasaViirsFlood') entry.config.latestUsableDate = availableDates[0] || null;
     entry.config.acquiredAt = status.acquiredAt || null;
     entry.config.sceneId = status.sceneId || '';
     entry.config.available = status.available !== false;
@@ -2702,6 +2830,8 @@ function applySatelliteStatusToRasterLayers(payload) {
     if (resolvedWmsTime) entry.layer.setParams({ time: resolvedWmsTime });
   });
   const selected = state.climateMap.wmsLayers.get(state.climateMap.activeHydrologyLayer);
+  if (selected?.config.id === 'nasaViirsFlood') void primeViirsDateCoverage(selected);
+  renderSatelliteDateControl(selected?.config || null);
   if (selected) renderSatelliteLayerDetail(selected.config);
   renderClimateExternalLegend(selected?.config || null);
   updateClimatePointSummary();
@@ -2746,6 +2876,49 @@ async function refreshSatelliteFloodStatus() {
   }
 }
 
+function resolveSatelliteDateTarget(layerConfig, date, explicit) {
+  const availableDates = layerConfig.availableDates || [];
+  const validExplicitDate = Boolean(explicit && availableDates.includes(date));
+  return {
+    targetDate: validExplicitDate ? date : (layerConfig.latestUsableDate || availableDates[0] || null),
+    dateExplicit: validExplicitDate
+  };
+}
+
+function selectClimateSatelliteDate(date, { explicit = true, updateUrl = true } = {}) {
+  const entry = state.climateMap.wmsLayers.get(state.climateMap.activeHydrologyLayer);
+  if (!entry) {
+    renderSatelliteDateControl(null);
+    return null;
+  }
+  const selection = resolveSatelliteDateTarget(entry.config, date, explicit);
+  const targetDate = selection.targetDate;
+  entry.config.dateExplicit = selection.dateExplicit;
+  entry.config.resolvedTime = targetDate;
+  if (entry.config.id === 'nasaViirsFlood') {
+    entry.config.rasterCoverage = targetDate
+      ? (entry.config.coverageByDate.get(targetDate) || classifyViirsRasterCoverage(emptyViirsRasterCounts()))
+      : null;
+  }
+  if (targetDate && entry.config.usesTimeParameter !== false) entry.layer.setParams({ time: targetDate });
+  renderSatelliteDateControl(entry.config);
+  renderClimateExternalLegend(entry.config);
+  renderSatelliteLayerDetail(entry.config);
+  if (entry.config.id === 'nasaViirsFlood' && targetDate) {
+    void requestViirsCoverageForDate(entry.config, targetDate).then(coverage => {
+      if (entry.config.resolvedTime !== targetDate) return;
+      entry.config.rasterCoverage = coverage;
+      entry.config.latestUsableDate = latestUsableSatelliteDate(entry.config);
+      if (state.climateMap.activeHydrologyLayer === entry.config.id) {
+        renderSatelliteDateControl(entry.config);
+        renderSatelliteLayerDetail(entry.config);
+      }
+    });
+  }
+  if (updateUrl) updateClimateViewUrl();
+  return targetDate;
+}
+
 function selectClimateHydrologyLayer(layerId) {
   sourceAudit.selectedId = ({operaS1:'opera', nasaViirsFlood:'viirs', gfmObservedFlood:'gfm'})[layerId] || sourceAudit.selectedId;
   state.climateMap.wmsLayers.forEach(({ layer }) => {
@@ -2754,6 +2927,7 @@ function selectClimateHydrologyLayer(layerId) {
   state.climateMap.activeHydrologyLayer = state.climateMap.wmsLayers.has(layerId) ? layerId : 'none';
   if (state.climateMap.activeHydrologyLayer !== 'none') state.climateMap.preferredHydrologyLayer = state.climateMap.activeHydrologyLayer;
   const selected = state.climateMap.wmsLayers.get(state.climateMap.activeHydrologyLayer);
+  if (selected) selectClimateSatelliteDate(selected.config.dateExplicit ? selected.config.resolvedTime : null, { explicit: selected.config.dateExplicit, updateUrl: false });
   if (selected) {
     const selectedOpacity = state.climateMap.satelliteOpacities.get(state.climateMap.activeHydrologyLayer) ?? Number(selected.config.opacity) ?? 0.65;
     setClimateSatelliteOpacity(selectedOpacity, { updateUrl: false });
@@ -2762,7 +2936,9 @@ function selectClimateHydrologyLayer(layerId) {
   if (state.climateMap.mode === 'hydrology') state.climateMap.geoLayer?.setStyle(climatePointBoundaryStyle);
   if ($('climateHydrologyLayer')) $('climateHydrologyLayer').value = state.climateMap.activeHydrologyLayer;
   renderClimateExternalLegend(selected?.config || null);
+  renderSatelliteDateControl(selected?.config || null);
   if (selected) renderSatelliteLayerDetail(selected.config);
+  if (selected?.config.id === 'nasaViirsFlood') void primeViirsDateCoverage(selected);
   updateClimatePointSummary();
   updateClimateViewUrl();
 }
@@ -2780,6 +2956,7 @@ function renderSatelliteLayerDetail(layerConfig) {
     ? (layerConfig.rasterCoverage?.message || 'Producto disponible — verificando cobertura raster para Corrientes.')
     : null;
   const visibleDescription = viirsCoverageDescription || executiveDescription;
+  const viirsNoCoverage = layerConfig.id === 'nasaViirsFlood' && layerConfig.rasterCoverage?.state === 'no-coverage';
   renderMapPointDetail({
     presentationType: 'satellite',
     sourceId: ({ operaS1: 'opera', nasaViirsFlood: 'viirs', gfmObservedFlood: 'gfm' })[layerConfig.id],
@@ -2787,7 +2964,7 @@ function renderSatelliteLayerDetail(layerConfig) {
     intro: '',
     source: ({ operaS1: 'NASA OPERA', nasaViirsFlood: 'NASA VIIRS', gfmObservedFlood: 'Copernicus GFM' })[layerConfig.id] || layerConfig.attribution,
     nature: 'Satelital',
-    availability: available ? 'Escena disponible' : 'Datos insuficientes',
+    availability: viirsNoCoverage ? 'Sin cobertura para Corrientes' : (available ? 'Escena disponible' : 'Datos insuficientes'),
     type: 'Observación satelital',
     value: available ? visibleDescription : 'Datos insuficientes',
     date: hasDate ? satelliteLayerDateLabel(layerConfig) : 'Datos insuficientes',

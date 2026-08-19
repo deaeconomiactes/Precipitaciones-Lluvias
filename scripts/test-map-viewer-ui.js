@@ -6,7 +6,7 @@ const html = fs.readFileSync('index.html', 'utf8');
 const app = fs.readFileSync('app.js', 'utf8');
 const rainfallBefore = fs.readFileSync('data/rainfall.json');
 
-for (const id of ['climateFullscreenButton','climateExportPngButton','climateSatelliteOpacity','climateMapLegend']) {
+for (const id of ['climateFullscreenButton','climateExportPngButton','climateSatelliteOpacity','climateMapLegend','climateSatelliteDate','climateSatelliteDateStatus','climateSatelliteLatestButton']) {
   if (!html.includes(`id="${id}"`)) throw Error(`Falta el control ${id}`);
 }
 for (const group of ['Registros propios','Hidrometría','Satélite','Modelos','Administrativo (preparado)']) {
@@ -81,6 +81,7 @@ const context = {
   Intl,
   Date,
   Map,
+  URLSearchParams,
   console,
   setTimeout,
   clearTimeout
@@ -158,6 +159,42 @@ if (viirsChecks.insufficient.state !== 'insufficient' || !viirsChecks.insufficie
 if (viirsChecks.audited.state !== 'insufficient-with-detections' || viirsChecks.audited.message !== 'Cobertura insuficiente predominante — se observan pequeñas áreas clasificadas como agua e inundación.') throw Error('VIIRS no describe correctamente el caso auditado del 18/08.');
 if (viirsChecks.noRelevant.state !== 'no-relevant-areas' || !viirsChecks.noRelevant.message.includes('sin áreas relevantes detectadas')) throw Error('VIIRS no distingue cobertura sin Flood/Recurring Flood.');
 if (viirsChecks.displayDate !== '18/8/2026' || viirsChecks.time !== '2026-08-18') throw Error(`La fecha visible y TIME de VIIRS no coinciden: ${JSON.stringify(viirsChecks)}`);
+const satelliteTimelineChecks = vm.runInContext(`(() => {
+  const dates = satelliteRecentDates(['2026-08-18','2026-08-17','2026-08-16','2026-08-11','2026-08-10'], '2026-08-18');
+  const layerConfig = {
+    id: 'nasaViirsFlood',
+    layers: 'VIIRS_Combined_Flood_3-Day',
+    serviceUrl: 'https://gibs.earthdata.nasa.gov/wms/epsg4326/best/wms.cgi',
+    format: 'image/png',
+    transparent: true,
+    availableDates: dates,
+    latestUsableDate: '2026-08-17',
+    coverageByDate: new Map([
+      ['2026-08-18', { state: 'no-coverage' }],
+      ['2026-08-17', { state: 'insufficient' }],
+      ['2026-08-16', { state: 'detections' }]
+    ])
+  };
+  return {
+    dates,
+    latest: resolveSatelliteDateTarget(layerConfig, null, false),
+    previous: resolveSatelliteDateTarget(layerConfig, '2026-08-16', true),
+    outside: resolveSatelliteDateTarget(layerConfig, '2026-08-10', true),
+    noCoverage: satelliteCoverageLabel(layerConfig, '2026-08-18'),
+    insufficient: satelliteCoverageLabel(layerConfig, '2026-08-17'),
+    available: satelliteCoverageLabel(layerConfig, '2026-08-16'),
+    requestUrl: viirsCoverageRequestUrl(layerConfig, '2026-08-17')
+  };
+})()`, context);
+if (JSON.stringify(satelliteTimelineChecks.dates) !== JSON.stringify(['2026-08-18','2026-08-17','2026-08-16','2026-08-11'])) throw Error(`La ventana satelital excede siete días: ${JSON.stringify(satelliteTimelineChecks.dates)}`);
+if (satelliteTimelineChecks.latest.targetDate !== '2026-08-17' || satelliteTimelineChecks.latest.dateExplicit) throw Error('Última disponible no omite correctamente una fecha sin cobertura.');
+if (satelliteTimelineChecks.previous.targetDate !== '2026-08-16' || !satelliteTimelineChecks.previous.dateExplicit) throw Error('No se puede seleccionar una escena anterior real.');
+if (satelliteTimelineChecks.outside.targetDate !== '2026-08-17' || satelliteTimelineChecks.outside.dateExplicit) throw Error('Una fecha fuera de la ventana de siete días fue aceptada.');
+if (satelliteTimelineChecks.noCoverage !== 'Sin cobertura para Corrientes' || satelliteTimelineChecks.insufficient !== 'Cobertura insuficiente' || satelliteTimelineChecks.available !== 'Datos disponibles') throw Error(`Los estados temporales VIIRS son incorrectos: ${JSON.stringify(satelliteTimelineChecks)}`);
+if (!satelliteTimelineChecks.requestUrl.includes('time=2026-08-17') || !satelliteTimelineChecks.requestUrl.includes('layers=VIIRS_Combined_Flood_3-Day')) throw Error('La verificación de cobertura no usa la fecha y producto VIIRS seleccionados.');
+const dateSelectionSource = app.slice(app.indexOf('function selectClimateSatelliteDate'), app.indexOf('function selectClimateHydrologyLayer'));
+if (!dateSelectionSource.includes('entry.layer.setParams({ time: targetDate })') || dateSelectionSource.includes('fitClimateMapToCorrientes') || dateSelectionSource.includes('setView(')) throw Error('Cambiar la fecha reinicia el mapa o no actualiza TIME.');
+if (!app.includes("params.set('mapSatelliteDate', selectedRaster.config.resolvedTime)") || !app.includes("params.get('mapSatelliteDate')")) throw Error('La fecha satelital no persiste en la URL.');
 for (const category of ['Agua abierta','Vegetación inundada','Sin agua','Datos no disponibles / máscaras']) {
   if (!satelliteConfig.includes(category)) throw Error(`Falta la clase ejecutiva OPERA ${category}`);
 }
@@ -165,7 +202,7 @@ for (const category of ['Extensión de inundación observada','Agua observada','
   if (!satelliteConfig.includes(category)) throw Error(`Falta la clase ejecutiva GFM ${category}`);
 }
 if (!app.includes('Qué muestra esta capa') || app.includes("[['Estado observado', detail.status]")) throw Error('El panel satelital conserva una etiqueta técnica.');
-if (!html.includes('Imagen satelital correspondiente a la fecha seleccionada.') || html.includes('Ráster remoto con fecha de escena')) throw Error('El selector conserva texto técnico.');
+if (!html.includes('Escenas recientes verificadas, hasta 7 días hacia atrás.') || html.includes('Ráster remoto con fecha de escena')) throw Error('El selector temporal satelital no comunica su límite operativo.');
 for (const category of ['Precipitaciones','Altura de ríos','Observación satelital','Modelos / pronósticos']) {
   if (!html.includes(category)) throw Error(`Falta la categoría visual ${category}`);
 }

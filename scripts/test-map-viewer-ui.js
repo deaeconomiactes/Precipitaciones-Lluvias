@@ -15,7 +15,7 @@ for (const group of ['Registros propios','Hidrometría','Satélite','Modelos','A
 for (const id of ['mapPointDetailTitle','mapPointDetailEyebrow','mapPointOperationalDetail']) {
   if (!html.includes(`id="${id}"`)) throw Error(`Falta el elemento operativo ${id}`);
 }
-for (const label of ['Lluvia registrada','Acumulado 7 días','Acumulado 30 días','Fuente','Fecha','Valor observado','Observación']) {
+for (const label of ['Referencia histórica comparable','Diferencia porcentual','Fuente','Fecha','Valor observado','Observación']) {
   if (!app.includes(label)) throw Error(`El panel no contempla ${label}`);
 }
 if (!app.includes('renderSatelliteLayerDetail') || !app.includes('exportClimateMapPng')) throw Error('Falta una función visible central del visor');
@@ -50,8 +50,12 @@ const css = fs.readFileSync('operational.css', 'utf8');
 for (const requirement of ['align-items: start', 'isolation: isolate', 'scroll-margin-top:', '.ina-history-chart-wrap canvas']) {
   if (!css.includes(requirement)) throw Error(`Falta el resguardo de layout del mapa: ${requirement}`);
 }
-for (const label of ['Lluvia del día de referencia','Fecha diaria de referencia']) {
-  if (!html.includes(label) || !app.includes(label)) throw Error(`Falta la etiqueta temporal territorial: ${label}`);
+const territorialMarkup = html.slice(html.indexOf('id="climateDepartmentDetail"'), html.indexOf('id="climatePointDetail"'));
+for (const label of ['Período comparable','Observado del período','Promedio histórico comparable','Mínimo histórico comparable','Máximo histórico comparable','Diferencia','Diferencia porcentual','Actualización de datos']) {
+  if (!territorialMarkup.includes(label)) throw Error(`Falta la métrica territorial: ${label}`);
+}
+for (const removed of ['Categoría descriptiva','<dt>Fuente</dt>','Cobertura 7 / 15 / 30 días']) {
+  if (territorialMarkup.includes(removed)) throw Error(`El detalle territorial conserva información secundaria: ${removed}`);
 }
 for (const requirement of ['function updateClimateDailyStatuses', 'coverage7d: `${row.observations[7]}/7`']) {
   if (!app.includes(requirement)) throw Error(`El mapa no recalcula la lluvia diaria operativa: ${requirement}`);
@@ -85,17 +89,51 @@ vm.createContext(context);
 vm.runInContext(app, context);
 const timestampChecks = vm.runInContext(`(() => {
   state.climateMap.statuses = new Map();
+  const historicalRows = [2023, 2024, 2025].flatMap((year, yearIndex) => Array.from({ length: 18 }, (_, index) => ({
+    department: 'Capital',
+    date: year + '-08-' + String(index + 1).padStart(2, '0'),
+    rainfallMm: yearIndex + 2
+  })));
+  const observedRows = Array.from({ length: 18 }, (_, index) => ({ department: 'Capital', date: '2026-08-' + String(index + 1).padStart(2, '0'), rainfallMm: 1 }));
+  state.dailyRecords = [...historicalRows, ...observedRows];
   state.dailyGeneratedAt = '2026-08-13T10:56:09';
   renderClimateDepartmentDetail({ department: 'Capital', referenceDateDaily: '2026-08-18', updatedAt: '2026-08-11T10:16:18' });
-  const loaded = { updated: document.getElementById('mapDetailUpdated').textContent, reference: document.getElementById('mapDetailDailyDate').textContent };
+  const loaded = {
+    updated: document.getElementById('mapDetailUpdated').textContent,
+    period: document.getElementById('mapDetailComparablePeriod').textContent,
+    observed: document.getElementById('mapDetailMonthlyObserved').textContent,
+    average: document.getElementById('mapDetailMonthlyHistorical').textContent,
+    minimum: document.getElementById('mapDetailMonthlyMinimum').textContent,
+    maximum: document.getElementById('mapDetailMonthlyMaximum').textContent,
+    difference: document.getElementById('mapDetailMonthlyDifference').textContent,
+    differencePct: document.getElementById('mapDetailMonthlyDifferencePct').textContent
+  };
   state.dailyGeneratedAt = null;
   renderClimateDepartmentDetail({ department: 'Capital', referenceDateDaily: '2026-08-18', updatedAt: '2026-08-11T10:16:18' });
-  return { ...loaded, fallback: document.getElementById('mapDetailUpdated').textContent };
+  return {
+    ...loaded,
+    fallback: document.getElementById('mapDetailUpdated').textContent,
+    rainColors: [-40, -20, 0, 20, 40, null].map(rainComparisonColor)
+  };
 })()`, context);
 if (timestampChecks.updated !== '13/08/2026 · 07:56') throw Error(`Formato horario argentino incorrecto: ${timestampChecks.updated}`);
 if (timestampChecks.fallback !== 'Actualización no disponible') throw Error(`Fallback incorrecto: ${timestampChecks.fallback}`);
-if (timestampChecks.reference !== '18/8/2026') throw Error(`La fecha diaria de referencia dejó de ser independiente: ${timestampChecks.reference}`);
+if (timestampChecks.period !== '01/08/2026–18/08/2026') throw Error(`El período comparable es incorrecto: ${timestampChecks.period}`);
+if (timestampChecks.observed !== '18 mm' || timestampChecks.average !== '54 mm' || timestampChecks.minimum !== '36 mm' || timestampChecks.maximum !== '72 mm') {
+  throw Error(`Los extremos parciales no usan la misma ventana: ${JSON.stringify(timestampChecks)}`);
+}
+if (timestampChecks.difference !== '-36 mm' || timestampChecks.differencePct !== '-66,7 %') throw Error(`La comparación parcial es incorrecta: ${JSON.stringify(timestampChecks)}`);
+if (JSON.stringify(timestampChecks.rainColors) !== JSON.stringify(['#dceefa','#a9d3ef','#5aa7d6','#197bb7','#084f83','#d7dedd'])) throw Error(`La escala azul relativa es incorrecta: ${timestampChecks.rainColors}`);
 if (app.includes("element.hidden = true;\n  element.innerHTML = '';\n  return;\n  if (!layerConfig)")) throw Error('La leyenda satelital permanece bloqueada');
+const externalLegendSource = app.slice(app.indexOf('function renderClimateExternalLegend'), app.indexOf('function climatePointBoundaryStyle'));
+for (const requirement of ["item.emphasis !== 'auxiliary'", 'climate-external-legend-head', 'GFM · inundación observada', 'formatApiDateTime(layerConfig.acquiredAt)', 'formatDate(layerConfig.resolvedTime)']) {
+  if (!externalLegendSource.includes(requirement)) throw Error(`La leyenda satelital compacta perdió un dato clave: ${requirement}`);
+}
+for (const removed of ['layerConfig.sceneId','layerConfig.spatialResolution','legendUrls','Naturaleza: satelital','No se convierte en estaciones']) {
+  if (externalLegendSource.includes(removed)) throw Error(`La leyenda satelital conserva detalle técnico: ${removed}`);
+}
+const externalLegendCss = css.slice(css.indexOf('.climate-external-legend {'), css.indexOf('.climate-map-legend strong'));
+if (!externalLegendCss.includes('max-width: 210px') || !externalLegendCss.includes('overflow: hidden') || externalLegendCss.includes('overflow: auto')) throw Error('La leyenda satelital todavía ocupa demasiado espacio o permite scroll interno.');
 const satelliteConfig = fs.readFileSync('data/external-api-config.json', 'utf8');
 for (const category of ['Agua superficial','Inundación recurrente','Inundación detectada','Datos insuficientes']) {
   if (!satelliteConfig.includes(category)) throw Error(`Falta la clase oficial VIIRS ${category}`);
@@ -108,15 +146,46 @@ for (const category of ['Extensión de inundación observada','Agua observada','
 }
 if (!app.includes('Qué muestra esta capa') || app.includes("[['Estado observado', detail.status]")) throw Error('El panel satelital conserva una etiqueta técnica.');
 if (!html.includes('Imagen satelital correspondiente a la fecha seleccionada.') || html.includes('Ráster remoto con fecha de escena')) throw Error('El selector conserva texto técnico.');
-for (const category of ['Precipitaciones','Hidrometría','Observación satelital','Modelos y pronósticos']) {
-  if (!html.includes(category) || !app.includes(category)) throw Error(`Falta la categoría visual ${category}`);
+for (const category of ['Precipitaciones','Altura de ríos','Observación satelital','Modelos / pronósticos']) {
+  if (!html.includes(category)) throw Error(`Falta la categoría visual ${category}`);
 }
 for (const mapping of [
   "ina: { label: 'Altura del río · INA', category: 'hydrometry', color: CLIMATE_CATEGORY_COLORS.hydrometry",
   "snih: { label: 'Altura del río · SNIH', category: 'hydrometry', color: CLIMATE_CATEGORY_COLORS.hydrometry",
   "salto: { label: 'Altura del río · Salto Grande', category: 'hydrometry', color: CLIMATE_CATEGORY_COLORS.hydrometry",
-  "nasa: { label: 'Precipitación NASA', category: 'models', color: CLIMATE_CATEGORY_COLORS.models",
-  "geoglows: { label: 'Pronóstico de caudal', category: 'models', color: CLIMATE_CATEGORY_COLORS.models"
+  "nasa: { label: 'Precipitación modelada · NASA POWER', category: 'models', color: CLIMATE_CATEGORY_COLORS.models",
+  "geoglows: { label: 'Caudal pronosticado · GEOGLOWS', category: 'models', color: CLIMATE_CATEGORY_COLORS.models"
 ]) if (!app.includes(mapping)) throw Error('Una fuente no comparte el color de su categoría');
+const rainLayerSource = app.slice(app.indexOf('function rainPointComparison'), app.indexOf('function renderRainPointDetail'));
+if (!app.includes('const RAIN_COMPARISON_SCALE')) throw Error('Falta la escala azul común de precipitación.');
+for (const requirement of ['dailyHistoricalWindowReference(state.dailyRecords','Referencia histórica','Diferencia:','radius: 5.8','wireClimatePointSelection(marker, options)']) {
+  if (!rainLayerSource.includes(requirement)) throw Error(`La lluvia no usa comparación visual homogénea: ${requirement}`);
+}
+if (rainLayerSource.includes('Math.sqrt') || rainLayerSource.includes('sourceInfo.color')) throw Error('La lluvia todavía varía tamaño o color por fuente/magnitud.');
+const hydrometrySource = app.slice(app.indexOf('function renderInaPointLayer'), app.indexOf('function renderNasaPointLayer'));
+for (const requirement of ["className: `climate-point-marker hydrometry-marker", "color: '#ffffff'", 'radius: 5.6', 'marker.__hydrometryLabel = true']) {
+  if (!hydrometrySource.includes(requirement)) throw Error(`La hidrometría no comparte estilo común: ${requirement}`);
+}
+if (hydrometrySource.includes('permanent: true')) throw Error('Las etiquetas hidrométricas siguen visibles en todo nivel de zoom.');
+if (!app.includes("const showHeightLabels = map.getZoom() >= 11") || !app.includes("state.climateMap.map.on('zoomend', updateHydrometryLabelsForZoom)")) throw Error('Las etiquetas hidrométricas no dependen del zoom.');
+const modelSource = app.slice(app.indexOf('function renderNasaPointLayer'), app.indexOf('function refreshGeoglowsCoverage'));
+for (const requirement of ["icon: climateModelIcon('rain')", "icon: climateModelIcon('flow')", 'Precipitación modelada · NASA POWER', 'Caudal pronosticado · GEOGLOWS']) {
+  if (!modelSource.includes(requirement)) throw Error(`Los modelos no se distinguen por forma y variable: ${requirement}`);
+}
+if (!app.includes("className: `climate-model-div-icon model-${modelKind}-icon`") || modelSource.includes('Math.sqrt')) throw Error('Los modelos no usan símbolos huecos y estables.');
+for (const requirement of ['function wireClimatePointSelection','selectedPointMarker','is-selected','Respecto de lo habitual','Muy por debajo','Muy por encima']) {
+  if (!app.includes(requirement) && !css.includes(requirement)) throw Error(`Falta el requisito visual del mapa: ${requirement}`);
+}
+const modelLegendCss = css.slice(css.lastIndexOf('.climate-nature-legend .category-models'));
+if (!modelLegendCss.includes('background: transparent') || !modelLegendCss.includes('border: 2px solid #7656a8')) throw Error('La leyenda no distingue los modelos con un círculo hueco.');
+for (const requirement of ['Precipitación modelada','Caudal pronosticado','model-rain-symbol','model-flow-symbol']) {
+  if (!app.includes(requirement)) throw Error(`Falta la leyenda secundaria de modelos: ${requirement}`);
+}
+for (const requirement of ['.model-rain-icon span','.model-flow-icon span','transform: rotate(45deg)','.climate-model-div-icon.is-selected']) {
+  if (!css.includes(requirement)) throw Error(`Falta el estilo diferenciado o seleccionado de modelos: ${requirement}`);
+}
+for (const requirement of ['scrollWheelZoom: true','doubleClickZoom: true','touchZoom: true','wheelDebounceTime: 40','wheelPxPerZoomLevel: 80']) {
+  if (!app.includes(requirement)) throw Error(`Falta la interacción práctica de zoom: ${requirement}`);
+}
 if (!rainfallBefore.length) throw Error('rainfall.json está vacío');
 console.log('Visor: controles, panel operativo y simbología por categoría validados.');

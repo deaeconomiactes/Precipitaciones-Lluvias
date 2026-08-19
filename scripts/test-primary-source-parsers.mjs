@@ -7,7 +7,7 @@ import {
   parseSaltoStations,
   selectSnihStations
 } from '../lib/primary-hydrology.mjs';
-import { fetchSatelliteFloodStatus } from '../lib/satellite-flood.mjs';
+import { fetchSatelliteFloodStatus, granuleNominalDate } from '../lib/satellite-flood.mjs';
 
 function assert(condition, message) {
   if (!condition) throw new Error(message);
@@ -86,9 +86,9 @@ const cmrEntries = {
     time_end: '2026-08-09T09:14:00Z'
   },
   'C4064643747-LANCEMODIS': {
-    producer_granule_id: 'VIIRS_SCENE',
-    time_start: '2026-08-10T00:00:00Z',
-    time_end: '2026-08-11T23:59:59Z'
+    producer_granule_id: 'VCDWD_L3_F3_NRT.A2026230.h12v11.002.tif',
+    time_start: '2026-08-18T23:00:00Z',
+    time_end: '2026-08-19T23:00:00Z'
   }
 };
 const fetchImpl = async (url, options = {}) => {
@@ -111,7 +111,10 @@ const fetchImpl = async (url, options = {}) => {
 const satellite = await fetchSatelliteFloodStatus({ fetchImpl, now: new Date('2026-08-11T12:00:00Z') });
 assert(satellite.availableCount === 3, 'No se descubrieron las tres fuentes satelitales.');
 assert(satellite.layers.operaS1.sceneId === 'OPERA_SCENE', 'OPERA perdió el identificador CMR.');
-assert(satellite.layers.nasaViirsFlood.date === '2026-08-11', 'VIIRS no usa el final del compuesto como fecha WMS.');
+assert(granuleNominalDate('VCDWD_L3_F3_NRT.A2026230.h12v11.002.tif') === '2026-08-18', 'No se interpretó la fecha nominal Ayyyyddd de VIIRS.');
+assert(satellite.layers.nasaViirsFlood.date === '2026-08-18', 'VIIRS no usa la fecha nominal/inicial como fecha WMS.');
+assert(satellite.layers.nasaViirsFlood.date === satellite.layers.nasaViirsFlood.acquiredAt.slice(0, 10), 'La fecha visible de VIIRS y TIME quedaron desfasados.');
+assert(satellite.layers.nasaViirsFlood.date !== satellite.layers.nasaViirsFlood.endAt.slice(0, 10), 'VIIRS volvió a usar time_end como fecha WMS.');
 assert(satellite.layers.gfmObservedFlood.sceneId === 'GFM_SCENE', 'GFM perdió el identificador STAC.');
 
 console.log('Parsers primarios: filtros SNIH, SOAP Salto Grande y centinelas validados.');

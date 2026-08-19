@@ -2681,7 +2681,11 @@ function latestUsableSatelliteDate(layerConfig) {
   }) || null;
 }
 
-function renderSatelliteDateControl(layerConfig = null) {
+function activeSatelliteLayerEntry() {
+  return state.climateMap.wmsLayers.get(state.climateMap.activeHydrologyLayer) || null;
+}
+
+function renderSatelliteDateControl(layerConfig = activeSatelliteLayerEntry()?.config || null) {
   const select = $('climateSatelliteDate');
   const status = $('climateSatelliteDateStatus');
   const latestButton = $('climateSatelliteLatestButton');
@@ -2691,6 +2695,15 @@ function renderSatelliteDateControl(layerConfig = null) {
     select.disabled = true;
     latestButton.disabled = true;
     status.textContent = 'Seleccioná una capa satelital.';
+    return;
+  }
+  if (layerConfig.available === false || !layerConfig.availableDates.length) {
+    select.innerHTML = '<option value="">Última disponible</option>';
+    select.disabled = true;
+    latestButton.disabled = true;
+    status.textContent = layerConfig.datesLoading
+      ? 'Cargando fechas disponibles…'
+      : 'No hay escenas recientes disponibles.';
     return;
   }
   const latestDate = layerConfig.latestUsableDate || layerConfig.availableDates[0] || null;
@@ -2790,6 +2803,7 @@ function initializePointRasterLayers() {
       availableDates,
       latestUsableDate: layerConfig.id === 'nasaViirsFlood' ? null : (availableDates[0] || null),
       dateExplicit: false,
+      datesLoading: false,
       coverageByDate: new Map(),
       coverageRequests: new Map()
     };
@@ -2825,6 +2839,7 @@ function applySatelliteStatusToRasterLayers(payload) {
     entry.config.acquiredAt = status.acquiredAt || null;
     entry.config.sceneId = status.sceneId || '';
     entry.config.available = status.available !== false;
+    entry.config.datesLoading = false;
     entry.config.sourceUrl = status.sourceUrl || '';
     if (entry.config.id === 'nasaViirsFlood') entry.config.rasterCoverage = null;
     if (resolvedWmsTime) entry.layer.setParams({ time: resolvedWmsTime });
@@ -2856,6 +2871,10 @@ async function refreshSatelliteFloodStatus() {
   const config = state.climateMap.externalConfig?.satelliteFloodStatus;
   if (!config?.proxyUrl || state.climateMap.refreshingSatelliteStatus || state.climateMap.satelliteProxyUnavailable) return;
   state.climateMap.refreshingSatelliteStatus = true;
+  state.climateMap.wmsLayers.forEach(entry => {
+    if (!entry.config.availableDates.length) entry.config.datesLoading = true;
+  });
+  renderSatelliteDateControl();
   updateClimateApiCard('satelliteApi', 'loading', 'Consultando', 'La imagen respaldada permanece visible mientras se verifican las escenas.');
   try {
     const response = await fetchWithTimeout(config.proxyUrl, Number(config.timeoutMs) || 60000, { cache: 'no-store' });
@@ -2873,6 +2892,8 @@ async function refreshSatelliteFloodStatus() {
     console.warn(`No se pudieron actualizar los metadatos satelitales: ${error.message}`);
   } finally {
     state.climateMap.refreshingSatelliteStatus = false;
+    state.climateMap.wmsLayers.forEach(entry => { entry.config.datesLoading = false; });
+    renderSatelliteDateControl();
   }
 }
 
@@ -2886,7 +2907,7 @@ function resolveSatelliteDateTarget(layerConfig, date, explicit) {
 }
 
 function selectClimateSatelliteDate(date, { explicit = true, updateUrl = true } = {}) {
-  const entry = state.climateMap.wmsLayers.get(state.climateMap.activeHydrologyLayer);
+  const entry = activeSatelliteLayerEntry();
   if (!entry) {
     renderSatelliteDateControl(null);
     return null;

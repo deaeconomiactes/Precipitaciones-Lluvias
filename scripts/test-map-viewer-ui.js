@@ -203,6 +203,74 @@ for (const category of ['Extensión de inundación observada','Agua observada','
 }
 if (!app.includes('Qué muestra esta capa') || app.includes("[['Estado observado', detail.status]")) throw Error('El panel satelital conserva una etiqueta técnica.');
 if (!html.includes('Escenas recientes verificadas, hasta 7 días hacia atrás.') || html.includes('Ráster remoto con fecha de escena')) throw Error('El selector temporal satelital no comunica su límite operativo.');
+if (!html.includes('app.js?v=20260819-1')) throw Error('El HTML no invalida la versión anterior del JavaScript del selector satelital.');
+const satelliteControlChecks = vm.runInContext(`(() => {
+  const elements = ['climateSatelliteDate','climateSatelliteDateStatus','climateSatelliteLatestButton']
+    .reduce((result, id) => ({ ...result, [id]: document.getElementById(id) }), {});
+  const makeConfig = (id, dates, extras = {}) => ({
+    id,
+    available: true,
+    availableDates: dates,
+    latestUsableDate: dates[0] || null,
+    resolvedTime: dates[0] || null,
+    dateExplicit: false,
+    datesLoading: false,
+    coverageByDate: new Map(),
+    usesTimeParameter: true,
+    ...extras
+  });
+  const viirs = makeConfig('nasaViirsFlood', ['2026-08-18','2026-08-17']);
+  viirs.coverageByDate.set('2026-08-18', { state: 'detections' });
+  viirs.coverageByDate.set('2026-08-17', { state: 'insufficient' });
+  const opera = makeConfig('operaS1', ['2026-08-16','2026-08-14']);
+  const gfm = makeConfig('gfmObservedFlood', ['2026-08-19','2026-08-16']);
+  state.climateMap.wmsLayers = new Map([
+    ['nasaViirsFlood', { config: viirs, layer: {} }],
+    ['operaS1', { config: opera, layer: {} }],
+    ['gfmObservedFlood', { config: gfm, layer: {} }]
+  ]);
+
+  state.climateMap.activeHydrologyLayer = 'nasaViirsFlood';
+  renderSatelliteDateControl();
+  const viirsSelected = {
+    enabled: !elements.climateSatelliteDate.disabled,
+    options: elements.climateSatelliteDate.innerHTML,
+    status: elements.climateSatelliteDateStatus.textContent,
+    activeId: activeSatelliteLayerEntry()?.config.id
+  };
+
+  state.climateMap.activeHydrologyLayer = 'none';
+  renderSatelliteDateControl();
+  const noneSelected = {
+    disabled: elements.climateSatelliteDate.disabled,
+    status: elements.climateSatelliteDateStatus.textContent
+  };
+
+  state.climateMap.activeHydrologyLayer = 'operaS1';
+  opera.availableDates = [];
+  opera.datesLoading = true;
+  renderSatelliteDateControl();
+  const loading = elements.climateSatelliteDateStatus.textContent;
+  opera.datesLoading = false;
+  renderSatelliteDateControl();
+  const empty = elements.climateSatelliteDateStatus.textContent;
+
+  opera.availableDates = ['2026-08-16','2026-08-14'];
+  opera.latestUsableDate = '2026-08-16';
+  opera.resolvedTime = '2026-08-16';
+  renderSatelliteDateControl();
+  const operaOptions = elements.climateSatelliteDate.innerHTML;
+  state.climateMap.activeHydrologyLayer = 'gfmObservedFlood';
+  renderSatelliteDateControl();
+  const gfmOptions = elements.climateSatelliteDate.innerHTML;
+  return { viirsSelected, noneSelected, loading, empty, operaOptions, gfmOptions };
+})()`, context);
+if (!satelliteControlChecks.viirsSelected.enabled || satelliteControlChecks.viirsSelected.activeId !== 'nasaViirsFlood') throw Error(`VIIRS seleccionado no habilita el control: ${JSON.stringify(satelliteControlChecks)}`);
+if (!satelliteControlChecks.viirsSelected.options.includes('2026-08-18') || !satelliteControlChecks.viirsSelected.options.includes('2026-08-17')) throw Error('El selector VIIRS no carga sus fechas reales recientes.');
+if (!satelliteControlChecks.noneSelected.disabled || satelliteControlChecks.noneSelected.status !== 'Seleccioná una capa satelital.') throw Error('El control no se deshabilita correctamente cuando no hay capa.');
+if (satelliteControlChecks.loading !== 'Cargando fechas disponibles…' || satelliteControlChecks.empty !== 'No hay escenas recientes disponibles.') throw Error('Los estados de carga y ausencia de fechas son ambiguos.');
+if (!satelliteControlChecks.operaOptions.includes('2026-08-16') || satelliteControlChecks.operaOptions.includes('2026-08-15')) throw Error('OPERA fabrica fechas no disponibles.');
+if (!satelliteControlChecks.gfmOptions.includes('2026-08-19') || satelliteControlChecks.gfmOptions.includes('2026-08-18')) throw Error('GFM fabrica fechas no disponibles.');
 for (const category of ['Precipitaciones','Altura de ríos','Observación satelital','Modelos / pronósticos']) {
   if (!html.includes(category)) throw Error(`Falta la categoría visual ${category}`);
 }

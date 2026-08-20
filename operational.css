@@ -465,15 +465,19 @@ main {
 }
 
 .climate-point-toolbar {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   align-items: stretch;
+  gap: 10px;
+  margin-bottom: 10px;
+  padding: 10px;
 }
 
 .climate-source-group {
   display: flex;
-  flex: 1 1 320px;
   flex-direction: column;
   gap: 8px;
-  min-width: 260px;
+  min-width: 0;
   margin: 0;
   padding: 10px;
   border: 1px solid #cbdad6;
@@ -500,6 +504,19 @@ main {
 
 .climate-source-group-future {
   opacity: .62;
+}
+
+.climate-point-toolbar > .climate-map-reference {
+  grid-column: 1 / -1;
+  justify-self: end;
+  width: auto;
+  margin-left: 0;
+  padding: 0 2px;
+  color: var(--muted);
+  font-size: .62rem;
+  font-weight: 650;
+  line-height: 1.35;
+  text-align: right;
 }
 
 .climate-source-toggles {
@@ -1953,6 +1970,10 @@ footer {
   .climate-source-toggles {
     grid-template-columns: repeat(3, minmax(150px, 1fr));
   }
+
+  .climate-point-toolbar {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 800px) {
@@ -2113,6 +2134,20 @@ footer {
 
   .climate-map-layout {
     grid-template-columns: 1fr;
+  }
+
+  .climate-point-toolbar {
+    grid-template-columns: 1fr;
+    gap: 8px;
+    margin-bottom: 9px;
+    padding: 9px;
+  }
+
+  .climate-point-toolbar > .climate-map-reference {
+    justify-self: start;
+    width: 100%;
+    padding: 0;
+    text-align: left;
   }
 
   .ina-hydrometry-card { grid-column: auto; }

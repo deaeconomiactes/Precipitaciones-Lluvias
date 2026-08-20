@@ -9,8 +9,14 @@ const rainfallBefore = fs.readFileSync('data/rainfall.json');
 for (const id of ['climateFullscreenButton','climateExportPngButton','climateSatelliteOpacity','climateMapLegend','climateSatelliteDate','climateSatelliteDateStatus','climateSatelliteLatestButton']) {
   if (!html.includes(`id="${id}"`)) throw Error(`Falta el control ${id}`);
 }
-for (const group of ['Registros propios','Hidrometría','Satélite','Modelos','Administrativo (preparado)']) {
+for (const group of ['Registros propios','Hidrometría','Satélite','Modelos']) {
   if (!html.includes(`<summary>${group}</summary>`)) throw Error(`Falta el grupo ${group}`);
+}
+if (!html.includes('<details class="climate-source-group climate-source-group-future" hidden>') || !html.includes('Administrativo (preparado)')) {
+  throw Error('La tarjeta administrativa futura no está oculta y conservada para reactivación.');
+}
+if (html.includes('<summary>Administrativo (preparado)</summary>') && !html.includes('climate-source-group-future" hidden')) {
+  throw Error('Administrativo (preparado) sigue visible en la UI pública.');
 }
 for (const id of ['mapPointDetailTitle','mapPointDetailEyebrow','mapPointOperationalDetail','inaHydrometryDetailCard']) {
   if (!html.includes(`id="${id}"`)) throw Error(`Falta el elemento operativo ${id}`);
@@ -56,6 +62,15 @@ for (const requirement of [
 const css = fs.readFileSync('operational.css', 'utf8');
 for (const requirement of ['align-items: start', 'isolation: isolate', 'scroll-margin-top:', '.ina-history-chart-wrap canvas', '.ina-hydrometry-card', 'grid-column: 1 / -1', '.ina-quick-indicators']) {
   if (!css.includes(requirement)) throw Error(`Falta el resguardo de layout del mapa: ${requirement}`);
+}
+for (const requirement of ['grid-template-columns: repeat(4, minmax(0, 1fr))', 'grid-template-columns: repeat(2, minmax(0, 1fr))', 'grid-template-columns: 1fr', 'grid-column: 1 / -1', 'justify-self: end']) {
+  if (!css.includes(requirement)) throw Error(`Falta la disposición responsive de fuentes: ${requirement}`);
+}
+for (const control of ['climateSatelliteDate', 'climateSatelliteOpacity', 'climateInaToggle', 'climateSnihToggle', 'climateSaltoToggle', 'climateNasaToggle', 'climateGeoglowsToggle']) {
+  if (!html.includes(`id="${control}"`)) throw Error(`Falta el control de fuente ${control}`);
+}
+for (const requirement of ['function updateClimatePointReference', 'climateHydrologyReference', 'fuentes puntuales visibles', 'inundación satelital']) {
+  if (!app.includes(requirement)) throw Error(`Falta la actualización del resumen de fuentes: ${requirement}`);
 }
 const territorialMarkup = html.slice(html.indexOf('id="climateDepartmentDetail"'), html.indexOf('id="climatePointDetail"'));
 for (const label of ['Período comparable','Observado del período','Promedio histórico comparable','Mínimo histórico comparable','Máximo histórico comparable','Diferencia','Diferencia porcentual','Actualización de datos']) {

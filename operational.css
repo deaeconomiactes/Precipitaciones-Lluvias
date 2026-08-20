@@ -959,6 +959,22 @@ main {
   background: linear-gradient(145deg, #f8fbfa, #edf5f2);
 }
 
+.ina-hydrometry-card { grid-column: 1 / -1; min-width: 0; margin-top: 10px; padding: 18px; border: 1px solid #b9cbd4; border-radius: 14px; background: linear-gradient(145deg, #fbfdfc, #edf5f2); box-shadow: 0 5px 16px rgba(22,61,56,.07); }
+.ina-card-heading { display: flex; justify-content: space-between; gap: 18px; align-items: flex-start; }
+.ina-card-heading h3 { margin: 3px 0 3px; color: var(--deep); font-size: 1.08rem; }
+.ina-card-heading p, .ina-card-source span, .ina-card-source small { color: var(--muted); font-size: .68rem; line-height: 1.45; }
+.ina-card-heading p { margin: 0; }
+.ina-card-source { display: grid; gap: 3px; min-width: 210px; text-align: right; }
+.ina-card-source strong { color: var(--deep); font-size: .76rem; }
+.ina-quick-indicators { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin: 15px 0 2px; }
+.ina-quick-indicators > div { min-width: 0; padding: 10px 12px; border: 1px solid rgba(61,98,91,.16); border-radius: 10px; background: rgba(255,255,255,.72); }
+.ina-quick-indicators span, .ina-quick-indicators strong { display: block; }
+.ina-quick-indicators span { color: var(--muted); font-size: .61rem; }
+.ina-quick-indicators strong { margin-top: 4px; color: var(--deep); font-size: .9rem; overflow-wrap: anywhere; }
+.ina-hydrometry-card .ina-history-panel { padding-top: 16px; }
+.ina-hydrometry-card .ina-history-chart-wrap { height: 330px; }
+.ina-threshold-caption { margin: 8px 0 0; color: var(--muted); font-size: .6rem; }
+
 .climate-api-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
@@ -2098,6 +2114,11 @@ footer {
   .climate-map-layout {
     grid-template-columns: 1fr;
   }
+
+  .ina-hydrometry-card { grid-column: auto; }
+  .ina-card-heading { flex-direction: column; gap: 8px; }
+  .ina-card-source { min-width: 0; text-align: left; }
+  .ina-quick-indicators { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 
   .climate-map-card { scroll-margin-top: 12px; }
 

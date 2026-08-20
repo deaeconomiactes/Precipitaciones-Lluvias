@@ -1242,6 +1242,7 @@ function applyClimateMapMode(mode, { initial = false } = {}) {
   if ($('climateHydrologyControls')) $('climateHydrologyControls').hidden = !hydrology;
   if ($('climateDepartmentDetail')) $('climateDepartmentDetail').hidden = hydrology;
   if ($('climatePointDetail')) $('climatePointDetail').hidden = !hydrology;
+  if (!hydrology && $('inaHydrometryDetailCard')) $('inaHydrometryDetailCard').hidden = true;
   if ($('climateApiGrid')) $('climateApiGrid').hidden = !hydrology;
   if ($('climateDepartmentMethod')) $('climateDepartmentMethod').hidden = hydrology;
   if ($('climateHydrologyMethod')) $('climateHydrologyMethod').hidden = !hydrology;
@@ -1978,14 +1979,14 @@ function renderInaHistoryChart(station, points) {
   const legend = $('inaThresholdLegend');
   destroyInaHydrometryChart();
   if (!points.length) {
-    if (status) status.textContent = 'No hay observaciones disponibles para este período.';
+    if (status) status.textContent = 'No hay observaciones suficientes para graficar esta ventana.';
     if (canvas) canvas.hidden = true;
     if (notice) notice.hidden = true;
     if (legend) legend.innerHTML = '';
     return;
   }
   if (typeof Chart === 'undefined') throw new Error('La biblioteca de gráficos no está disponible');
-  if (status) status.textContent = `${points.length} observaciones reales · hora de Argentina`;
+  if (status) status.textContent = points.length < 2 ? 'Serie observada disponible para la ventana seleccionada.' : `${points.length} observaciones reales · hora de Argentina`;
   if (canvas) canvas.hidden = false;
   const thresholds = inaThresholds(station);
   if (legend) legend.innerHTML = thresholds.length
@@ -1997,7 +1998,7 @@ function renderInaHistoryChart(station, points) {
   }
   const latestTimestamp = points.at(-1).x;
   const observationDatasets = inaObservationSegments(points).map((segment, index) => ({
-    label: 'Altura observada', data: segment, parsing: false, borderColor: '#087d94', backgroundColor: '#087d94', borderWidth: 2.2,
+    label: 'Altura observada', data: segment, parsing: false, borderColor: '#087d94', backgroundColor: '#087d94', borderWidth: 2.8,
     pointRadius: context => context.raw.x === latestTimestamp ? 4.5 : 1.8,
     pointHoverRadius: 5,
     pointBackgroundColor: context => context.raw.x === latestTimestamp ? '#d66b3d' : '#087d94',
@@ -2065,27 +2066,30 @@ async function showInaHistoryWindow(station, windowKey, token) {
 }
 
 function renderInaHydrometryPanel(station) {
-  const container = $('mapPointOperationalDetail');
+  const container = $('inaHydrometryDetailCard');
   if (!container) return;
   const height = station.latestHeight || {};
   const trend = formatInaTrend(height.trend);
   const token = ++state.climateMap.inaHistory.selectionToken;
   destroyInaHydrometryChart();
+  const publishedState = String(height.status || '').trim();
+  const thresholds = inaThresholds(station);
+  container.hidden = false;
   container.innerHTML = `
-    <dl class="climate-detail-list climate-point-detail-list ina-current-summary">
-      <div><dt>Estación</dt><dd>${escapeHtml(station.name)}</dd></div>
-      <div><dt>Río / curso</dt><dd>${escapeHtml(station.river || 'No informado por INA')}</dd></div>
-      <div><dt>Altura actual</dt><dd>${escapeHtml(format(height.valueM))} m</dd></div>
-      <div><dt>Última actualización</dt><dd>${escapeHtml(formatInaDateTime(height.date))}</dd></div>
-      <div class="climate-detail-wide"><dt>Fuente</dt><dd>INA / SIyAH</dd></div>
-      ${trend ? `<div class="climate-detail-wide"><dt>Tendencia informada por INA</dt><dd>${escapeHtml(trend)}</dd></div>` : ''}
-    </dl>
+    <div class="ina-card-heading"><div><span class="eyebrow">Detalle hidrométrico</span><h3>${escapeHtml(station.name)}</h3><p>Altura observada del río — serie oficial por estación</p></div><div class="ina-card-source"><strong>${escapeHtml(station.river || 'Río / curso no informado')}</strong><span>Fuente: INA / SIyAH</span><small>Última actualización: ${escapeHtml(formatInaDateTime(height.date))}</small></div></div>
+    <div class="ina-quick-indicators" aria-label="Indicadores rápidos de la estación">
+      <div><span>Altura actual</span><strong>${escapeHtml(format(height.valueM))} m</strong></div>
+      ${trend ? `<div><span>Tendencia informada</span><strong>${escapeHtml(trend)}</strong></div>` : ''}
+      <div><span>Estado informado</span><strong>${escapeHtml(publishedState || 'No informado por la fuente')}</strong></div>
+      ${Number.isFinite(height.changeM) ? `<div><span>Cambio reciente</span><strong>${escapeHtml(format(height.changeM))} m</strong></div>` : ''}
+    </div>
     <section class="ina-history-panel" aria-labelledby="inaHistoryTitle">
       <div class="ina-history-head"><div><h4 id="inaHistoryTitle">Evolución de la altura del río</h4><small>Serie observada oficial · metros</small></div><div class="ina-history-window" role="group" aria-label="Período del gráfico"><button type="button" data-ina-history-window="7d" class="is-active" aria-pressed="true">7 días</button><button type="button" data-ina-history-window="30d" aria-pressed="false">30 días</button></div></div>
       <p id="inaHistoryStatus" class="ina-history-status" role="status">Cargando serie hidrométrica…</p>
       <div class="ina-history-chart-wrap"><canvas id="inaHistoryChart" aria-label="Gráfico de altura hidrométrica observada" role="img"></canvas></div>
       <div id="inaThresholdLegend" class="ina-threshold-legend"></div>
       <p id="inaHistoryDifference" class="ina-history-notice" hidden></p>
+      <p class="ina-threshold-caption">${thresholds.length ? 'Umbrales publicados por INA / autoridades competentes' : 'Umbrales no disponibles para esta estación.'}</p>
       <a class="ina-history-source" href="https://alerta.ina.gob.ar/pub/mapa" target="_blank" rel="noopener noreferrer">Fuente: INA / SIyAH</a>
     </section>`;
   container.querySelectorAll('[data-ina-history-window]').forEach(button => button.addEventListener('click', () => showInaHistoryWindow(station, button.dataset.inaHistoryWindow, token)));
@@ -3272,6 +3276,8 @@ function formatClimateReferenceDate(value) {
 }
 
 function renderMapPointDetail(detail, action = null) {
+  const inaCard = $('inaHydrometryDetailCard');
+  if (inaCard && detail.presentationType !== 'ina-height') inaCard.hidden = true;
   if (detail.presentationType !== 'ina-height') {
     state.climateMap.inaHistory.selectionToken += 1;
     destroyInaHydrometryChart();

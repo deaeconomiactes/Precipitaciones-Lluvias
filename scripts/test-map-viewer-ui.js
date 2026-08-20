@@ -12,7 +12,7 @@ for (const id of ['climateFullscreenButton','climateExportPngButton','climateSat
 for (const group of ['Registros propios','Hidrometría','Satélite','Modelos','Administrativo (preparado)']) {
   if (!html.includes(`<summary>${group}</summary>`)) throw Error(`Falta el grupo ${group}`);
 }
-for (const id of ['mapPointDetailTitle','mapPointDetailEyebrow','mapPointOperationalDetail']) {
+for (const id of ['mapPointDetailTitle','mapPointDetailEyebrow','mapPointOperationalDetail','inaHydrometryDetailCard']) {
   if (!html.includes(`id="${id}"`)) throw Error(`Falta el elemento operativo ${id}`);
 }
 for (const label of ['Referencia histórica comparable','Diferencia porcentual','Fuente','Fecha','Valor observado','Observación']) {
@@ -28,6 +28,13 @@ for (const requirement of [
   'No fue posible consultar el histórico en este momento.',
   'El último dato del gráfico puede diferir de la lectura más reciente.',
   'Umbrales publicados por INA / autoridades competentes',
+  'Umbrales no disponibles para esta estación.',
+  'No hay observaciones suficientes para graficar esta ventana.',
+  'Serie observada disponible para la ventana seleccionada.',
+  'data-ina-history-window="7d"',
+  'data-ina-history-window="30d"',
+  'inaHydrometryDetailCard',
+  'container.hidden = false',
   'inaHistoryCacheKey(seriesId, windowKey)',
   "if (sourceId === 'ina') renderInaHydrometryPanel(station)"
 ]) if (!app.includes(requirement)) throw Error(`Falta el requisito del histórico INA: ${requirement}`);
@@ -47,7 +54,7 @@ for (const requirement of [
   'state.climateMap.resizeObserver = new ResizeObserver(() => scheduleClimateMapInvalidate(100))'
 ]) if (!app.includes(requirement)) throw Error(`Falta el recálculo controlado de Leaflet: ${requirement}`);
 const css = fs.readFileSync('operational.css', 'utf8');
-for (const requirement of ['align-items: start', 'isolation: isolate', 'scroll-margin-top:', '.ina-history-chart-wrap canvas']) {
+for (const requirement of ['align-items: start', 'isolation: isolate', 'scroll-margin-top:', '.ina-history-chart-wrap canvas', '.ina-hydrometry-card', 'grid-column: 1 / -1', '.ina-quick-indicators']) {
   if (!css.includes(requirement)) throw Error(`Falta el resguardo de layout del mapa: ${requirement}`);
 }
 const territorialMarkup = html.slice(html.indexOf('id="climateDepartmentDetail"'), html.indexOf('id="climatePointDetail"'));

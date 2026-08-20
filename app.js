@@ -251,8 +251,8 @@ function monthlyObservationSourceLabel(rows, month) {
   const rowsWithValue = rows.filter(row => Number.isFinite(row.months[month]));
   if (!rowsWithValue.length) return null;
   const derivedRows = rowsWithValue.filter(row => row.monthSources?.[month] === 'daily_derived');
-  if (!derivedRows.length) return 'fuente mensual';
-  const source = derivedRows.length === rowsWithValue.length ? 'diaria mensualizada' : 'mensual + diaria mensualizada';
+  if (!derivedRows.length) return 'Mensual';
+  const source = derivedRows.length === rowsWithValue.length ? 'Derivado de diarios' : 'Mensual + derivado de diarios';
   if (derivedRows.length === 1) {
     const meta = derivedRows[0].dailyDerivedMeta?.[month];
     if (meta) return `${source}; ${meta.daysWithRecords}/${meta.daysInMonth} días con registro`;
@@ -3199,7 +3199,7 @@ function updateClimateDepartmentReference() {
   const variable = CLIMATE_MAP_VARIABLES[state.climateMap.variable];
   const reference = variable.scale === 'rain'
     ? `Fecha diaria de referencia: ${dailyReference ? formatClimateReferenceDate(dailyReference) : 'Sin dato'} · ${statuses.length} departamentos en la base diaria`
-    : `Referencia mensual: ${selected?.monthlyReference || 'último mes disponible por departamento'}`;
+    : `Referencia mensual: ${selected?.monthlyReference || 'último mes con registro mensual por departamento'}`;
   if ($('climateMapReference')) $('climateMapReference').textContent = reference;
 }
 
@@ -4311,7 +4311,7 @@ function getLatestMonthlyPeriodForDepartment(department, f) {
       if (!months.includes(month)) return;
       if (!Number.isFinite(value)) return;
       if (!latest || row.year > latest.year || (row.year === latest.year && month > latest.month)) {
-        latest = { year: row.year, month, observedMm: value };
+        latest = { year: row.year, month, observedMm: value, source: row.monthSources?.[month] || null };
       }
     });
     return latest;
@@ -4353,6 +4353,7 @@ function getDepartmentMonthlyDeviationRows(f, today = new Date()) {
       latestYear: latest ? latest.year : null,
       latestMonth: latest ? latest.month : null,
       observedMm,
+      dataOrigin: latest ? monthlyDataOrigin(latest.source) : 'Sin dato',
       historicalAverageMm,
       differenceMm,
       differencePct,
@@ -4367,8 +4368,14 @@ function renderDepartmentDetail(rows, f) {
   updateDepartmentDetailMethodology(f);
   $('detailsTable').innerHTML = sortedRows.length ? sortedRows.map(row => {
     const period = Number.isInteger(row.latestMonth) && Number.isFinite(row.latestYear) ? `${MONTHS_FULL[row.latestMonth]} ${row.latestYear}` : 'Sin dato';
-    return `<tr><td>${row.department}</td><td>${period}</td><td>${formatTableRainfall(row.observedMm)}</td><td>${formatTableRainfall(row.historicalAverageMm)}</td><td>${formatSignedMm(row.differenceMm)}</td><td>${formatSignedPercent(row.differencePct)}</td><td><span class="${deviationClass(row.category)}">${row.category}</span></td></tr>`;
-  }).join('') : '<tr><td colspan="7">No hay registros válidos para el período seleccionado.</td></tr>';
+    return `<tr><td>${row.department}</td><td>${period}</td><td>${formatTableRainfall(row.observedMm)}</td><td>${row.dataOrigin}</td><td>${formatTableRainfall(row.historicalAverageMm)}</td><td>${formatSignedMm(row.differenceMm)}</td><td>${formatSignedPercent(row.differencePct)}</td><td><span class="${deviationClass(row.category)}">${row.category}</span></td></tr>`;
+  }).join('') : '<tr><td colspan="8">No hay registros válidos para el período seleccionado.</td></tr>';
+}
+
+function monthlyDataOrigin(source) {
+  if (source === 'monthly') return 'Mensual';
+  if (source === 'daily_derived') return 'Derivado de diarios';
+  return 'Sin dato';
 }
 
 function sortDepartmentDetailRows(rows, criterion) {
@@ -4464,13 +4471,14 @@ function signedMm(value) {
 }
 
 function downloadTable() {
-  const headers = ['Departamento','Ultimo_anio','Ultimo_mes','Acumulado_mensual_observado_mm','Promedio_historico_mensual_mm','Diferencia_mm','Diferencia_pct','Categoria'];
+  const headers = ['Departamento','Ultimo_anio','Ultimo_mes_con_registro_mensual','Acumulado_mensual_observado_mm','Origen_del_dato','Promedio_historico_mensual_mm','Diferencia_mm','Diferencia_pct','Categoria'];
   const csvValue = value => Number.isFinite(value) ? value.toFixed(2) : '';
   const lines = state.tableRows.map(row => [
     row.department,
     Number.isFinite(row.latestYear) ? row.latestYear : '',
     Number.isInteger(row.latestMonth) ? MONTHS_FULL[row.latestMonth] : '',
     csvValue(row.observedMm),
+    row.dataOrigin,
     csvValue(row.historicalAverageMm),
     csvValue(row.differenceMm),
     csvValue(row.differencePct),

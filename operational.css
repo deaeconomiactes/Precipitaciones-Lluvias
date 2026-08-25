@@ -2386,3 +2386,5 @@ footer {
   border-radius: 1px;
   transform: rotate(45deg) scale(.78);
 }
+
+.climate-hydrometry-summary{margin-top:12px;padding-top:12px;border-top:1px solid var(--border);color:var(--muted);font-size:.72rem;line-height:1.45}.climate-hydrometry-summary h4{margin-bottom:7px;color:var(--deep);font-size:.68rem;letter-spacing:.08em;text-transform:uppercase}.climate-hydrometry-summary ul{margin:6px 0 0 16px}.climate-hydrometry-summary button{border:0;background:none;color:#087d94;text-decoration:underline;cursor:pointer;font:inherit;font-weight:750}

@@ -13,7 +13,7 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="climate-controls.css?v=20260612-4">
-  <link rel="stylesheet" href="operational.css?v=20260812-3">
+  <link rel="stylesheet" href="operational.css?v=20260825-4">
 </head>
 <body>
   <div class="loading" id="loading"><div class="spinner"></div><p>Preparando datos climáticos...</p></div>
@@ -79,18 +79,15 @@
       <section class="decision-grid">
         <article class="card climate-map-card">
           <div class="card-head climate-map-heading">
-            <div><h2>Mapa climático interactivo de Corrientes</h2><p>La lluvia departamental y las fuentes hidrológicas se presentan en modos separados para no mezclar indicadores territoriales, mediciones puntuales, modelos y referencias satelitales.</p></div>
+            <div><h2>Mapa climático interactivo de Corrientes</h2><p>Departamentos coloreados por lluvia, con hidrometría, satélite y modelos disponibles sobre la misma vista.</p></div>
             <span class="source-tag" id="climatePointTotal">Cargando mapa…</span>
           </div>
-          <div class="climate-map-mode-bar">
-            <label><span>Modo del mapa</span><select id="climateMapMode"><option value="departments" selected>Departamentos / lluvia</option><option value="hydrology">Hidrología / puntos</option></select></label>
-            <span class="climate-mode-explanation" id="climateModeExplanation">Indicadores territoriales agregados por departamento.</span>
-          </div>
+          <div class="climate-map-mode-bar" hidden aria-hidden="true"><select id="climateMapMode"><option value="departments" selected>Departamentos / lluvia</option><option value="hydrology">Hidrología / puntos</option></select><span class="climate-mode-explanation" id="climateModeExplanation">Departamentos / lluvia con hidrometría superpuesta.</span></div>
           <div class="climate-map-toolbar" id="climateDepartmentControls" aria-label="Controles del mapa departamental">
             <label><span>Variable del mapa</span><select id="climateMapVariable"><option value="rainLastDateMm">Lluvia del día de referencia</option><option value="rain7dMm" selected>Acumulado 7 días</option><option value="rain15dMm">Acumulado 15 días</option><option value="rain30dMm">Acumulado 30 días</option><option value="monthlyDifferencePct">Desvío mensual vs histórico</option><option value="monthlyCategory">Categoría mensual descriptiva</option></select></label>
             <span class="climate-map-reference" id="climateMapReference">Cargando información territorial…</span>
           </div>
-          <div class="climate-map-toolbar climate-point-toolbar" id="climateHydrologyControls" aria-label="Fuentes del mapa hidrológico" hidden>
+          <div class="climate-map-toolbar climate-point-toolbar" id="climateHydrologyControls" aria-label="Capas hidrológicas y fuentes puntuales">
             <details class="climate-source-group" open><summary>Registros propios</summary><div class="climate-source-content"><label class="climate-source-toggle source-rain"><input id="climateRainToggle" data-point-source="rain" type="checkbox"><i aria-hidden="true"></i><span>Lluvias registradas <strong id="climateRainCount">—</strong></span></label><small>Observado propio · ubicación pública aproximada.</small></div></details>
             <details class="climate-source-group" open><summary>Hidrometría</summary><div class="climate-source-content climate-source-toggles"><label class="climate-source-toggle source-ina"><input id="climateInaToggle" data-point-source="ina" type="checkbox" checked><i aria-hidden="true"></i><span>Altura del río · INA <strong id="climateInaCount">—</strong></span></label><label class="climate-source-toggle source-snih"><input id="climateSnihToggle" data-point-source="snih" type="checkbox" checked><i aria-hidden="true"></i><span>Altura del río · SNIH <strong id="climateSnihCount">—</strong></span></label><label class="climate-source-toggle source-salto"><input id="climateSaltoToggle" data-point-source="salto" type="checkbox" checked><i aria-hidden="true"></i><span>Altura · Salto Grande <strong id="climateSaltoCount">—</strong></span></label><small>Observaciones externas; SNIH se identifica como preliminar.</small></div></details>
             <details class="climate-source-group"><summary>Satélite</summary><div class="climate-source-content"><label class="climate-raster-select"><span>Capa visible</span><select id="climateHydrologyLayer"><option value="none">Sin referencia satelital</option></select></label><div class="climate-satellite-date-control"><label for="climateSatelliteDate"><span>Fecha satelital</span><select id="climateSatelliteDate" disabled><option value="">Última disponible</option></select></label><small id="climateSatelliteDateStatus">Seleccioná una capa satelital.</small><button id="climateSatelliteLatestButton" type="button" disabled>Volver a última disponible</button></div><label class="climate-opacity-control"><span>Opacidad <output id="climateSatelliteOpacityValue">65 %</output></span><input id="climateSatelliteOpacity" type="range" min="10" max="100" step="5" value="65"></label><small>Escenas recientes verificadas, hasta 7 días hacia atrás.</small></div></details>
@@ -117,6 +114,7 @@
                 <div><dt>Diferencia</dt><dd id="mapDetailMonthlyDifference">Sin dato</dd></div><div><dt>Diferencia porcentual</dt><dd id="mapDetailMonthlyDifferencePct">Sin dato</dd></div>
                 <div class="climate-detail-wide"><dt>Actualización de datos</dt><dd id="mapDetailUpdated">Sin dato</dd></div>
               </dl>
+              <section class="climate-hydrometry-summary" id="climateHydrometrySummary" aria-live="polite"><h4>Resumen hidrométrico</h4><div id="climateHydrometrySummaryContent">Sin estación hidrométrica asociada en esta vista.</div></section>
             </aside>
             <aside class="climate-map-detail" id="climatePointDetail" aria-live="polite" hidden>
               <span class="eyebrow" id="mapPointDetailEyebrow">Información seleccionada</span>
@@ -260,6 +258,6 @@
   <footer><p>Dashboard independiente · Datos exclusivos de Precipitaciones-Lluvias</p><p id="dataNote"></p></footer>
   <div class="error-banner" id="errorBanner"></div>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="app.js?v=20260819-1"></script>
+  <script src="app.js?v=20260825-4"></script>
 </body>
 </html>

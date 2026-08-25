@@ -225,7 +225,7 @@ for (const category of ['Extensión de inundación observada','Agua observada','
 }
 if (!app.includes('Qué muestra esta capa') || app.includes("[['Estado observado', detail.status]")) throw Error('El panel satelital conserva una etiqueta técnica.');
 if (!html.includes('Escenas recientes verificadas, hasta 7 días hacia atrás.') || html.includes('Ráster remoto con fecha de escena')) throw Error('El selector temporal satelital no comunica su límite operativo.');
-if (!html.includes('app.js?v=20260819-1')) throw Error('El HTML no invalida la versión anterior del JavaScript del selector satelital.');
+if (!html.includes('app.js?v=20260825-4') || html.includes('app.js?v=20260819-1')) throw Error('El HTML no invalida la versión anterior del JavaScript del selector satelital.');
 const satelliteControlChecks = vm.runInContext(`(() => {
   const elements = ['climateSatelliteDate','climateSatelliteDateStatus','climateSatelliteLatestButton']
     .reduce((result, id) => ({ ...result, [id]: document.getElementById(id) }), {});
@@ -334,5 +334,13 @@ for (const requirement of ['.model-rain-icon span','.model-flow-icon span','tran
 for (const requirement of ['scrollWheelZoom: true','doubleClickZoom: true','touchZoom: true','wheelDebounceTime: 40','wheelPxPerZoomLevel: 80']) {
   if (!app.includes(requirement)) throw Error(`Falta la interacción práctica de zoom: ${requirement}`);
 }
+for (const requirement of ['id="climateHydrometrySummary"', 'Resumen hidrométrico']) {
+  if (!html.includes(requirement)) throw Error(`Falta la integración departamental de hidrometría: ${requirement}`);
+}
+if (html.includes('climateHydrometryToggle')) throw Error('La vista conserva un toggle hidrométrico redundante en lugar de las solapas originales.');
+for (const requirement of ['function relevantHydrometryPoints', 'climateGeometryContains(feature.geometry, point.lng, point.lat)', 'point.distance <= 1.6 ** 2', 'Sin estaciones hidrométricas cercanas para este departamento']) {
+  if (!app.includes(requirement)) throw Error(`Falta la búsqueda espacial de hidrometría relevante: ${requirement}`);
+}
+if (!app.includes('renderHydrometrySummary(state.climateMap.statuses.get(state.climateMap.selectedDepartment)')) throw Error('La selección de estación no actualiza el resumen hidrométrico territorial.');
 if (!rainfallBefore.length) throw Error('rainfall.json está vacío');
 console.log('Visor: controles, panel operativo y simbología por categoría validados.');

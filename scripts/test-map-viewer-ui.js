@@ -225,7 +225,7 @@ for (const category of ['Extensión de inundación observada','Agua observada','
 }
 if (!app.includes('Qué muestra esta capa') || app.includes("[['Estado observado', detail.status]")) throw Error('El panel satelital conserva una etiqueta técnica.');
 if (!html.includes('Escenas recientes verificadas, hasta 7 días hacia atrás.') || html.includes('Ráster remoto con fecha de escena')) throw Error('El selector temporal satelital no comunica su límite operativo.');
-if (!html.includes('app.js?v=20260825-4') || html.includes('app.js?v=20260819-1')) throw Error('El HTML no invalida la versión anterior del JavaScript del selector satelital.');
+if (!html.includes('app.js?v=20260826-4') || html.includes('app.js?v=20260819-1')) throw Error('El HTML no invalida la versión anterior del JavaScript del visor.');
 const satelliteControlChecks = vm.runInContext(`(() => {
   const elements = ['climateSatelliteDate','climateSatelliteDateStatus','climateSatelliteLatestButton']
     .reduce((result, id) => ({ ...result, [id]: document.getElementById(id) }), {});
@@ -305,7 +305,7 @@ for (const mapping of [
 ]) if (!app.includes(mapping)) throw Error('Una fuente no comparte el color de su categoría');
 const rainLayerSource = app.slice(app.indexOf('function rainPointComparison'), app.indexOf('function renderRainPointDetail'));
 if (!app.includes('const RAIN_COMPARISON_SCALE')) throw Error('Falta la escala azul común de precipitación.');
-for (const requirement of ['dailyHistoricalWindowReference(state.dailyRecords','Referencia histórica','Diferencia:','radius: 5.8','wireClimatePointSelection(marker, options)']) {
+for (const requirement of ['dailyHistoricalWindowReference(state.dailyRecords','historicalAverageMm','differenceMm','radius: 5.8','wireClimatePointSelection(marker, options)']) {
   if (!rainLayerSource.includes(requirement)) throw Error(`La lluvia no usa comparación visual homogénea: ${requirement}`);
 }
 if (rainLayerSource.includes('Math.sqrt') || rainLayerSource.includes('sourceInfo.color')) throw Error('La lluvia todavía varía tamaño o color por fuente/magnitud.');
@@ -334,10 +334,35 @@ for (const requirement of ['.model-rain-icon span','.model-flow-icon span','tran
 for (const requirement of ['scrollWheelZoom: true','doubleClickZoom: true','touchZoom: true','wheelDebounceTime: 40','wheelPxPerZoomLevel: 80']) {
   if (!app.includes(requirement)) throw Error(`Falta la interacción práctica de zoom: ${requirement}`);
 }
-for (const requirement of ['id="climateHydrometrySummary"', 'Resumen hidrométrico']) {
+for (const requirement of ['id="climateHydrometrySummary"', 'Resumen hidrométrico', 'id="climateSelectedPointSummary"']) {
   if (!html.includes(requirement)) throw Error(`Falta la integración departamental de hidrometría: ${requirement}`);
 }
+for (const requirement of ['id="climateDepartmentOpacity"', 'climateDepartmentFillPane', 'climateRasterPane', 'climateDepartmentBoundaryPane', 'pane: \'climateDepartmentFillPane\'', 'pane: \'climateDepartmentBoundaryPane\'', 'mapFillOpacity']) {
+  if (!app.includes(requirement) && !html.includes(requirement)) throw Error(`Falta la superposición visual independiente: ${requirement}`);
+}
+for (const requirement of ['function climatePointBoundaryStyle', "fillOpacity: state.climateMap.departmentFillOpacity", "state.climateMap.activeHydrologyLayer === 'none' ? 0.8 : 0.35"]) {
+  if (!app.includes(requirement)) throw Error(`Falta el control de profundidad visual del mapa: ${requirement}`);
+}
+for (const requirement of ['Registro puntual de lluvia', 'className: \'climate-rain-point-tooltip\'', 'formatClimateMm(point.rainfallMm)', 'formatDate(point.date)']) {
+  if (!app.includes(requirement)) throw Error(`Falta la jerarquía cuantitativa de lluvia puntual: ${requirement}`);
+}
+const rainTooltip = app.slice(app.indexOf("marker.bindTooltip(`<strong>Registro puntual de lluvia"), app.indexOf("marker.bindPopup(`<strong>Registro puntual de lluvia"));
+for (const forbidden of ['differencePct', 'Variación relativa', 'Observación puntual/local', 'Referencia histórica comparable']) {
+  if (rainTooltip.includes(forbidden)) throw Error(`El tooltip puntual todavía contiene información secundaria: ${forbidden}`);
+}
+const rainPopup = app.slice(app.indexOf("marker.bindPopup(`<strong>Registro puntual de lluvia"), app.indexOf('wireClimatePointSelection(marker, options)'));
+for (const forbidden of ['differencePct', 'Variación relativa', 'Observación puntual/local', 'Referencia histórica comparable']) {
+  if (rainPopup.includes(forbidden)) throw Error(`El popup puntual todavía contiene información secundaria: ${forbidden}`);
+}
+if (!app.includes("value: formatClimateSigned(differenceMm, 'mm')") || !html.includes('Mayor diferencia absoluta (mm)')) throw Error('La diferencia absoluta no es la lectura principal del dashboard.');
+if (html.indexOf('<th>Diferencia (mm)</th>') > html.indexOf('<th>Diferencia (%)</th>')) throw Error('La tabla departamental prioriza la diferencia porcentual sobre milímetros.');
+for (const forbidden of ['+568,7 %</strong>', 'Alerta oficial', 'Riesgo crítico']) {
+  if (html.includes(forbidden) || app.includes(forbidden)) throw Error(`Persistió una lectura de alerta no permitida: ${forbidden}`);
+}
 if (html.includes('climateHydrometryToggle')) throw Error('La vista conserva un toggle hidrométrico redundante en lugar de las solapas originales.');
+for (const requirement of ['function renderSelectedPointSummary', 'renderSelectedPointSummary(detail, action)', 'climatePointSummaryAction']) {
+  if (!app.includes(requirement)) throw Error(`La selección de modelos no tiene un detalle visible: ${requirement}`);
+}
 for (const requirement of ['function relevantHydrometryPoints', 'climateGeometryContains(feature.geometry, point.lng, point.lat)', 'point.distance <= 1.6 ** 2', 'Sin estaciones hidrométricas cercanas para este departamento']) {
   if (!app.includes(requirement)) throw Error(`Falta la búsqueda espacial de hidrometría relevante: ${requirement}`);
 }

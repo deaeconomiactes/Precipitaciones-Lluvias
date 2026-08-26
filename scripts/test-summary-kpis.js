@@ -183,13 +183,13 @@ if (checks.departmentPresentation.observedTitle !== "Lluvia acumulada en A" || c
 if (checks.closedPresentation.periodValue !== "Diciembre 2024" || checks.closedPresentation.periodDetail !== "Mes completo" || checks.closedPresentation.historicalDetail !== "Para diciembre completo") {
   throw new Error(`El mes cerrado no tiene una presentación limpia: ${JSON.stringify(checks.closedPresentation)}`);
 }
-if (checks.positiveMonthNegativeYear.monthComparisonValue !== "+10 %" || !checks.positiveMonthNegativeYear.monthComparisonDetail.includes("por encima") || !checks.positiveMonthNegativeYear.annualComparisonValue.startsWith("−20")) {
+if (checks.positiveMonthNegativeYear.monthComparisonValue !== "+10 mm" || !checks.positiveMonthNegativeYear.monthComparisonDetail.includes("+10 mm") || !checks.positiveMonthNegativeYear.annualComparisonValue.startsWith("-20")) {
   throw new Error(`La comparación positiva mensual / negativa anual es incorrecta: ${JSON.stringify(checks.positiveMonthNegativeYear)}`);
 }
-if (checks.negativeMonthPositiveYear.monthComparisonValue !== "−20 %" || !checks.negativeMonthPositiveYear.monthComparisonDetail.includes("por debajo") || !checks.negativeMonthPositiveYear.annualComparisonValue.startsWith("+20")) {
+if (checks.negativeMonthPositiveYear.monthComparisonValue !== "-20 mm" || !checks.negativeMonthPositiveYear.monthComparisonDetail.includes("-20 mm") || !checks.negativeMonthPositiveYear.annualComparisonValue.startsWith("+20")) {
   throw new Error(`La comparación negativa mensual / positiva anual es incorrecta: ${JSON.stringify(checks.negativeMonthPositiveYear)}`);
 }
-if (!checks.positiveMonthNegativeYear.reading.includes("10 % por encima") || !checks.positiveMonthNegativeYear.reading.includes("20 % por debajo")) {
+if (!checks.positiveMonthNegativeYear.reading.includes("+10 mm por encima") || !checks.positiveMonthNegativeYear.reading.includes("-20 mm por debajo")) {
   throw new Error(`La lectura ejecutiva no combina mes y año: ${checks.positiveMonthNegativeYear.reading}`);
 }
 if (checks.noReferencePresentation.monthComparisonValue !== "Sin referencia histórica" || checks.noReferencePresentation.annualComparisonValue !== "Sin referencia histórica" || checks.noReferencePresentation.reading !== "No hay referencia histórica suficiente para realizar la comparación.") {

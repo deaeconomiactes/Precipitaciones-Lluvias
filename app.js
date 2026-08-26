@@ -29,6 +29,7 @@ const averageFinite = values => {
 document.addEventListener('DOMContentLoaded', init);
 
 async function init() {
+  wireWindyEmbed();
   try {
     const [rainfall, operationalDailyRecords, combinedDailyResult, dailySummary, stations, metadata] = await Promise.all([
       fetchDataFile('rainfall.json'),
@@ -340,6 +341,44 @@ function wireControls() {
     renderClimate(filters());
   });
   $('downloadTable').addEventListener('click', downloadTable);
+}
+
+const WINDY_EMBED_BASE_URL = 'https://embed.windy.com/embed2.html';
+const WINDY_EMBED_DEFAULTS = Object.freeze({ lat: '-27.47', lon: '-58.83', zoom: '7', level: 'surface' });
+
+function windyEmbedUrl(overlay) {
+  const params = new URLSearchParams({ ...WINDY_EMBED_DEFAULTS, overlay });
+  return `${WINDY_EMBED_BASE_URL}?${params.toString()}`;
+}
+
+function wireWindyEmbed() {
+  const frame = $('windyEmbed');
+  const fallback = $('windyEmbedFallback');
+  if (!frame || !fallback) return;
+  const buttons = [...document.querySelectorAll('[data-windy-overlay]')];
+  const showFallback = () => {
+    if (frame.dataset.loaded !== 'true') fallback.hidden = false;
+  };
+  const beginLoad = () => {
+    fallback.hidden = true;
+  };
+
+  frame.addEventListener('load', () => {
+    frame.dataset.loaded = 'true';
+    fallback.hidden = true;
+  });
+  frame.addEventListener('error', showFallback);
+  buttons.forEach(button => button.addEventListener('click', () => {
+    buttons.forEach(item => {
+      const active = item === button;
+      item.classList.toggle('is-active', active);
+      item.setAttribute('aria-pressed', String(active));
+    });
+    frame.dataset.loaded = 'false';
+    beginLoad();
+    frame.src = windyEmbedUrl(button.dataset.windyOverlay);
+  }));
+  beginLoad();
 }
 
 function normalizeMultiSelection(id, changed) {

@@ -198,11 +198,12 @@ if (checks.noReferencePresentation.monthComparisonValue !== "Sin referencia hist
 
 const html = fs.readFileSync("index.html", "utf8");
 const summaryMarkup = html.slice(html.indexOf('class="kpi-grid operational-kpis"'), html.indexOf('class="decision-grid"'));
+const fullSummaryMarkup = html.slice(html.indexOf('id="summaryPanel"'), html.indexOf('id="dailyPanel"'));
 for (const removed of ["Avance sobre histórico", "id=\"kpiMonthlyCategory\"", "Mes de referencia", "Observado del mes", "Diferencia vs. histórico", "Promedio histórico anual comparable", "Nota metodológica"]) {
   if (summaryMarkup.includes(removed)) throw new Error(`El detalle metodológico anterior sigue en la portada: ${removed}`);
 }
-for (const required of ["Período analizado", "Lluvia acumulada promedio por departamento", "Lluvia habitual por departamento", "Comparación con lo habitual", "Comparación anual con lo habitual", "Lectura provincial", "Situación reciente", "Observación satelital"]) {
-  if (!summaryMarkup.includes(required)) throw new Error(`Falta el elemento ejecutivo: ${required}`);
+for (const required of ["Período analizado", "Lluvia acumulada promedio por departamento", "Lluvia habitual por departamento", "Comparación con lo habitual", "Comparación anual con lo habitual", "Lectura provincial", "Situación reciente", "Meteorología avanzada"]) {
+  if (!fullSummaryMarkup.includes(required)) throw new Error(`Falta el elemento ejecutivo: ${required}`);
 }
 const css = fs.readFileSync("operational.css", "utf8");
 if (!css.includes('.operational-kpis .executive-comparison strong')) throw new Error('Las comparaciones principales no tienen mayor jerarquía visual.');

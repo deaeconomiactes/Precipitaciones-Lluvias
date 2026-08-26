@@ -178,8 +178,34 @@
           <aside class="source-info-panel" id="sourceInfoPanel" hidden><button id="sourceInfoClose" type="button" aria-label="Cerrar información">×</button><h3 id="sourceInfoTitle">Información de la fuente</h3><div id="sourceInfoContent"></div></aside>
         </article>
       </section>
-      <section class="flood-card">
-        <div class="flood-icon">sat</div><div><span class="eyebrow">Observación satelital</span><h2>Zonas inundadas visibles en el mapa</h2><p>GFM, OPERA Sentinel-1 y VIIRS aportan imágenes observadas con fecha de escena trazable. Todavía no existe una medición validada de hectáreas afectadas por departamento, por lo que no se inventa una superficie.</p></div><strong>Mapa · sin ha</strong>
+      <section class="weather-advanced-card" aria-labelledby="weatherAdvancedTitle">
+        <div class="weather-advanced-heading">
+          <div class="weather-advanced-icon" aria-hidden="true">☁</div>
+          <div class="weather-advanced-heading-copy">
+            <span class="eyebrow">Meteorología avanzada</span>
+            <h2 id="weatherAdvancedTitle">Pronóstico meteorológico externo</h2>
+            <p>Visualización complementaria para Corrientes basada en modelos meteorológicos.</p>
+          </div>
+          <a class="weather-advanced-secondary-link" href="https://www.windy.com/?-27.47,-58.83,7" target="_blank" rel="noopener noreferrer">Abrir Windy</a>
+        </div>
+        <div class="weather-advanced-controls" aria-label="Capas del visor meteorológico externo">
+          <span>Variable meteorológica</span>
+          <div class="weather-advanced-layer-buttons" role="group" aria-label="Seleccionar variable meteorológica">
+            <button type="button" class="weather-layer-button is-active" data-windy-overlay="wind" aria-pressed="true">Viento</button>
+            <button type="button" class="weather-layer-button" data-windy-overlay="rain" aria-pressed="false">Lluvia</button>
+            <button type="button" class="weather-layer-button" data-windy-overlay="temp" aria-pressed="false">Temperatura</button>
+            <button type="button" class="weather-layer-button" data-windy-overlay="pressure" aria-pressed="false">Presión</button>
+            <button type="button" class="weather-layer-button" data-windy-overlay="clouds" aria-pressed="false">Nubosidad</button>
+          </div>
+        </div>
+        <div class="weather-advanced-frame-wrap">
+          <iframe id="windyEmbed" title="Meteorología avanzada Windy para Corrientes" src="https://embed.windy.com/embed2.html?lat=-27.47&amp;lon=-58.83&amp;zoom=7&amp;level=surface&amp;overlay=wind" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen onload="this.dataset.loaded='true'"></iframe>
+          <div class="weather-advanced-fallback" id="windyEmbedFallback" role="status" hidden>
+            <p>No se pudo cargar el visor meteorológico externo.</p>
+            <a class="weather-advanced-open" href="https://www.windy.com/?-27.47,-58.83,7" target="_blank" rel="noopener noreferrer">Abrir Windy en nueva pestaña</a>
+          </div>
+        </div>
+        <p class="weather-advanced-note">Consulta externa basada en modelos meteorológicos. Usar como complemento de los registros observados e hidrométricos del dashboard.</p>
       </section>
     </section>
 

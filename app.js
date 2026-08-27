@@ -16,7 +16,7 @@ const CLIMATE_MAP_VARIABLES = Object.freeze({
   monthlyDifferencePct: { label: 'Desvío mensual vs histórico', unit: '%', scale: 'difference' },
   monthlyCategory: { label: 'Categoría mensual descriptiva', unit: '', scale: 'category' }
 });
-const state = { rainfall: [], monthlyRainfall: [], monthlySourceStats: {}, operationalDailyRecords: [], dailyRecords: [], dailyDataSource: 'operational', dailyGeneratedAt: null, dailyDateMax: null, stations: [], metadata: {}, charts: {}, tableRows: [], filterConfigs: {}, temporalFiltersExplicit: { years: false, months: false }, climateMetrics: new Set(['temperature','humidity','wind','rain24Total']), climateMap: { map: null, geoLayer: null, boundaryLayer: null, resizeObserver: null, layoutInvalidateTimer: null, refreshTimer: null, statuses: new Map(), selectedDepartment: null, selectedPointMarker: null, selectedStation: null, mode: 'departments', variable: 'rain7dMm', externalConfig: {}, pointCache: null, provinceGeojson: null, satelliteStatus: null, pointLayers: new Map(), pointCounts: new Map(), pointData: new Map(), pointRequests: new Set(), wmsLayers: new Map(), activeHydrologyLayer: 'none', preferredHydrologyLayer: 'none', satelliteOpacity: 0.65, satelliteOpacities: new Map(), departmentFillOpacity: 0.8, departmentFillOpacityUserSet: false, satelliteTimeline: { enabled: false, scenes: [] }, geoglowsForecasts: new Map(), inaHistory: { cache: new Map(), requests: new Map(), selectionToken: 0, chart: null }, refreshingPrimaryHeights: false, refreshingSatelliteStatus: false, primaryProxyUnavailable: false, satelliteProxyUnavailable: false, hydrologyLiveStarted: false, detailAction: null } };
+const state = { rainfall: [], monthlyRainfall: [], monthlySourceStats: {}, operationalDailyRecords: [], dailyRecords: [], dailyDataSource: 'operational', dailyGeneratedAt: null, dailyDateMax: null, stations: [], metadata: {}, charts: {}, tableRows: [], filterConfigs: {}, temporalFiltersExplicit: { years: false, months: false }, climateMetrics: new Set(['temperature','humidity','wind','rain24Total']), climateMap: { map: null, geoLayer: null, boundaryLayer: null, resizeObserver: null, layoutInvalidateTimer: null, refreshTimer: null, statuses: new Map(), selectedDepartment: null, selectedPointMarker: null, selectedStation: null, mode: 'departments', variable: 'rain7dMm', operationalSignalsVisible: true, externalConfig: {}, pointCache: null, provinceGeojson: null, satelliteStatus: null, pointLayers: new Map(), pointCounts: new Map(), pointData: new Map(), pointRequests: new Set(), wmsLayers: new Map(), activeHydrologyLayer: 'none', preferredHydrologyLayer: 'none', satelliteOpacity: 0.65, satelliteOpacities: new Map(), departmentFillOpacity: 0.8, departmentFillOpacityUserSet: false, satelliteTimeline: { enabled: false, scenes: [] }, geoglowsForecasts: new Map(), inaHistory: { cache: new Map(), requests: new Map(), selectionToken: 0, chart: null }, refreshingPrimaryHeights: false, refreshingSatelliteStatus: false, primaryProxyUnavailable: false, satelliteProxyUnavailable: false, hydrologyLiveStarted: false, detailAction: null } };
 const sourceAudit = { catalog: new Map(), health: new Map(), selectedId: null };
 const $ = id => document.getElementById(id);
 const format = value => new Intl.NumberFormat('es-AR', { maximumFractionDigits: 1 }).format(value || 0);
@@ -1021,6 +1021,22 @@ const RAIN_COMPARISON_SCALE = Object.freeze([
   { key: 'high', label: 'Por encima', max: 30, color: '#197bb7' },
   { key: 'very-high', label: 'Muy por encima', max: Infinity, color: '#084f83' }
 ]);
+// Señales operativas configurables. Son umbrales absolutos iniciales para
+// vigilancia del tablero; no representan criterios oficiales ni climatología
+// diaria histórica. La referencia mensual se muestra solo como contexto.
+const OPERATIONAL_SIGNAL_THRESHOLDS = Object.freeze({
+  1: Object.freeze({ label: '24 h', attention: 30, warning: 60, critical: 100 }),
+  3: Object.freeze({ label: '3 días', attention: 60, warning: 100, critical: 150 }),
+  7: Object.freeze({ label: '7 días', attention: 80, warning: 140, critical: 200 }),
+  15: Object.freeze({ label: '15 días', attention: 120, warning: 200, critical: 300 }),
+  30: Object.freeze({ label: '30 días', attention: 180, warning: 300, critical: 450 })
+});
+const OPERATIONAL_SIGNAL_LEVELS = Object.freeze({
+  none: Object.freeze({ label: 'Sin señal', rank: 0, color: '#879e99' }),
+  attention: Object.freeze({ label: 'Atención', rank: 1, color: '#c88717' }),
+  warning: Object.freeze({ label: 'Advertencia', rank: 2, color: '#c45d25' }),
+  critical: Object.freeze({ label: 'Crítico operativo', rank: 3, color: '#b94b55' })
+});
 const CLIMATE_POINT_SOURCES = Object.freeze({
   ina: { label: 'Altura del río · INA', category: 'hydrometry', color: CLIMATE_CATEGORY_COLORS.hydrometry, countId: 'climateInaCount', pane: 'inaPointPane' },
   snih: { label: 'Altura del río · SNIH', category: 'hydrometry', color: CLIMATE_CATEGORY_COLORS.hydrometry, countId: 'climateSnihCount', pane: 'snihPointPane' },
@@ -1194,6 +1210,10 @@ function wireClimatePointControls() {
     state.climateMap.variable = event.target.value;
     refreshClimateDepartmentMap();
     updateClimateViewUrl();
+  });
+  $('climateOperationalSignalsToggle')?.addEventListener('change', event => {
+    state.climateMap.operationalSignalsVisible = event.target.checked;
+    refreshClimateDepartmentMap();
   });
   $('climateDepartmentOpacity')?.addEventListener('input', event => {
     state.climateMap.departmentFillOpacity = Math.max(0.15, Math.min(0.8, Number(event.target.value) / 100));
@@ -1385,6 +1405,7 @@ function replaceClimatePointLayer(source, records, markerFactory) {
   });
   state.climateMap.pointData.set(source, records);
   state.climateMap.pointCounts.set(source, records.length);
+  refreshClimateOperationalSignalState();
   applyClimatePointSourceVisibility(source, false);
   updateClimatePointSummary();
   if (state.climateMap.selectedDepartment) {
@@ -3106,11 +3127,13 @@ function climatePointBoundaryStyle(feature) {
   const department = normalizeClimateDepartment(feature?.properties?.department || feature?.properties?.officialName);
   const selected = state.climateMap.selectedDepartment === department;
   const overSatellite = state.climateMap.activeHydrologyLayer !== 'none';
+  const signal = operationalSignalForFeature(feature);
+  const showSignal = state.climateMap.operationalSignalsVisible !== false;
   return {
     className: 'climate-boundary',
-    color: selected ? '#063f47' : (overSatellite ? '#334d4a' : '#5d716d'),
-    weight: selected ? 3.2 : (overSatellite ? 1.8 : 1.15),
-    opacity: selected ? 1 : (overSatellite ? 0.95 : 0.72),
+    color: showSignal && signal.level !== 'none' ? signal.color : (selected ? '#063f47' : (overSatellite ? '#334d4a' : '#5d716d')),
+    weight: showSignal && signal.level !== 'none' ? 3.8 : (selected ? 3.2 : (overSatellite ? 1.8 : 1.15)),
+    opacity: showSignal && signal.level !== 'none' ? 1 : (selected ? 1 : (overSatellite ? 0.95 : 0.72)),
     fillColor: '#dfe9e5',
     fillOpacity: selected ? 0.04 : 0,
     lineCap: 'round',
@@ -3123,13 +3146,68 @@ function climateStatusForFeature(feature) {
   return state.climateMap.statuses.get(department) || null;
 }
 
+function refreshClimateOperationalSignalState() {
+  state.climateMap.statuses.forEach(status => { status.operationalSignal = calculateOperationalSignal(status); });
+  if (state.climateMap.mode === 'departments') {
+    state.climateMap.geoLayer?.setStyle(climateDepartmentStyle);
+    state.climateMap.boundaryLayer?.setStyle(climatePointBoundaryStyle);
+    state.climateMap.geoLayer?.eachLayer(layer => {
+      const department = normalizeClimateDepartment(layer.feature?.properties?.department || layer.feature?.properties?.officialName);
+      layer.setTooltipContent(climateMapTooltip(department));
+    });
+  }
+}
+
+function operationalRainSignal(status) {
+  const candidates = Object.entries(OPERATIONAL_SIGNAL_THRESHOLDS).flatMap(([days, thresholds]) => {
+    const value = Number(status?.[`rain${days === '1' ? 'LastDate' : `${days}d`}Mm`]);
+    const coverage = String(status?.[`coverage${days}d`] || status?.coverage1d || '0/0').split('/').map(Number)[0];
+    if (!Number.isFinite(value) || !Number.isFinite(coverage) || coverage < 1) return [];
+    const level = value >= thresholds.critical ? 'critical' : value >= thresholds.warning ? 'warning' : value >= thresholds.attention ? 'attention' : 'none';
+    return [{ days: Number(days), windowLabel: thresholds.label, value, level, threshold: thresholds[level] || null, source: 'Lluvia diaria observada', coverage }];
+  });
+  const active = candidates.filter(item => item.level !== 'none');
+  const selected = active.sort((a, b) => OPERATIONAL_SIGNAL_LEVELS[b.level].rank - OPERATIONAL_SIGNAL_LEVELS[a.level].rank || b.value - a.value || b.days - a.days)[0];
+  return { level: selected?.level || 'none', trigger: selected || null, reasons: active };
+}
+
+function operationalHydrometrySignal(status) {
+  const points = relevantHydrometryPoints(status?.department || '');
+  const candidates = points.flatMap(point => {
+    const height = point.latestHeight;
+    const value = Number(height?.valueM);
+    if (!Number.isFinite(value)) return [];
+    const alert = Number(height?.alertLevelM ?? point.alertLevelM);
+    const evacuation = Number(height?.evacuationLevelM ?? point.evacuationLevelM);
+    if (validInaThreshold(evacuation) && value >= evacuation) return [{ level: 'critical', point, value, threshold: evacuation, thresholdLabel: 'evacuación', official: true }];
+    if (validInaThreshold(alert) && value >= alert) return [{ level: 'warning', point, value, threshold: alert, thresholdLabel: 'alerta', official: true }];
+    return [];
+  });
+  const selected = candidates.sort((a, b) => OPERATIONAL_SIGNAL_LEVELS[b.level].rank - OPERATIONAL_SIGNAL_LEVELS[a.level].rank)[0];
+  return { level: selected?.level || 'none', trigger: selected || null, reasons: candidates };
+}
+
+function calculateOperationalSignal(status) {
+  const rain = operationalRainSignal(status);
+  const river = operationalHydrometrySignal(status);
+  const level = OPERATIONAL_SIGNAL_LEVELS[rain.level].rank >= OPERATIONAL_SIGNAL_LEVELS[river.level].rank ? rain.level : river.level;
+  return { level, label: OPERATIONAL_SIGNAL_LEVELS[level].label, color: OPERATIONAL_SIGNAL_LEVELS[level].color, rain, river, hasData: Boolean(rain.reasons.length || river.reasons.length) };
+}
+
+function operationalSignalForFeature(feature) {
+  const status = climateStatusForFeature(feature);
+  return status?.operationalSignal || calculateOperationalSignal(status || {});
+}
+
 function climateDepartmentStyle(feature) {
   const department = normalizeClimateDepartment(feature?.properties?.department || feature?.properties?.officialName);
   const status = climateStatusForFeature(feature);
+  const signal = operationalSignalForFeature(feature);
+  const showSignal = state.climateMap.operationalSignalsVisible !== false;
   return {
-    color: 'transparent',
-    weight: 0,
-    opacity: 0,
+    color: showSignal ? signal.color : 'transparent',
+    weight: showSignal ? (signal.level === 'none' ? 0.8 : 3.4) : 0,
+    opacity: showSignal ? (signal.level === 'none' ? 0.35 : 0.95) : 0,
     fillColor: climateMapColor(status?.[state.climateMap.variable], state.climateMap.variable),
     fillOpacity: state.climateMap.departmentFillOpacity,
     lineCap: 'round',
@@ -3210,13 +3288,17 @@ function clearClimateDepartmentSelection() {
   if ($('climateHydrometrySummaryContent')) $('climateHydrometrySummaryContent').textContent = 'Sin estación hidrométrica asociada en esta vista.';
   ['mapDetailComparablePeriod','mapDetailMonthlyObserved','mapDetailMonthlyHistorical','mapDetailMonthlyMinimum','mapDetailMonthlyMaximum','mapDetailMonthlyDifference','mapDetailMonthlyDifferencePct','mapDetailUpdated']
     .forEach(id => { if ($(id)) $(id).textContent = '—'; });
+  if ($('mapDetailOperationalSignal')) $('mapDetailOperationalSignal').innerHTML = '<p>Seleccione un departamento para ver su estado operativo.</p>';
   updateClimateDepartmentReference();
 }
 
 function climateMapTooltip(department) {
   const status = state.climateMap.statuses.get(department);
   const variable = CLIMATE_MAP_VARIABLES[state.climateMap.variable];
-  return `<strong>${escapeHtml(department)}</strong><br>${escapeHtml(variable.label)}: ${escapeHtml(formatClimateMapValue(status?.[state.climateMap.variable], state.climateMap.variable))}`;
+  const signal = status?.operationalSignal || calculateOperationalSignal(status || {});
+  const trigger = signal.rain.trigger;
+  const signalText = state.climateMap.operationalSignalsVisible === false ? '' : `<br><strong>Estado operativo: ${escapeHtml(signal.label)}</strong>${trigger ? `<br>Motivo: lluvia ${escapeHtml(trigger.windowLabel)} = ${escapeHtml(format(trigger.value))} mm<br>Umbral: ${escapeHtml(signal.label.toLowerCase())} ≥ ${escapeHtml(format(trigger.threshold))} mm` : ''}`;
+  return `<strong>${escapeHtml(department)}</strong><br>${escapeHtml(variable.label)}: ${escapeHtml(formatClimateMapValue(status?.[state.climateMap.variable], state.climateMap.variable))}${signalText}`;
 }
 
 function refreshClimateDepartmentMap() {
@@ -3281,6 +3363,8 @@ function updateClimateDepartmentReference() {
 
 function renderClimateDepartmentDetail(status) {
   const comparison = climateDepartmentComparablePeriod(status);
+  const signal = calculateOperationalSignal(status || {});
+  if (status) status.operationalSignal = signal;
   const values = {
     mapDetailDepartment: status.department || 'Sin dato',
     mapDetailComparablePeriod: comparison.periodLabel,
@@ -3293,8 +3377,31 @@ function renderClimateDepartmentDetail(status) {
     mapDetailUpdated: formatDailyDatasetUpdatedAt(state.dailyGeneratedAt)
   };
   Object.entries(values).forEach(([id, value]) => { if ($(id)) $(id).textContent = value; });
+  renderOperationalSignalDetail(status, signal, comparison);
   updateClimateDepartmentReference();
   renderHydrometrySummary(status, state.climateMap.selectedStation);
+}
+
+function renderOperationalSignalDetail(status, signal, comparison) {
+  const container = $('mapDetailOperationalSignal');
+  if (!container) return;
+  const rainTrigger = signal.rain.trigger;
+  const riverTrigger = signal.river.trigger;
+  const nearbyStation = riverTrigger?.point || relevantHydrometryPoints(status?.department || '')[0] || null;
+  const nearbyHeight = nearbyStation?.latestHeight || null;
+  const displayLabel = ({ none: 'Sin señal', attention: 'Atención', warning: 'Alerta', critical: 'Crítico operativo' })[signal.level] || signal.label;
+  const trigger = rainTrigger || riverTrigger;
+  const triggerValue = rainTrigger ? `${format(rainTrigger.value)} mm` : riverTrigger ? `${format(riverTrigger.value)} m` : '—';
+  const triggerThreshold = rainTrigger ? `${format(rainTrigger.threshold)} mm` : riverTrigger ? `${format(riverTrigger.threshold)} m` : '—';
+  const excess = trigger ? (rainTrigger ? `${format(rainTrigger.value - rainTrigger.threshold)} mm` : `${format(riverTrigger.value - riverTrigger.threshold)} m`) : '—';
+  const contextValue = Number.isFinite(comparison?.differenceMm) ? formatClimateSigned(comparison.differenceMm, 'mm') : '—';
+  const contextReading = Number.isFinite(comparison?.differenceMm) ? (comparison.differenceMm > 0 ? 'Por encima de lo habitual' : comparison.differenceMm < 0 ? 'Por debajo de lo habitual' : 'En torno a lo habitual') : 'Sin referencia comparable';
+  const hydrometryState = riverTrigger ? (riverTrigger.thresholdLabel === 'evacuación' ? 'Evacuación publicada' : 'Alerta publicada') : nearbyStation ? 'Sin superación de umbral' : 'Sin estación cercana';
+  const hydrometryThreshold = riverTrigger ? triggerThreshold : nearbyHeight && validInaThreshold(Number(nearbyHeight.alertLevelM ?? nearbyStation.alertLevelM)) ? `${format(Number(nearbyHeight.alertLevelM ?? nearbyStation.alertLevelM))} m` : 'No disponible';
+  const source = rainTrigger ? 'Lluvia diaria observada' : riverTrigger ? (riverTrigger.point.sourceLabel || 'Fuente hidrométrica oficial') : 'Datos diarios observados';
+  const rule = rainTrigger ? `Umbral operativo configurable · ${rainTrigger.windowLabel}` : riverTrigger ? 'Umbral hidrométrico publicado por la fuente' : 'No se superó ningún umbral operativo configurable';
+  if (container.dataset) container.dataset.level = signal.level;
+  container.innerHTML = `<div class="climate-operational-status"><span class="climate-operational-kicker">Estado operativo</span><strong class="climate-operational-badge">${escapeHtml(displayLabel)}</strong><span class="climate-operational-updated">Actualizado ${escapeHtml(formatDailyDatasetUpdatedAt(state.dailyGeneratedAt))}</span></div><section class="climate-signal-card climate-signal-primary"><h4>¿Por qué se activó?</h4><div class="climate-signal-grid"><div><span>Variable</span><strong>${escapeHtml(rainTrigger ? 'Lluvia diaria' : riverTrigger ? 'Hidrometría' : 'Sin señal')}</strong></div><div><span>Ventana</span><strong>${escapeHtml(rainTrigger ? rainTrigger.windowLabel : riverTrigger ? riverTrigger.thresholdLabel : '—')}</strong></div><div><span>Observado</span><strong>${escapeHtml(triggerValue)}</strong></div><div><span>Umbral</span><strong>${escapeHtml(triggerThreshold)}</strong></div></div><div class="climate-signal-excess"><span>Exceso respecto del umbral</span><strong>${escapeHtml(excess)}</strong></div>${!trigger ? '<p class="climate-signal-empty">No se superaron umbrales con datos observados suficientes.</p>' : ''}</section><section class="climate-signal-card"><h4>¿Qué acompaña?</h4><div class="climate-support-state"><span>Estado hidrométrico</span><strong>${escapeHtml(hydrometryState)}</strong></div>${nearbyStation ? `<div class="climate-signal-grid climate-signal-grid-compact"><div><span>Estación</span><strong>${escapeHtml(nearbyStation.name || 'Estación cercana')}</strong></div><div><span>Valor actual</span><strong>${escapeHtml(Number.isFinite(Number(nearbyHeight?.valueM)) ? `${format(Number(nearbyHeight.valueM))} m` : 'Sin dato')}</strong></div><div><span>Umbral</span><strong>${escapeHtml(hydrometryThreshold)}</strong></div><div><span>Estado</span><strong>${escapeHtml(nearbyHeight?.status || hydrometryState)}</strong></div></div>` : '<p class="climate-signal-empty">No hay estación hidrométrica cercana disponible.</p>'}</section><section class="climate-signal-card"><h4>Contexto</h4><div class="climate-context-reading"><strong>${escapeHtml(contextValue)}</strong><span>${escapeHtml(contextReading)}</span></div></section><section class="climate-signal-card climate-signal-source"><h4>Fuente</h4><div><span>Fuente principal</span><strong>${escapeHtml(source)}</strong></div><div><span>Regla aplicada</span><strong>${escapeHtml(rule)}</strong></div></section><p class="climate-signal-method">Señal operativa interna. No constituye alerta oficial.</p>`;
 }
 
 function departmentForCoordinate(lat, lng) {
@@ -3656,15 +3763,20 @@ function updateClimateDailyStatuses(f, today = new Date()) {
       department: row.department,
       referenceDateDaily: referenceDate,
       rainLastDateMm: row.windows[1],
+      coverage1d: `${row.observations[1]}/1`,
+      rain3dMm: dailyWindowTotal(records.filter(record => record.department === row.department), referenceDate, 3),
+      coverage3d: `${dailyWindowCoverage(records.filter(record => record.department === row.department), referenceDate, 3).daysWithRecords}/3`,
       rain7dMm: row.windows[7],
       coverage7d: `${row.observations[7]}/7`,
       rain15dMm: row.windows[15],
       coverage15d: `${row.observations[15]}/15`,
       rain30dMm: row.windows[30],
       coverage30d: `${row.observations[30]}/30`,
-      sourceDaily: `${state.dailyDataSource === 'combined' ? 'rainfall-daily-combined' : 'rainfall-daily'} · cálculo operativo en memoria`
+      sourceDaily: `${state.dailyDataSource === 'combined' ? 'rainfall-daily-combined' : 'rainfall-daily'} · cálculo operativo en memoria`,
+      operationalSignal: calculateOperationalSignal({ ...previous, rainLastDateMm: row.windows[1], coverage1d: `${row.observations[1]}/1`, rain3dMm: dailyWindowTotal(records.filter(record => record.department === row.department), referenceDate, 3), coverage3d: `${dailyWindowCoverage(records.filter(record => record.department === row.department), referenceDate, 3).daysWithRecords}/3`, rain7dMm: row.windows[7], coverage7d: `${row.observations[7]}/7`, rain15dMm: row.windows[15], coverage15d: `${row.observations[15]}/15`, rain30dMm: row.windows[30], coverage30d: `${row.observations[30]}/30`, department: row.department })
     });
   });
+  refreshClimateOperationalSignalState();
   const selected = state.climateMap.statuses.get(state.climateMap.selectedDepartment);
   if (selected && $('mapDetailDepartment')) renderClimateDepartmentDetail(selected);
 }

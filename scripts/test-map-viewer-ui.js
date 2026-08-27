@@ -110,6 +110,21 @@ const context = {
 };
 vm.createContext(context);
 vm.runInContext(app, context);
+for (const requirement of ['OPERATIONAL_SIGNAL_THRESHOLDS', 'function operationalRainSignal', 'function calculateOperationalSignal', 'mapDetailOperationalSignal']) {
+  if (!app.includes(requirement) && !html.includes(requirement)) throw Error(`Falta la lógica de señales operativas: ${requirement}`);
+}
+const operationalSignalChecks = vm.runInContext(`(() => {
+  state.climateMap.pointData = new Map();
+  const warning = calculateOperationalSignal({ department: 'Capital', rainLastDateMm: 0, coverage1d: '1/1', rain3dMm: 112, coverage3d: '3/3', rain7dMm: 112, coverage7d: '7/7', rain15dMm: 112, coverage15d: '7/15', rain30dMm: 112, coverage30d: '7/30' });
+  const insufficient = calculateOperationalSignal({ department: 'Capital', coverage1d: '0/1', coverage7d: '0/7', coverage15d: '0/15', coverage30d: '0/30' });
+  const critical = calculateOperationalSignal({ department: 'Capital', rainLastDateMm: 101, coverage1d: '1/1', rain3dMm: 151, coverage3d: '3/3', rain7dMm: 201, coverage7d: '7/7', rain15dMm: 301, coverage15d: '15/15', rain30dMm: 451, coverage30d: '30/30' });
+  return { warning, insufficient, critical };
+})()`, context);
+if (operationalSignalChecks.warning.level !== 'warning' || operationalSignalChecks.warning.rain.trigger.days !== 3 || operationalSignalChecks.warning.rain.trigger.threshold !== 100) throw Error(`Umbrales absolutos incorrectos: ${JSON.stringify(operationalSignalChecks.warning)}`);
+if (operationalSignalChecks.insufficient.level !== 'none' || operationalSignalChecks.insufficient.rain.reasons.length) throw Error('La señal no queda sin datos cuando no hay observaciones recientes.');
+if (operationalSignalChecks.critical.level !== 'critical') throw Error(`No se prioriza crítico operativo: ${JSON.stringify(operationalSignalChecks.critical)}`);
+if (app.slice(app.indexOf('function operationalRainSignal'), app.indexOf('function operationalHydrometrySignal')).includes('dailyHistoricalWindowReference')) throw Error('La señal operativa usa promedios diarios históricos.');
+if (app.includes('alerta por') || html.includes('alerta por')) throw Error('El contexto mensual se presenta como alerta.');
 const timestampChecks = vm.runInContext(`(() => {
   state.climateMap.statuses = new Map();
   const historicalRows = [2023, 2024, 2025].flatMap((year, yearIndex) => Array.from({ length: 18 }, (_, index) => ({
@@ -225,7 +240,7 @@ for (const category of ['Extensión de inundación observada','Agua observada','
 }
 if (!app.includes('Qué muestra esta capa') || app.includes("[['Estado observado', detail.status]")) throw Error('El panel satelital conserva una etiqueta técnica.');
 if (!html.includes('Escenas recientes verificadas, hasta 7 días hacia atrás.') || html.includes('Ráster remoto con fecha de escena')) throw Error('El selector temporal satelital no comunica su límite operativo.');
-if (!html.includes('app.js?v=20260826-4') || html.includes('app.js?v=20260819-1')) throw Error('El HTML no invalida la versión anterior del JavaScript del visor.');
+if (!html.includes('app.js?v=20260827-1') || html.includes('app.js?v=20260826-4') || html.includes('app.js?v=20260819-1')) throw Error('El HTML no invalida la versión anterior del JavaScript del visor.');
 const satelliteControlChecks = vm.runInContext(`(() => {
   const elements = ['climateSatelliteDate','climateSatelliteDateStatus','climateSatelliteLatestButton']
     .reduce((result, id) => ({ ...result, [id]: document.getElementById(id) }), {});

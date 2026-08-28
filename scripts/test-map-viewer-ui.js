@@ -325,7 +325,7 @@ for (const requirement of ['dailyHistoricalWindowReference(state.dailyRecords','
 }
 if (rainLayerSource.includes('Math.sqrt') || rainLayerSource.includes('sourceInfo.color')) throw Error('La lluvia todavía varía tamaño o color por fuente/magnitud.');
 const hydrometrySource = app.slice(app.indexOf('function renderInaPointLayer'), app.indexOf('function renderNasaPointLayer'));
-for (const requirement of ['function hydrometryTrend', 'HYDROMETRY_TREND_TOLERANCE_M = 0.03', 'function hydrometryVisualState', 'function hydrometryMarker', 'L.divIcon', 'hydrometry-marker-symbol', 'function hydrometryTooltipHtml']) {
+for (const requirement of ['function hydrometryTrend', 'function hydrometryTrendSource', 'trendSource', 'HYDROMETRY_TREND_TOLERANCE_M = 0.03', 'function hydrometryVisualState', 'function hydrometryMarker', 'L.divIcon', 'hydrometry-marker-symbol', 'function hydrometryTooltipHtml']) {
   if (!app.includes(requirement)) throw Error(`Falta la simbología de tendencia hidrométrica: ${requirement}`);
 }
 if (!hydrometrySource.includes("hydrometryMarker(station, 'ina')") || !app.includes('hydrometryMarker(station, sourceId, { popup: true })')) {
@@ -353,7 +353,7 @@ for (const requirement of ['.model-rain-icon span','.model-flow-icon span','tran
 for (const requirement of ['scrollWheelZoom: true','doubleClickZoom: true','touchZoom: true','wheelDebounceTime: 40','wheelPxPerZoomLevel: 80']) {
   if (!app.includes(requirement)) throw Error(`Falta la interacción práctica de zoom: ${requirement}`);
 }
-for (const requirement of ['id="climateHydrometrySummary"', 'Resumen hidrométrico', 'id="climateSelectedPointSummary"', 'climate-hydrometry-trend-help', '↑ sube · ↓ baja · • permanece']) {
+for (const requirement of ['id="climateHydrometrySummary"', 'Resumen hidrométrico', 'id="climateSelectedPointSummary"', 'climate-hydrometry-trend-help', '↑ sube · ↓ baja · • permanece/sin dato']) {
   if (!html.includes(requirement)) throw Error(`Falta la integración departamental de hidrometría: ${requirement}`);
 }
 const hydrometryTrendChecks = vm.runInContext(`(() => {
@@ -367,21 +367,26 @@ const hydrometryTrendChecks = vm.runInContext(`(() => {
     series: hydrometryTrend(make({ valueM: 1.05, previousValueM: null, timeseries: [['2026-08-28T11:00:00Z', 1], ['2026-08-28T12:00:00Z', 1.02]] })),
     insufficient: hydrometryTrend(make({ previousValueM: null, timeseries: [] })),
     publishedSteady: hydrometryTrend(make({ valueM: 2, previousValueM: 1, trend: 'estable' })),
+    saltoCalculated: hydrometryTrend({ sourceId: 'salto', latestHeight: { valueM: 2.04, previousValueM: 2, trend: 'sube', date: '2026-08-28T12:00:00Z' } }),
     normal: hydrometryVisualState(make({ valueM: 2, status: 'normal', alertLevelM: 5, evacuationLevelM: 8 })),
     alert: hydrometryVisualState(make({ valueM: 6, alertLevelM: 5, evacuationLevelM: 8 })),
     evacuation: hydrometryVisualState(make({ valueM: 9, alertLevelM: 5, evacuationLevelM: 8 })),
     low: hydrometryVisualState(make({ valueM: 1, status: 'aguas bajas', lowWaterLevelM: 2 })),
     noThreshold: hydrometryVisualState(make({ valueM: 2 })),
-    tooltip: hydrometryTooltipHtml(make({ valueM: 1.5, trend: 'baja', status: 'normal', date: '2026-08-28T12:00:00Z' }))
+    tooltip: hydrometryTooltipHtml(make({ valueM: 1.5, trend: 'baja', status: 'normal', date: '2026-08-28T12:00:00Z' })),
+    unavailableTooltip: hydrometryTooltipHtml(make({ valueM: 1.5, status: 'normal', date: '2026-08-28T12:00:00Z' }))
   };
 })()`, context);
-if (hydrometryTrendChecks.published.key !== 'up' || hydrometryTrendChecks.published.source !== 'published') throw Error('No se prioriza la tendencia publicada por la fuente.');
-if (hydrometryTrendChecks.calculatedUp.key !== 'up' || hydrometryTrendChecks.calculatedDown.key !== 'down' || hydrometryTrendChecks.series.key !== 'up') throw Error(`La tendencia calculada desde lecturas válidas es incorrecta: ${JSON.stringify(hydrometryTrendChecks)}`);
+if (hydrometryTrendChecks.published.key !== 'up' || hydrometryTrendChecks.published.source !== 'published' || hydrometryTrendChecks.published.trendSource !== 'published') throw Error('No se prioriza la tendencia publicada por la fuente.');
+if (hydrometryTrendChecks.calculatedUp.key !== 'up' || hydrometryTrendChecks.calculatedUp.trendSource !== 'calculated' || hydrometryTrendChecks.calculatedDown.key !== 'down' || hydrometryTrendChecks.series.key !== 'up') throw Error(`La tendencia calculada desde lecturas válidas es incorrecta: ${JSON.stringify(hydrometryTrendChecks)}`);
 if (hydrometryTrendChecks.toleranceUp.key !== 'up' || hydrometryTrendChecks.toleranceSteady.key !== 'steady') throw Error('La tolerancia hidrométrica de 0,03 m no se aplica en los límites esperados.');
-if (hydrometryTrendChecks.insufficient.key !== 'unknown' || hydrometryTrendChecks.publishedSteady.key !== 'steady') throw Error('No se representan correctamente los casos sin dato o permanece.');
+if (hydrometryTrendChecks.insufficient.key !== 'unknown' || hydrometryTrendChecks.insufficient.symbol !== '•' || hydrometryTrendChecks.insufficient.label !== 'Tendencia no disponible' || hydrometryTrendChecks.insufficient.trendSource !== 'insufficient' || hydrometryTrendChecks.publishedSteady.key !== 'steady' || hydrometryTrendChecks.saltoCalculated.trendSource !== 'calculated') throw Error('No se representan correctamente los casos sin dato, permanece o tendencia calculada.');
 if (hydrometryTrendChecks.normal.key !== 'normal' || hydrometryTrendChecks.alert.key !== 'alert' || hydrometryTrendChecks.evacuation.key !== 'evacuation' || hydrometryTrendChecks.evacuation.color !== '#c4474f' || hydrometryTrendChecks.low.key !== 'low' || hydrometryTrendChecks.noThreshold.key !== 'no-threshold') throw Error(`Los estados visuales hidrométricos son incorrectos: ${JSON.stringify(hydrometryTrendChecks)}`);
 for (const text of ['Estación de prueba', '1,5', 'Baja', 'Sin superación de umbral', '28/08/2026']) if (!hydrometryTrendChecks.tooltip.includes(text)) throw Error(`El tooltip hidrométrico no contiene ${text}.`);
-if (!app.includes('hydrometryLegendMarkup()') || !app.includes('Evacuación') || !app.includes('Aguas bajas') || !app.includes('Sin umbral')) throw Error('La leyenda no explica estados y tendencia hidrométrica.');
+for (const text of ['Tendencia no disponible', 'Sin superación de umbral', '28/08/2026']) if (!hydrometryTrendChecks.unavailableTooltip.includes(text)) throw Error(`El tooltip sin tendencia no contiene ${text}.`);
+if (hydrometryTrendChecks.unavailableTooltip.includes('?')) throw Error('El tooltip sin tendencia todavía muestra el signo ?.');
+if (!app.includes('hydrometryLegendMarkup()') || !app.includes('Evacuación') || !app.includes('Aguas bajas') || !app.includes('Sin umbral') || app.includes("symbol: '?'")) throw Error('La leyenda o los marcadores todavía muestran una tendencia hidrométrica ambigua.');
+if (html.includes('· ? sin dato') || app.includes("symbol: '?'")) throw Error('Todavía se muestra el signo ? para tendencia insuficiente.');
 for (const requirement of ['id="climateDepartmentOpacity"', 'climateDepartmentFillPane', 'climateRasterPane', 'climateDepartmentBoundaryPane', 'pane: \'climateDepartmentFillPane\'', 'pane: \'climateDepartmentBoundaryPane\'', 'mapFillOpacity']) {
   if (!app.includes(requirement) && !html.includes(requirement)) throw Error(`Falta la superposición visual independiente: ${requirement}`);
 }

@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Workflow — Precipitaciones y lluvias</title>
+  <style>
+    :root { color-scheme: light; --ink:#172033; --muted:#526071; --line:#b8c4d2; }
+    * { box-sizing: border-box; }
+    body { margin:0; background:#f4f7fb; color:var(--ink); font:16px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif; }
+    main { max-width:1180px; margin:0 auto; padding:42px 24px 60px; }
+    h1 { margin:0 0 8px; font-size:clamp(28px,4vw,46px); letter-spacing:-.03em; }
+    .lead { max-width:850px; margin:0 0 30px; color:var(--muted); font-size:18px; }
+    .chart { overflow:auto; border:1px solid #d7e0ea; border-radius:22px; background:white; padding:28px 16px 34px; box-shadow:0 16px 45px #20334d12; }
+    svg { display:block; width:100%; min-width:760px; height:auto; }
+    .box { stroke-width:2; }
+    .title { font:700 18px system-ui,sans-serif; letter-spacing:.06em; }
+    .item { font:14px system-ui,sans-serif; }
+    .arrow { fill:none; stroke:var(--line); stroke-width:3; marker-end:url(#arrowhead); }
+    .note { margin:22px 4px 0; color:var(--muted); font-size:14px; }
+    .legend { display:flex; flex-wrap:wrap; gap:10px 18px; margin-top:22px; color:var(--muted); font-size:13px; }
+    .legend span { display:inline-flex; align-items:center; gap:7px; }
+    .swatch { width:14px; height:14px; border-radius:4px; display:inline-block; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Workflow de datos y publicación</h1>
+  <p class="lead">Precipitaciones y lluvias — desde las fuentes internas y externas hasta el dashboard público publicado en GitHub Pages.</p>
+
+  <section class="chart" aria-label="Diagrama del workflow">
+    <svg viewBox="0 0 1000 1660" role="img" aria-labelledby="diagram-title diagram-desc">
+      <title id="diagram-title">Flujo de datos del dashboard</title>
+      <desc id="diagram-desc">Fuentes, captura, procesamiento, archivos JSON, dashboard web, componentes visuales y publicación.</desc>
+      <defs>
+        <marker id="arrowhead" markerWidth="10" markerHeight="8" refX="8" refY="4" orient="auto"><path d="M0,0 L10,4 L0,8 Z" fill="#b8c4d2"/></marker>
+      </defs>
+
+      <path class="arrow" d="M500 245 V285"/><path class="arrow" d="M500 490 V530"/>
+      <path class="arrow" d="M500 735 V775"/><path class="arrow" d="M500 980 V1020"/>
+      <path class="arrow" d="M500 1225 V1265"/><path class="arrow" d="M500 1470 V1510"/>
+
+      <g transform="translate(70 25)"><rect class="box" width="860" height="220" rx="18" fill="#e8f1fb" stroke="#2563eb"/>
+        <text class="title" x="28" y="38">FUENTES</text>
+        <text class="item" x="28" y="76">• Registros propios de lluvia</text><text class="item" x="28" y="104">• Google Sheets y formularios</text>
+        <text class="item" x="28" y="132">• NASA / VIIRS / GFM / OPERA</text><text class="item" x="28" y="160">• INA / SIyAH / SNIH</text>
+        <text class="item" x="470" y="76">• GEOGLOWS</text><text class="item" x="470" y="104">• Windy</text>
+        <text class="item" x="470" y="132">• Geometrías y datos territoriales</text>
+      </g>
+
+      <g transform="translate(70 285)"><rect class="box" width="860" height="205" rx="18" fill="#fff4d6" stroke="#d97706"/>
+        <text class="title" x="28" y="38">CAPTURA / INTERMEDIACIÓN</text>
+        <text class="item" x="28" y="78">• Planillas</text><text class="item" x="28" y="108">• Apps Script</text><text class="item" x="28" y="138">• Formularios</text>
+        <text class="item" x="470" y="78">• Endpoints externos</text><text class="item" x="470" y="108">• Archivos fuente</text>
+      </g>
+
+      <g transform="translate(70 530)"><rect class="box" width="860" height="205" rx="18" fill="#fff4d6" stroke="#d97706"/>
+        <text class="title" x="28" y="38">GITHUB ACTIONS / SCRIPTS</text>
+        <text class="item" x="28" y="78">• Actualización diaria de lluvia</text><text class="item" x="28" y="108">• Actualización de hidrología y mapas</text>
+        <text class="item" x="470" y="78">• Scripts de validación</text><text class="item" x="470" y="108">• Generación de JSON</text><text class="item" x="470" y="138">• Deploy del dashboard</text>
+      </g>
+
+      <g transform="translate(70 775)"><rect class="box" width="860" height="205" rx="18" fill="#e8f7ee" stroke="#16a34a"/>
+        <text class="title" x="28" y="38">JSON GENERADOS / CONSUMIDOS</text>
+        <text class="item" x="28" y="78">• rainfall.json — base mensual histórica</text><text class="item" x="28" y="108">• rainfall-daily.json — operación diaria</text>
+        <text class="item" x="28" y="138">• rainfall-daily-combined.json — datos combinados</text>
+        <text class="item" x="470" y="78">• rainfall-daily-summary.json — metadata</text><text class="item" x="470" y="108">• department-climate-status.json — estados derivados</text>
+        <text class="item" x="470" y="138">• Auxiliares de mapas y fuentes</text>
+      </g>
+
+      <g transform="translate(70 1020)"><rect class="box" width="860" height="205" rx="18" fill="#f3e8ff" stroke="#9333ea"/>
+        <text class="title" x="28" y="38">DASHBOARD WEB / FRONTEND</text>
+        <text class="item" x="28" y="78">• index.html</text><text class="item" x="28" y="108">• app.js</text><text class="item" x="28" y="138">• styles.css / operational.css</text>
+        <text class="item" x="470" y="78">• lib/satellite-flood.mjs</text><text class="item" x="470" y="108">• lib/primary-hydrology.mjs</text>
+        <text class="item" x="470" y="138">• Consume y renderiza los JSON</text>
+      </g>
+
+      <g transform="translate(70 1265)"><rect class="box" width="860" height="205" rx="18" fill="#f3e8ff" stroke="#9333ea"/>
+        <text class="title" x="28" y="38">COMPONENTES VISUALES</text>
+        <text class="item" x="28" y="78">• Resumen provincial</text><text class="item" x="28" y="108">• Monitoreo diario</text><text class="item" x="28" y="138">• Análisis por departamento</text>
+        <text class="item" x="470" y="78">• Evolución temporal</text><text class="item" x="470" y="108">• Metodología y datos</text><text class="item" x="470" y="138">• Mapa climático / Windy / señales operativas</text>
+      </g>
+
+      <g transform="translate(70 1510)"><rect class="box" width="860" height="110" rx="18" fill="#fce7f3" stroke="#db2777"/>
+        <text class="title" x="28" y="38">PUBLICACIÓN</text><text class="item" x="28" y="76">GitHub Pages</text><text class="item" x="300" y="76">URL pública</text><text class="item" x="560" y="76">Navegador del usuario</text>
+      </g>
+    </svg>
+    <p class="note">Cadena de valor: <strong>observar → capturar → validar → normalizar → publicar datos → visualizar → operar</strong>.</p>
+  </section>
+  <div class="legend"><span><i class="swatch" style="background:#e8f1fb"></i>Fuentes</span><span><i class="swatch" style="background:#fff4d6"></i>Procesamiento</span><span><i class="swatch" style="background:#e8f7ee"></i>Datos</span><span><i class="swatch" style="background:#f3e8ff"></i>Aplicación</span><span><i class="swatch" style="background:#fce7f3"></i>Publicación</span></div>
+</main>
+</body>
+</html>

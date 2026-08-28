@@ -17,7 +17,7 @@
     "monthlyCategory": "Muy por encima",
     "sourceDaily": "rainfall-daily-combined",
     "sourceMonthly": "base mensual combinada",
-    "updatedAt": "2026-08-25T10:24:20"
+    "updatedAt": "2026-08-28T13:37:45"
   },
   {
     "department": "Beron de Astrada",
@@ -37,7 +37,7 @@
     "monthlyCategory": "Por encima",
     "sourceDaily": "rainfall-daily-combined",
     "sourceMonthly": "base mensual combinada",
-    "updatedAt": "2026-08-25T10:24:20"
+    "updatedAt": "2026-08-28T13:37:45"
   },
   {
     "department": "Capital",
@@ -57,7 +57,7 @@
     "monthlyCategory": "Muy por encima",
     "sourceDaily": "rainfall-daily-combined",
     "sourceMonthly": "base mensual combinada",
-    "updatedAt": "2026-08-25T10:24:20"
+    "updatedAt": "2026-08-28T13:37:45"
   },
   {
     "department": "Concepcion",
@@ -77,7 +77,7 @@
     "monthlyCategory": "Por debajo",
     "sourceDaily": "rainfall-daily-combined",
     "sourceMonthly": "base mensual combinada",
-    "updatedAt": "2026-08-25T10:24:20"
+    "updatedAt": "2026-08-28T13:37:45"
   },
   {
     "department": "Curuzu Cuatia",
@@ -97,7 +97,7 @@
     "monthlyCategory": "Muy por encima",
     "sourceDaily": "rainfall-daily-combined",
     "sourceMonthly": "base mensual combinada",
-    "updatedAt": "2026-08-25T10:24:20"
+    "updatedAt": "2026-08-28T13:37:45"
   },
   {
     "department": "Empedrado",
@@ -117,7 +117,7 @@
     "monthlyCategory": "Muy por encima",
     "sourceDaily": "rainfall-daily-combined",
     "sourceMonthly": "base mensual combinada",
-    "updatedAt": "2026-08-25T10:24:20"
+    "updatedAt": "2026-08-28T13:37:45"
   },
   {
     "department": "Esquina",
@@ -137,7 +137,7 @@
     "monthlyCategory": "Muy por encima",
     "sourceDaily": "rainfall-daily-combined",
     "sourceMonthly": "base mensual combinada",
-    "updatedAt": "2026-08-25T10:24:20"
+    "updatedAt": "2026-08-28T13:37:45"
   },
   {
     "department": "General Alvear",
@@ -157,7 +157,7 @@
     "monthlyCategory": "Muy por encima",
     "sourceDaily": "rainfall-daily-combined",
     "sourceMonthly": "base mensual combinada",
-    "updatedAt": "2026-08-25T10:24:20"
+    "updatedAt": "2026-08-28T13:37:45"
   },
   {
     "department": "General Paz",
@@ -177,7 +177,7 @@
     "monthlyCategory": "Muy por encima",
     "sourceDaily": "rainfall-daily-combined",
     "sourceMonthly": "base mensual combinada",
-    "updatedAt": "2026-08-25T10:24:20"
+    "updatedAt": "2026-08-28T13:37:45"
   },
   {
     "department": "Goya",
@@ -197,27 +197,27 @@
     "monthlyCategory": "Muy por debajo",
     "sourceDaily": "rainfall-daily-combined",
     "sourceMonthly": "base mensual combinada",
-    "updatedAt": "2026-08-25T10:24:20"
+    "updatedAt": "2026-08-28T13:37:45"
   },
   {
     "department": "Itati",
     "referenceDateDaily": "2026-08-20",
     "rainLastDateMm": null,
-    "rain7dMm": 2.4,
-    "coverage7d": "1/7",
-    "rain15dMm": 21.4,
-    "coverage15d": "4/15",
-    "rain30dMm": 76.0,
-    "coverage30d": "7/30",
+    "rain7dMm": 32.4,
+    "coverage7d": "2/7",
+    "rain15dMm": 51.4,
+    "coverage15d": "5/15",
+    "rain30dMm": 106.0,
+    "coverage30d": "8/30",
     "monthlyReference": "Agosto 2026",
-    "monthlyObservedMm": 76.0,
-    "monthlyHistoricalAvgMm": 42.87,
-    "monthlyDifferenceMm": 33.13,
-    "monthlyDifferencePct": 77.26,
+    "monthlyObservedMm": 106.0,
+    "monthlyHistoricalAvgMm": 44.18,
+    "monthlyDifferenceMm": 61.82,
+    "monthlyDifferencePct": 139.94,
     "monthlyCategory": "Muy por encima",
     "sourceDaily": "rainfall-daily-combined",
     "sourceMonthly": "base mensual combinada",
-    "updatedAt": "2026-08-25T10:24:20"
+    "updatedAt": "2026-08-28T13:37:45"
   },
   {
     "department": "Ituzaingo",
@@ -237,7 +237,7 @@
     "monthlyCategory": "Muy por encima",
     "sourceDaily": "rainfall-daily-combined",
     "sourceMonthly": "base mensual combinada",
-    "updatedAt": "2026-08-25T10:24:20"
+    "updatedAt": "2026-08-28T13:37:45"
   },
   {
     "department": "Lavalle",
@@ -257,7 +257,7 @@
     "monthlyCategory": "Por debajo",
     "sourceDaily": "rainfall-daily-combined",
     "sourceMonthly": "base mensual combinada",
-    "updatedAt": "2026-08-25T10:24:20"
+    "updatedAt": "2026-08-28T13:37:45"
   },
   {
     "department": "Mburucuya",
@@ -277,7 +277,7 @@
     "monthlyCategory": "Muy por encima",
     "sourceDaily": "rainfall-daily-combined",
     "sourceMonthly": "base mensual combinada",
-    "updatedAt": "2026-08-25T10:24:20"
+    "updatedAt": "2026-08-28T13:37:45"
   },
   {
     "department": "Mercedes",
@@ -297,7 +297,7 @@
     "monthlyCategory": "Muy por encima",
     "sourceDaily": "rainfall-daily-combined",
     "sourceMonthly": "base mensual combinada",
-    "updatedAt": "2026-08-25T10:24:20"
+    "updatedAt": "2026-08-28T13:37:45"
   },
   {
     "department": "Monte Caseros",
@@ -317,7 +317,7 @@
     "monthlyCategory": "Muy por encima",
     "sourceDaily": "rainfall-daily-combined",
     "sourceMonthly": "base mensual combinada",
-    "updatedAt": "2026-08-25T10:24:20"
+    "updatedAt": "2026-08-28T13:37:45"
   },
   {
     "department": "Paso de los Libres",
@@ -337,7 +337,7 @@
     "monthlyCategory": "En torno al promedio",
     "sourceDaily": "rainfall-daily-combined",
     "sourceMonthly": "base mensual combinada",
-    "updatedAt": "2026-08-25T10:24:20"
+    "updatedAt": "2026-08-28T13:37:45"
   },
   {
     "department": "Saladas",
@@ -357,7 +357,7 @@
     "monthlyCategory": "Por encima",
     "sourceDaily": "rainfall-daily-combined",
     "sourceMonthly": "base mensual combinada",
-    "updatedAt": "2026-08-25T10:24:20"
+    "updatedAt": "2026-08-28T13:37:45"
   },
   {
     "department": "San Cosme",
@@ -377,7 +377,7 @@
     "monthlyCategory": "Muy por debajo",
     "sourceDaily": "rainfall-daily-combined",
     "sourceMonthly": "base mensual combinada",
-    "updatedAt": "2026-08-25T10:24:20"
+    "updatedAt": "2026-08-28T13:37:45"
   },
   {
     "department": "San Luis del Palmar",
@@ -397,7 +397,7 @@
     "monthlyCategory": "Muy por debajo",
     "sourceDaily": "rainfall-daily-combined",
     "sourceMonthly": "base mensual combinada",
-    "updatedAt": "2026-08-25T10:24:20"
+    "updatedAt": "2026-08-28T13:37:45"
   },
   {
     "department": "San Martin",
@@ -417,7 +417,7 @@
     "monthlyCategory": "Muy por encima",
     "sourceDaily": "rainfall-daily-combined",
     "sourceMonthly": "base mensual combinada",
-    "updatedAt": "2026-08-25T10:24:20"
+    "updatedAt": "2026-08-28T13:37:45"
   },
   {
     "department": "San Miguel",
@@ -437,7 +437,7 @@
     "monthlyCategory": "Por debajo",
     "sourceDaily": "rainfall-daily-combined",
     "sourceMonthly": "base mensual combinada",
-    "updatedAt": "2026-08-25T10:24:20"
+    "updatedAt": "2026-08-28T13:37:45"
   },
   {
     "department": "San Roque",
@@ -457,7 +457,7 @@
     "monthlyCategory": "Muy por encima",
     "sourceDaily": "rainfall-daily-combined",
     "sourceMonthly": "base mensual combinada",
-    "updatedAt": "2026-08-25T10:24:20"
+    "updatedAt": "2026-08-28T13:37:45"
   },
   {
     "department": "Santo Tome",
@@ -477,7 +477,7 @@
     "monthlyCategory": "Muy por encima",
     "sourceDaily": "rainfall-daily-combined",
     "sourceMonthly": "base mensual combinada",
-    "updatedAt": "2026-08-25T10:24:20"
+    "updatedAt": "2026-08-28T13:37:45"
   },
   {
     "department": "Sauce",
@@ -497,6 +497,6 @@
     "monthlyCategory": "Muy por encima",
     "sourceDaily": "rainfall-daily-combined",
     "sourceMonthly": "base mensual combinada",
-    "updatedAt": "2026-08-25T10:24:20"
+    "updatedAt": "2026-08-28T13:37:45"
   }
 ]

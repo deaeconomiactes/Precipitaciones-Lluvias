@@ -1761,9 +1761,12 @@ function normalizePrimaryHeightRecords(records, sourceId, inventory = []) {
     const height = record.latestHeight || record;
     const matchedStation = record.latestHeight ? record : stationBySeries.get(String(height.seriesId));
     const station = matchedStation || record;
+    const normalizedSourceId = String(record.sourceId || sourceId);
+    const trendSource = hydrometryTrendSource({ ...record, sourceId: normalizedSourceId, latestHeight: height });
     return {
       ...inaHeightStation(height, station),
-      sourceId: String(record.sourceId || sourceId),
+      sourceId: normalizedSourceId,
+      trendSource,
       sourceLabel: String(record.sourceLabel || PRIMARY_HEIGHT_SOURCE_DETAILS[sourceId]?.label || sourceId),
       sourceUrl: String(record.sourceUrl || ''),
       validation: String(record.validation || PRIMARY_HEIGHT_SOURCE_DETAILS[sourceId]?.validation || ''),
@@ -1776,6 +1779,7 @@ function normalizePrimaryHeightRecords(records, sourceId, inventory = []) {
       lastTransmissionAt: String(record.lastTransmissionAt || ''),
       latestHeight: {
         ...height,
+        trendSource,
         valueM: finiteApiNumber(height.valueM),
         previousValueM: finiteApiNumber(height.previousValueM),
         alertLevelM: finiteApiNumber(height.alertLevelM ?? station.alertLevelM),
@@ -1800,6 +1804,37 @@ function normalizeInaHeightRecords(records, inventory = []) {
 
 function validInaThreshold(value) {
   return Number.isFinite(value) && value > 0;
+}
+
+function normalizeHydrometryTrendSource(value, sourceId = '') {
+  const normalized = normalizeSourceKey(value);
+  if (normalized === 'published' || normalized === 'calculated' || normalized === 'insufficient') return normalized;
+  const source = normalizeSourceKey(sourceId);
+  return source === 'salto' ? 'calculated' : '';
+}
+
+function hydrometryPreviousValue(station) {
+  const height = station?.latestHeight || station || {};
+  const currentTime = new Date(height.date).getTime();
+  const series = (Array.isArray(height.timeseries) ? height.timeseries : [])
+    .map(row => ({ time: new Date(row?.[0]).getTime(), value: Number(row?.[1]) }))
+    .filter(row => Number.isFinite(row.time) && Number.isFinite(row.value))
+    .sort((a, b) => a.time - b.time);
+  const previousSeries = Number.isFinite(currentTime)
+    ? series.filter(row => row.time < currentTime)
+    : series.slice(0, -1);
+  const previousValue = height.previousValueM;
+  return previousSeries.at(-1)?.value ?? (previousValue !== null && previousValue !== '' && Number.isFinite(Number(previousValue)) ? Number(previousValue) : null);
+}
+
+function hydrometryTrendSource(station) {
+  const height = station?.latestHeight || station || {};
+  const explicit = normalizeHydrometryTrendSource(height.trendSource ?? station?.trendSource);
+  if (explicit) return explicit;
+  const sourceId = station?.sourceId || height.sourceId || '';
+  const rawTrend = height.trend ?? station?.trend;
+  if (String(rawTrend || '').trim()) return normalizeSourceKey(sourceId) === 'salto' ? 'calculated' : 'published';
+  return Number.isFinite(hydrometryPreviousValue(station)) ? 'calculated' : 'insufficient';
 }
 
 function inaHeightState(station) {
@@ -1950,29 +1985,21 @@ function hydrometryTrendKey(value) {
 
 function hydrometryTrend(station) {
   const height = station?.latestHeight || station || {};
+  const trendSource = hydrometryTrendSource(station);
   const publishedValue = height.trend ?? station?.trend;
   const publishedText = String(publishedValue || '').trim();
   const publishedKey = hydrometryTrendKey(publishedValue);
-  if (publishedKey) return { key: publishedKey, symbol: { up: '↑', down: '↓', steady: '•' }[publishedKey], label: { up: 'Sube', down: 'Baja', steady: 'Permanece' }[publishedKey], source: 'published', delta: null };
-  if (publishedText) return { key: 'unknown', symbol: '?', label: 'Sin dato suficiente', source: 'published', delta: null };
+  if (publishedKey) return { key: publishedKey, symbol: { up: '↑', down: '↓', steady: '•' }[publishedKey], label: { up: 'Sube', down: 'Baja', steady: 'Permanece' }[publishedKey], source: trendSource, trendSource, delta: null };
+  if (publishedText) return { key: 'unknown', symbol: '•', label: 'Tendencia no disponible', source: trendSource, trendSource, delta: null };
 
   const current = Number(height.valueM);
-  if (!Number.isFinite(current)) return { key: 'unknown', symbol: '?', label: 'Sin dato suficiente', source: 'insufficient', delta: null };
-  const currentTime = new Date(height.date).getTime();
-  const series = (Array.isArray(height.timeseries) ? height.timeseries : [])
-    .map(row => ({ time: new Date(row?.[0]).getTime(), value: Number(row?.[1]) }))
-    .filter(row => Number.isFinite(row.time) && Number.isFinite(row.value))
-    .sort((a, b) => a.time - b.time);
-  const previousSeries = Number.isFinite(currentTime)
-    ? series.filter(row => row.time < currentTime)
-    : series.slice(0, -1);
-  const previousValue = height.previousValueM;
-  const previous = previousSeries.at(-1)?.value ?? (previousValue !== null && previousValue !== '' && Number.isFinite(Number(previousValue)) ? Number(previousValue) : null);
-  if (!Number.isFinite(previous)) return { key: 'unknown', symbol: '?', label: 'Sin dato suficiente', source: 'insufficient', delta: null };
+  if (!Number.isFinite(current)) return { key: 'unknown', symbol: '•', label: 'Tendencia no disponible', source: 'insufficient', trendSource: 'insufficient', delta: null };
+  const previous = hydrometryPreviousValue(station);
+  if (!Number.isFinite(previous)) return { key: 'unknown', symbol: '•', label: 'Tendencia no disponible', source: 'insufficient', trendSource: 'insufficient', delta: null };
   const delta = current - previous;
-  if (delta >= HYDROMETRY_TREND_TOLERANCE_M) return { key: 'up', symbol: '↑', label: 'Sube', source: 'calculated', delta };
-  if (delta <= -HYDROMETRY_TREND_TOLERANCE_M) return { key: 'down', symbol: '↓', label: 'Baja', source: 'calculated', delta };
-  return { key: 'steady', symbol: '•', label: 'Permanece', source: 'calculated', delta };
+  if (delta >= HYDROMETRY_TREND_TOLERANCE_M) return { key: 'up', symbol: '↑', label: 'Sube', source: 'calculated', trendSource: 'calculated', delta };
+  if (delta <= -HYDROMETRY_TREND_TOLERANCE_M) return { key: 'down', symbol: '↓', label: 'Baja', source: 'calculated', trendSource: 'calculated', delta };
+  return { key: 'steady', symbol: '•', label: 'Permanece', source: 'calculated', trendSource: 'calculated', delta };
 }
 
 function hydrometryVisualState(station) {

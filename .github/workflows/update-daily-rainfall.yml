@@ -52,8 +52,11 @@ jobs:
         shell: pwsh
         run: |
           Write-Host "[daily-rainfall] Ejecutando scripts/build-daily-data.ps1"
+          $global:LASTEXITCODE = 0
           ./scripts/build-daily-data.ps1
-          if ($LASTEXITCODE -ne 0) { throw "build-daily-data.ps1 terminó con código $LASTEXITCODE" }
+          $scriptExitCode = $LASTEXITCODE
+          if ($scriptExitCode -ne 0) { throw "build-daily-data.ps1 terminó con código $scriptExitCode" }
+          $global:LASTEXITCODE = 0
 
       - name: Validate generated daily metadata
         shell: bash

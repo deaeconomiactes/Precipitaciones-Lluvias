@@ -1457,7 +1457,7 @@ function renderClimatePointLegend() {
   const geoglowsVisible = geoglowsControl?.checked && !geoglowsControl.disabled;
   const sections = [`<div class="climate-legend-section"><strong>Lluvia departamental · ${escapeHtml(variable?.label || 'variable seleccionada')}</strong>${climateLegendItems(state.climateMap.variable).slice(0, 6).map(([color, label]) => `<span class="climate-legend-row"><i class="climate-legend-swatch" style="--legend-color:${color}"></i>${escapeHtml(label)}</span>`).join('')}</div>`];
   const heightVisible = ['ina', 'snih', 'salto'].some(source => document.querySelector(`[data-point-source="${source}"]`)?.checked);
-  if (heightVisible) sections.push('<div class="climate-legend-section"><strong>Puntos</strong><span class="climate-legend-row"><i class="climate-legend-swatch climate-point-swatch" style="--legend-color:#13806f"></i>Altura de ríos</span></div>');
+  if (heightVisible) sections.push(hydrometryLegendMarkup());
   if (rainVisible) sections.push(`<div class="climate-legend-section"><strong>Respecto de lo habitual</strong>${RAIN_COMPARISON_SCALE.map(item => `<span class="climate-legend-row"><i class="climate-legend-swatch climate-point-swatch" style="--legend-color:${item.color}"></i>${item.label}</span>`).join('')}<span class="climate-legend-row"><i class="climate-legend-swatch climate-point-swatch" style="--legend-color:${CLIMATE_MAP_NEUTRAL}"></i>Sin referencia</span></div>`);
   if (nasaVisible || geoglowsVisible) sections.push(`<div class="climate-legend-section climate-model-legend"><strong>Modelos / pronósticos</strong>${nasaVisible ? '<span class="climate-legend-row"><i class="climate-model-legend-symbol model-rain-symbol"></i>Precipitación modelada</span>' : ''}${geoglowsVisible ? '<span class="climate-legend-row"><i class="climate-model-legend-symbol model-flow-symbol"></i>Caudal pronosticado</span>' : ''}</div>`);
   legend.hidden = !sections.length;
@@ -1832,29 +1832,8 @@ function renderInaPointLayer(stations, sourceInfo = {}) {
   const availability = sourceInfo.source === 'live' ? 'Consulta externa actualizada' : 'Respaldo local';
   const normalized = normalizeInaHeightRecords(stations, inventoryStations).map(station => ({ ...station, dataAvailability: availability }));
   replaceClimatePointLayer('ina', normalized, station => {
-    const older = inaHeightIsOlder(station);
-    const value = station.latestHeight.valueM;
-    const seriesClass = String(station.latestHeight.seriesId ?? '').replace(/[^a-zA-Z0-9_-]/g, '');
-    const options = {
-      pane: CLIMATE_POINT_SOURCES.ina.pane,
-      radius: 5.6,
-      color: '#ffffff',
-      weight: 1.6,
-      fillColor: CLIMATE_CATEGORY_COLORS.hydrometry,
-      fillOpacity: older ? 0.72 : 0.9,
-      className: `climate-point-marker hydrometry-marker source-ina-marker${seriesClass ? ` ina-series-${seriesClass}` : ''}${older ? ' river-height-older' : ''}`
-    };
-    const marker = L.circleMarker([station.lat, station.lng], options);
-    marker.__climateStation = station;
-    marker.__climateStationKey = hydrometryPointKey(station, 'ina');
-    marker.bindTooltip(`${station.name}: ${format(value)} m`, {
-      direction: 'top',
-      offset: [0, -6],
-      opacity: 0.96,
-      className: `river-height-label${older ? ' is-older' : ''}`
-    });
-    marker.__hydrometryLabel = true;
-    wireClimatePointSelection(marker, options);
+    const marker = hydrometryMarker(station, 'ina');
+    wireClimatePointSelection(marker, {});
     marker.on('click', () => renderPrimaryHeightDetail('ina', station));
     return marker;
   });
@@ -1949,6 +1928,109 @@ function formatInaTrend(value) {
   if (normalized.includes('baja') || normalized.includes('desc')) return 'Baja';
   if (normalized.includes('permanece') || normalized.includes('estable')) return 'Permanece';
   return '';
+}
+
+const HYDROMETRY_TREND_TOLERANCE_M = 0.03;
+const HYDROMETRY_STATE_COLORS = Object.freeze({
+  normal: '#13806f',
+  alert: '#e2a126',
+  evacuation: '#c4474f',
+  low: '#d9822b',
+  'no-threshold': '#87949a',
+  'no-data': '#87949a'
+});
+
+function hydrometryTrendKey(value) {
+  const normalized = normalizeSourceKey(value);
+  if (normalized.includes('sube') || normalized.includes('asc') || normalized.includes('crece') || normalized.includes('aument')) return 'up';
+  if (normalized.includes('baja') || normalized.includes('desc') || normalized.includes('decrec')) return 'down';
+  if (normalized.includes('permanece') || normalized.includes('estable') || normalized.includes('igual')) return 'steady';
+  return '';
+}
+
+function hydrometryTrend(station) {
+  const height = station?.latestHeight || station || {};
+  const publishedValue = height.trend ?? station?.trend;
+  const publishedText = String(publishedValue || '').trim();
+  const publishedKey = hydrometryTrendKey(publishedValue);
+  if (publishedKey) return { key: publishedKey, symbol: { up: '↑', down: '↓', steady: '•' }[publishedKey], label: { up: 'Sube', down: 'Baja', steady: 'Permanece' }[publishedKey], source: 'published', delta: null };
+  if (publishedText) return { key: 'unknown', symbol: '?', label: 'Sin dato suficiente', source: 'published', delta: null };
+
+  const current = Number(height.valueM);
+  if (!Number.isFinite(current)) return { key: 'unknown', symbol: '?', label: 'Sin dato suficiente', source: 'insufficient', delta: null };
+  const currentTime = new Date(height.date).getTime();
+  const series = (Array.isArray(height.timeseries) ? height.timeseries : [])
+    .map(row => ({ time: new Date(row?.[0]).getTime(), value: Number(row?.[1]) }))
+    .filter(row => Number.isFinite(row.time) && Number.isFinite(row.value))
+    .sort((a, b) => a.time - b.time);
+  const previousSeries = Number.isFinite(currentTime)
+    ? series.filter(row => row.time < currentTime)
+    : series.slice(0, -1);
+  const previousValue = height.previousValueM;
+  const previous = previousSeries.at(-1)?.value ?? (previousValue !== null && previousValue !== '' && Number.isFinite(Number(previousValue)) ? Number(previousValue) : null);
+  if (!Number.isFinite(previous)) return { key: 'unknown', symbol: '?', label: 'Sin dato suficiente', source: 'insufficient', delta: null };
+  const delta = current - previous;
+  if (delta >= HYDROMETRY_TREND_TOLERANCE_M) return { key: 'up', symbol: '↑', label: 'Sube', source: 'calculated', delta };
+  if (delta <= -HYDROMETRY_TREND_TOLERANCE_M) return { key: 'down', symbol: '↓', label: 'Baja', source: 'calculated', delta };
+  return { key: 'steady', symbol: '•', label: 'Permanece', source: 'calculated', delta };
+}
+
+function hydrometryVisualState(station) {
+  const height = station?.latestHeight || station || {};
+  const status = normalizeSourceKey(height.status ?? station?.status);
+  const hasThreshold = [height.alertLevelM ?? station?.alertLevelM, height.evacuationLevelM ?? station?.evacuationLevelM, height.lowWaterLevelM ?? station?.lowWaterLevelM].some(validInaThreshold);
+  if (!Number.isFinite(Number(height.valueM))) return { key: 'no-data', label: 'Sin dato suficiente', color: HYDROMETRY_STATE_COLORS['no-data'] };
+  if (status.includes('evac') || inaHeightState(station).key === 'external-upper-2') return { key: 'evacuation', label: 'Evacuación', color: HYDROMETRY_STATE_COLORS.evacuation };
+  if (status.includes('alert') || inaHeightState(station).key === 'external-upper-1') return { key: 'alert', label: 'Alerta', color: HYDROMETRY_STATE_COLORS.alert };
+  if (status.includes('aguas bajas') || status.includes('agua baja') || status.includes('low') || inaHeightState(station).key === 'external-low') return { key: 'low', label: 'Aguas bajas', color: HYDROMETRY_STATE_COLORS.low };
+  if (status.includes('normal') || hasThreshold) return { key: 'normal', label: 'Sin superación de umbral', color: HYDROMETRY_STATE_COLORS.normal };
+  return { key: 'no-threshold', label: 'Sin umbral', color: HYDROMETRY_STATE_COLORS['no-threshold'] };
+}
+
+function hydrometryLegendMarkup() {
+  return `<div class="climate-legend-section"><strong>Puntos</strong><span class="climate-legend-row"><i class="climate-legend-swatch climate-point-swatch" style="--legend-color:${HYDROMETRY_STATE_COLORS.normal}"></i>Sin superación</span><span class="climate-legend-row"><i class="climate-legend-swatch climate-point-swatch" style="--legend-color:${HYDROMETRY_STATE_COLORS.alert}"></i>Alerta</span><span class="climate-legend-row"><i class="climate-legend-swatch climate-point-swatch" style="--legend-color:${HYDROMETRY_STATE_COLORS.evacuation}"></i>Evacuación</span><span class="climate-legend-row"><i class="climate-legend-swatch climate-point-swatch" style="--legend-color:${HYDROMETRY_STATE_COLORS.low}"></i>Aguas bajas</span><span class="climate-legend-row"><i class="climate-legend-swatch climate-point-swatch" style="--legend-color:${HYDROMETRY_STATE_COLORS['no-threshold']}"></i>Sin umbral</span><span class="climate-legend-row climate-legend-trend-row"><i class="climate-legend-trend">↑</i>Sube · <i class="climate-legend-trend">↓</i>Baja · <i class="climate-legend-trend">•</i>Permanece</span></div>`;
+}
+
+function hydrometryTooltipHtml(station) {
+  const height = station.latestHeight || station;
+  const trend = hydrometryTrend(station);
+  const status = hydrometryVisualState(station);
+  return `<strong>${escapeHtml(station.name || 'Estación hidrométrica')}</strong><br><b>${escapeHtml(format(Number(height.valueM)))} m</b><br><span>${escapeHtml(trend.label)} · ${escapeHtml(status.label)}</span><br><span>${escapeHtml(formatInaDateTime(height.date))}</span>`;
+}
+
+function hydrometryMarker(station, sourceId, { popup = false } = {}) {
+  const sourceConfig = CLIMATE_POINT_SOURCES[sourceId];
+  const height = station.latestHeight || station;
+  const trend = hydrometryTrend(station);
+  const status = hydrometryVisualState(station);
+  const older = inaHeightIsOlder(station);
+  const seriesClass = sourceId === 'ina' ? String(height.seriesId ?? '').replace(/[^a-zA-Z0-9_-]/g, '') : '';
+  const markerClass = `climate-point-marker hydrometry-div-icon source-${sourceId}-marker${seriesClass ? ` ina-series-${seriesClass}` : ''}${older ? ' river-height-older' : ''}`;
+  const marker = L.marker([station.lat, station.lng], {
+    pane: sourceConfig.pane,
+    icon: L.divIcon({
+      className: markerClass,
+      html: `<span class="hydrometry-marker-symbol" style="--hydrometry-color:${status.color}" aria-hidden="true">${trend.symbol}</span>`,
+      iconSize: [18, 18],
+      iconAnchor: [9, 9]
+    }),
+    keyboard: true,
+    title: station.name || 'Estación hidrométrica'
+  });
+  marker.__climateStation = station;
+  marker.__climateStationKey = hydrometryPointKey(station, sourceId);
+  marker.bindTooltip(hydrometryTooltipHtml(station), {
+    direction: 'top',
+    offset: [0, -8],
+    opacity: 0.96,
+    className: `river-height-label${older ? ' is-older' : ''}`
+  });
+  if (popup) {
+    const definition = PRIMARY_HEIGHT_SOURCE_DETAILS[sourceId];
+    marker.bindPopup(`<strong>Hidrometría</strong><span class="climate-api-popup-label">Estación</span>${escapeHtml(station.name)}<span class="climate-api-popup-label">Altura observada</span>${escapeHtml(format(Number(height.valueM)))} m · ${escapeHtml(formatApiDateTime(height.date))}<span class="climate-api-popup-label">Fuente</span>${escapeHtml(definition.label)}`);
+  }
+  marker.__hydrometryLabel = true;
+  return marker;
 }
 
 function normalizeInaHistoryTimestamp(value) {
@@ -2199,24 +2281,8 @@ function renderAuthorityHeightLayer(sourceId, observations, sourceInfo = {}) {
   const availability = sourceInfo.source === 'live' ? 'Consulta externa actualizada' : 'Respaldo local';
   const normalized = normalizePrimaryHeightRecords(observations, sourceId).map(station => ({ ...station, dataAvailability: availability }));
   replaceClimatePointLayer(sourceId, normalized, station => {
-    const older = inaHeightIsOlder(station);
-    const value = station.latestHeight.valueM;
-    const options = {
-      pane: sourceConfig.pane,
-      radius: 5.6,
-      color: '#ffffff',
-      weight: 1.6,
-      fillColor: sourceConfig.color,
-      fillOpacity: older ? 0.72 : 0.9,
-      className: `climate-point-marker hydrometry-marker source-${sourceId}-marker${older ? ' river-height-older' : ''}`
-    };
-    const marker = L.circleMarker([station.lat, station.lng], options);
-    marker.__climateStation = station;
-    marker.__climateStationKey = hydrometryPointKey(station, sourceId);
-    marker.bindTooltip(`${station.name}: ${format(value)} m · ${formatApiDateTime(station.latestHeight.date)}`, { direction: 'top' });
-    marker.bindPopup(`<strong>Hidrometría</strong><span class="climate-api-popup-label">Estación</span>${escapeHtml(station.name)}<span class="climate-api-popup-label">Altura observada</span>${escapeHtml(format(value))} m · ${escapeHtml(formatApiDateTime(station.latestHeight.date))}<span class="climate-api-popup-label">Fuente</span>${escapeHtml(definition.label)}`);
-    marker.__hydrometryLabel = true;
-    wireClimatePointSelection(marker, options);
+    const marker = hydrometryMarker(station, sourceId, { popup: true });
+    wireClimatePointSelection(marker, {});
     marker.on('click', () => renderPrimaryHeightDetail(sourceId, station));
     return marker;
   });
@@ -3347,7 +3413,7 @@ function renderClimateDepartmentLegend() {
   const variable = CLIMATE_MAP_VARIABLES[state.climateMap.variable];
   const hydrometryVisible = ['ina', 'snih', 'salto'].some(source => document.querySelector(`[data-point-source="${source}"]`)?.checked);
   legend.hidden = false;
-  legend.innerHTML = `<div class="climate-legend-section"><strong>Lluvia departamental · ${escapeHtml(variable.label)}</strong>${climateLegendItems(state.climateMap.variable).map(([color, label]) => `<span class="climate-legend-row"><i class="climate-legend-swatch" style="--legend-color:${color}"></i>${escapeHtml(label)}</span>`).join('')}</div>${hydrometryVisible ? '<div class="climate-legend-section"><strong>Puntos</strong><span class="climate-legend-row"><i class="climate-legend-swatch climate-point-swatch" style="--legend-color:#13806f"></i>Altura de ríos</span></div>' : ''}`;
+  legend.innerHTML = `<div class="climate-legend-section"><strong>Lluvia departamental · ${escapeHtml(variable.label)}</strong>${climateLegendItems(state.climateMap.variable).map(([color, label]) => `<span class="climate-legend-row"><i class="climate-legend-swatch" style="--legend-color:${color}"></i>${escapeHtml(label)}</span>`).join('')}</div>${hydrometryVisible ? hydrometryLegendMarkup() : ''}`;
 }
 
 function updateClimateDepartmentReference() {

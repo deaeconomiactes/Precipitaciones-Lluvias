@@ -322,4 +322,25 @@ $summary = [ordered]@{
 }
 $summary | ConvertTo-Json @jsonOptions | Set-Content -Encoding UTF8 (Join-Path $dataDir 'rainfall-daily-summary.json')
 
+$dailyOutputPath = Join-Path $dataDir 'rainfall-daily.json'
+$summaryOutputPath = Join-Path $dataDir 'rainfall-daily-summary.json'
+foreach ($outputPath in @($dailyOutputPath, $summaryOutputPath)) {
+    if (-not (Test-Path -LiteralPath $outputPath) -or (Get-Item -LiteralPath $outputPath).Length -eq 0) {
+        throw "No se genero el archivo diario esperado: $outputPath"
+    }
+}
+
+try {
+    $generatedRows = @(Get-Content -Raw -LiteralPath $dailyOutputPath | ConvertFrom-Json)
+    if ($generatedRows.Count -eq 0) { throw 'rainfall-daily.json no contiene registros.' }
+    $generatedSummary = Get-Content -Raw -LiteralPath $summaryOutputPath | ConvertFrom-Json
+    if ([string]::IsNullOrWhiteSpace([string]$generatedSummary.generatedAt)) { throw 'rainfall-daily-summary.json no contiene generatedAt.' }
+    [datetime]::Parse([string]$generatedSummary.generatedAt, [Globalization.CultureInfo]::InvariantCulture) | Out-Null
+} catch {
+    throw "La validacion de los JSON diarios fallo: $($_.Exception.Message)"
+}
+
 Write-Host "Generados rainfall-daily.json ($($records.Count) registros) y rainfall-daily-summary.json."
+Write-Host "[daily-rainfall] Generacion diaria completada correctamente."
+$global:LASTEXITCODE = 0
+exit 0

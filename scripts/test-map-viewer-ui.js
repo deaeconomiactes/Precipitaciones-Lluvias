@@ -6,9 +6,17 @@ const html = fs.readFileSync('index.html', 'utf8');
 const app = fs.readFileSync('app.js', 'utf8');
 const rainfallBefore = fs.readFileSync('data/rainfall.json');
 
-for (const id of ['climateFullscreenButton','climateExportPngButton','climateSatelliteOpacity','climateMapLegend','climateSatelliteDate','climateSatelliteDateStatus','climateSatelliteLatestButton']) {
+for (const id of ['climateFullscreenButton','climateExportPngButton','climateSatelliteOpacity','climateMapLegend','climateSatelliteDate','climateSatelliteDateStatus','climateSatelliteLatestButton','climateMapFillOpacity','climateMapFillOpacityValue','climateMapSummary','climateSelectedPoint','climateHydrometryChartLink']) {
   if (!html.includes(`id="${id}"`)) throw Error(`Falta el control ${id}`);
 }
+if (!html.includes('id="climateMapFillOpacity" type="range" min="0" max="80" step="5"')) throw Error('El relleno departamental no permite opacidad de 0 % a 80 % en pasos de 5 %.');
+for (const requirement of ["mapFillOpacity', String(Math.round(state.climateMap.fillOpacity * 100))", "params.get('mapFillOpacity')", 'function setClimateMapFillOpacity', 'fillOpacity: state.climateMap.fillOpacity']) {
+  if (!app.includes(requirement)) throw Error(`La opacidad departamental no se persiste o no se aplica: ${requirement}`);
+}
+if (!app.includes('renderClimateSelectedPointSummary(detail, kind)') || !html.includes('Ver evolución hidrométrica') || !app.includes("scrollIntoView({ behavior: 'smooth', block: 'start' })")) {
+  throw Error('Falta la ficha compacta o el acceso al gráfico hidrométrico.');
+}
+if (app.includes('¿Por qué se activó?')) throw Error('El visor no debe mostrar detalle operativo vacío para “Sin señal”.');
 for (const group of ['Registros propios','Hidrometría','Satélite','Modelos']) {
   if (!html.includes(`<summary>${group}</summary>`)) throw Error(`Falta el grupo ${group}`);
 }
@@ -139,6 +147,18 @@ const timestampChecks = vm.runInContext(`(() => {
     rainColors: [-40, -20, 0, 20, 40, null].map(rainComparisonColor)
   };
 })()`, context);
+const fillOpacityChecks = vm.runInContext(`(() => {
+  state.climateMap.geoLayer = null;
+  setClimateMapFillOpacity(0, { updateUrl: false });
+  const zero = { value: state.climateMap.fillOpacity, label: document.getElementById('climateMapFillOpacityValue').textContent };
+  setClimateMapFillOpacity(.15, { updateUrl: false });
+  const fifteen = state.climateMap.fillOpacity;
+  setClimateMapFillOpacity(.8, { updateUrl: false });
+  return { zero, fifteen, eighty: state.climateMap.fillOpacity };
+})()`, context);
+if (fillOpacityChecks.zero.value !== 0 || fillOpacityChecks.zero.label !== '0 %' || fillOpacityChecks.fifteen !== .15 || fillOpacityChecks.eighty !== .8) {
+  throw Error(`La opacidad departamental no conserva 0 %, 15 % y 80 %: ${JSON.stringify(fillOpacityChecks)}`);
+}
 if (timestampChecks.updated !== '13/08/2026 · 07:56') throw Error(`Formato horario argentino incorrecto: ${timestampChecks.updated}`);
 if (timestampChecks.fallback !== 'Actualización no disponible') throw Error(`Fallback incorrecto: ${timestampChecks.fallback}`);
 if (timestampChecks.period !== '01/08/2026–18/08/2026') throw Error(`El período comparable es incorrecto: ${timestampChecks.period}`);
@@ -225,7 +245,7 @@ for (const category of ['Extensión de inundación observada','Agua observada','
 }
 if (!app.includes('Qué muestra esta capa') || app.includes("[['Estado observado', detail.status]")) throw Error('El panel satelital conserva una etiqueta técnica.');
 if (!html.includes('Escenas recientes verificadas, hasta 7 días hacia atrás.') || html.includes('Ráster remoto con fecha de escena')) throw Error('El selector temporal satelital no comunica su límite operativo.');
-if (!html.includes('app.js?v=20260819-1')) throw Error('El HTML no invalida la versión anterior del JavaScript del selector satelital.');
+if (!html.includes('app.js?v=20260904-1')) throw Error('El HTML no invalida la versión anterior del JavaScript del visor.');
 const satelliteControlChecks = vm.runInContext(`(() => {
   const elements = ['climateSatelliteDate','climateSatelliteDateStatus','climateSatelliteLatestButton']
     .reduce((result, id) => ({ ...result, [id]: document.getElementById(id) }), {});

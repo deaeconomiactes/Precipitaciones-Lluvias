@@ -88,6 +88,7 @@
           </div>
           <div class="climate-map-toolbar" id="climateDepartmentControls" aria-label="Controles del mapa departamental">
             <label><span>Variable del mapa</span><select id="climateMapVariable"><option value="rainLastDateMm">Lluvia del día de referencia</option><option value="rain7dMm" selected>Acumulado 7 días</option><option value="rain15dMm">Acumulado 15 días</option><option value="rain30dMm">Acumulado 30 días</option><option value="monthlyDifferencePct">Desvío mensual vs histórico</option><option value="monthlyCategory">Categoría mensual descriptiva</option></select></label>
+            <label class="climate-opacity-control climate-department-opacity"><span>Relleno departamental <output id="climateMapFillOpacityValue">80 %</output></span><input id="climateMapFillOpacity" type="range" min="0" max="80" step="5" value="80"></label>
             <span class="climate-map-reference" id="climateMapReference">Cargando información territorial…</span>
           </div>
           <div class="climate-map-toolbar climate-point-toolbar" id="climateHydrologyControls" aria-label="Fuentes del mapa hidrológico" hidden>
@@ -126,6 +127,12 @@
               <button class="climate-point-action source-info-button" id="sourceInfoButton" type="button">Información de la fuente</button>
             </aside>
           </div>
+          <section class="climate-map-summary" id="climateMapSummary" aria-live="polite">
+            <div class="climate-map-summary-head"><div><span class="eyebrow">Resumen hidrométrico</span><p id="climateMapSummaryEmpty">Seleccioná una estación, registro o pronóstico para ver su resumen aquí.</p></div></div>
+            <article class="climate-selected-point" id="climateSelectedPoint" hidden>
+              <span class="eyebrow">Punto seleccionado</span><h3 id="climateSelectedPointTitle">—</h3><p id="climateSelectedPointReading">—</p><small id="climateSelectedPointMeta">—</small><button id="climateHydrometryChartLink" type="button" hidden>Ver evolución hidrométrica</button>
+            </article>
+          </section>
           <section class="ina-hydrometry-card" id="inaHydrometryDetailCard" aria-live="polite" hidden></section>
           <section class="climate-api-grid" id="climateApiGrid" aria-label="Estado de las fuentes API del mapa" hidden>
             <article class="climate-api-card" id="rainApiCard" data-state="loading">
@@ -260,6 +267,6 @@
   <footer><p>Dashboard independiente · Datos exclusivos de Precipitaciones-Lluvias</p><p id="dataNote"></p></footer>
   <div class="error-banner" id="errorBanner"></div>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="app.js?v=20260819-1"></script>
+  <script src="app.js?v=20260904-1"></script>
 </body>
 </html>

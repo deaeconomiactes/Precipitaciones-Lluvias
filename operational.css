@@ -601,6 +601,14 @@ main {
   min-width: min(360px, 100%);
 }
 
+.climate-department-opacity {
+  min-width: 210px !important;
+  padding: 8px 10px;
+  border: 1px solid #cbdad6;
+  border-radius: 9px;
+  background: #fff;
+}
+
 .climate-map-toolbar label {
   display: flex;
   flex-direction: column;
@@ -975,6 +983,30 @@ main {
   border-radius: 14px;
   background: linear-gradient(145deg, #f8fbfa, #edf5f2);
 }
+
+@media (min-width: 761px) {
+  .climate-map-detail { max-height: min(72vh, 680px); overflow: auto; }
+}
+
+.climate-map-summary {
+  display: grid;
+  grid-template-columns: minmax(180px, .7fr) minmax(0, 1.3fr);
+  gap: 10px;
+  align-items: center;
+  margin-top: 10px;
+  padding: 11px 14px;
+  border: 1px solid #d4e0dc;
+  border-radius: 12px;
+  background: #f7fbf9;
+}
+
+.climate-map-summary-head p { margin: 4px 0 0; color: var(--muted); font-size: .67rem; line-height: 1.4; }
+.climate-selected-point { min-width: 0; padding-left: 13px; border-left: 3px solid #087d94; }
+.climate-selected-point h3 { margin: 3px 0; color: var(--deep); font-size: .86rem; }
+.climate-selected-point p { margin: 0; color: var(--text); font-size: .72rem; font-weight: 700; line-height: 1.4; }
+.climate-selected-point small { display: block; margin-top: 3px; color: var(--muted); font-size: .62rem; line-height: 1.4; }
+.climate-selected-point button { margin-top: 7px; padding: 5px 8px; color: #075e73; background: #e5f2ef; border: 1px solid #9fc7be; border-radius: 7px; font: 800 .62rem Inter, sans-serif; cursor: pointer; }
+.climate-selected-point button:hover { background: #d8ece7; }
 
 .ina-hydrometry-card { grid-column: 1 / -1; min-width: 0; margin-top: 10px; padding: 18px; border: 1px solid #b9cbd4; border-radius: 14px; background: linear-gradient(145deg, #fbfdfc, #edf5f2); box-shadow: 0 5px 16px rgba(22,61,56,.07); }
 .ina-card-heading { display: flex; justify-content: space-between; gap: 18px; align-items: flex-start; }
@@ -2135,6 +2167,9 @@ footer {
   .climate-map-layout {
     grid-template-columns: 1fr;
   }
+
+  .climate-map-summary { grid-template-columns: 1fr; align-items: start; }
+  .climate-selected-point { padding-top: 8px; padding-left: 10px; }
 
   .climate-point-toolbar {
     grid-template-columns: 1fr;

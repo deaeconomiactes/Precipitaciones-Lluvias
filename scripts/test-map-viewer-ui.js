@@ -124,6 +124,26 @@ if (operationalSignalChecks.warning.level !== 'warning' || operationalSignalChec
 if (operationalSignalChecks.insufficient.level !== 'none' || operationalSignalChecks.insufficient.rain.reasons.length) throw Error('La señal no queda sin datos cuando no hay observaciones recientes.');
 if (operationalSignalChecks.critical.level !== 'critical') throw Error(`No se prioriza crítico operativo: ${JSON.stringify(operationalSignalChecks.critical)}`);
 if (app.slice(app.indexOf('function operationalRainSignal'), app.indexOf('function operationalHydrometrySignal')).includes('dailyHistoricalWindowReference')) throw Error('La señal operativa usa promedios diarios históricos.');
+const operationalDetailChecks = vm.runInContext(`(() => {
+  const none = calculateOperationalSignal({ department: 'Capital', coverage1d: '0/1', coverage7d: '0/7', coverage15d: '0/15', coverage30d: '0/30' });
+  renderOperationalSignalDetail({ department: 'Capital' }, none, {});
+  const noSignal = document.getElementById('mapDetailOperationalSignal').innerHTML;
+  const warning = calculateOperationalSignal({ department: 'Capital', rainLastDateMm: 0, coverage1d: '1/1', rain3dMm: 112, coverage3d: '3/3', rain7dMm: 112, coverage7d: '7/7', rain15dMm: 112, coverage15d: '7/15', rain30dMm: 112, coverage30d: '7/30' });
+  renderOperationalSignalDetail({ department: 'Capital' }, warning, {});
+  return { noSignal, warning: document.getElementById('mapDetailOperationalSignal').innerHTML };
+})()`, context);
+if (operationalDetailChecks.noSignal.includes('¿Por qué se activó?') || operationalDetailChecks.noSignal.includes('>—<')) throw Error('“Sin señal” todavía muestra la tarjeta de activación vacía.');
+if (!operationalDetailChecks.noSignal.includes('No se superan umbrales operativos') || !operationalDetailChecks.warning.includes('¿Por qué se activó?')) throw Error('El detalle operativo no distingue correctamente ausencia y presencia de señal.');
+const fillOpacityChecks = vm.runInContext(`(() => {
+  state.climateMap.geoLayer = null;
+  applyClimateViewFromUrl(new URLSearchParams('mapFillOpacity=0'));
+  const zero = { value: state.climateMap.departmentFillOpacity, label: document.getElementById('climateDepartmentOpacityValue').textContent };
+  applyClimateViewFromUrl(new URLSearchParams('mapFillOpacity=15'));
+  const fifteen = state.climateMap.departmentFillOpacity;
+  applyClimateViewFromUrl(new URLSearchParams('mapFillOpacity=80'));
+  return { zero, fifteen, eighty: state.climateMap.departmentFillOpacity };
+})()`, context);
+if (fillOpacityChecks.zero.value !== 0 || fillOpacityChecks.zero.label !== '0 %' || fillOpacityChecks.fifteen !== .15 || fillOpacityChecks.eighty !== .8) throw Error(`mapFillOpacity no respeta 0 %, 15 % y 80 %: ${JSON.stringify(fillOpacityChecks)}`);
 if (app.includes('alerta por') || html.includes('alerta por')) throw Error('El contexto mensual se presenta como alerta.');
 const timestampChecks = vm.runInContext(`(() => {
   state.climateMap.statuses = new Map();
@@ -240,7 +260,7 @@ for (const category of ['Extensión de inundación observada','Agua observada','
 }
 if (!app.includes('Qué muestra esta capa') || app.includes("[['Estado observado', detail.status]")) throw Error('El panel satelital conserva una etiqueta técnica.');
 if (!html.includes('Escenas recientes verificadas, hasta 7 días hacia atrás.') || html.includes('Ráster remoto con fecha de escena')) throw Error('El selector temporal satelital no comunica su límite operativo.');
-if (!html.includes('app.js?v=20260827-1') || html.includes('app.js?v=20260826-4') || html.includes('app.js?v=20260819-1')) throw Error('El HTML no invalida la versión anterior del JavaScript del visor.');
+if (!html.includes('app.js?v=20260904-2') || html.includes('app.js?v=20260827-1') || html.includes('app.js?v=20260826-4') || html.includes('app.js?v=20260819-1')) throw Error('El HTML no invalida la versión anterior del JavaScript del visor.');
 const satelliteControlChecks = vm.runInContext(`(() => {
   const elements = ['climateSatelliteDate','climateSatelliteDateStatus','climateSatelliteLatestButton']
     .reduce((result, id) => ({ ...result, [id]: document.getElementById(id) }), {});
@@ -356,6 +376,9 @@ for (const requirement of ['scrollWheelZoom: true','doubleClickZoom: true','touc
 for (const requirement of ['id="climateHydrometrySummary"', 'Resumen hidrométrico', 'id="climateSelectedPointSummary"', 'climate-hydrometry-trend-help', '↑ sube · ↓ baja · • permanece/sin dato']) {
   if (!html.includes(requirement)) throw Error(`Falta la integración departamental de hidrometría: ${requirement}`);
 }
+if (!html.includes('class="climate-map-underlay"') || !app.includes('id="climateHydrometryEvolutionLink"') || !app.includes("scrollIntoView({ behavior: 'smooth', block: 'start' })")) throw Error('El resumen y el acceso al gráfico hidrométrico no comparten el espacio bajo el mapa.');
+const hydrometrySummaryCss = css.slice(css.indexOf('.climate-map-underlay'), css.indexOf('.climate-operational-signal{display:grid', css.indexOf('.climate-map-underlay')));
+if (!hydrometrySummaryCss.includes('grid-template-columns:minmax(0,1fr) minmax(0,1fr)') || hydrometrySummaryCss.includes('.climate-hydrometry-summary{height:100%')) throw Error('El resumen hidrométrico todavía reserva altura vacía.');
 const hydrometryTrendChecks = vm.runInContext(`(() => {
   const make = (height = {}) => ({ name: 'Estación de prueba', latestHeight: { valueM: 1, date: '2026-08-28T12:00:00Z', ...height } });
   return {
@@ -413,6 +436,13 @@ if (html.includes('climateHydrometryToggle')) throw Error('La vista conserva un 
 for (const requirement of ['function renderSelectedPointSummary', 'renderSelectedPointSummary(detail, action)', 'climatePointSummaryAction']) {
   if (!app.includes(requirement)) throw Error(`La selección de modelos no tiene un detalle visible: ${requirement}`);
 }
+if (!html.includes('class="climate-map-underlay"') || !app.includes('const reading = kind === \'rain\'') || !app.includes("kind === 'rain'")) throw Error('Falta la grilla o la separación de datos para lluvia bajo el mapa.');
+if (html.indexOf('class="climate-map-underlay"') < html.indexOf('class="climate-map-layout"') || html.indexOf('id="inaHydrometryDetailCard"') < html.indexOf('class="climate-map-underlay"')) throw Error('El resumen/detalle hidrométrico no está debajo de la grilla completa del mapa.');
+const summaryCss = css.slice(css.indexOf('.climate-map-underlay'));
+if (!summaryCss.includes('grid-template-columns:minmax(0,1fr) minmax(0,1fr)') || !summaryCss.includes('height:auto') || summaryCss.includes('.climate-hydrometry-summary{height:100%')) throw Error('El área bajo el mapa conserva altura o columnas vacías innecesarias.');
+if (!app.includes("fillOpacity >= 0 && fillOpacity <= 80") || !app.includes('Math.max(0, Math.min(0.8')) throw Error('mapFillOpacity=0 dejó de estar permitido.');
+const selectedSummarySource = app.slice(app.indexOf('function renderSelectedPointSummary'), app.indexOf('function latestDateForSource'));
+if (!selectedSummarySource.includes("kind === 'rain'") || !selectedSummarySource.includes("detail.presentationType === 'ina-height'")) throw Error('La ficha seleccionada no diferencia lluvia de hidrometría.');
 for (const requirement of ['function relevantHydrometryPoints', 'climateGeometryContains(feature.geometry, point.lng, point.lat)', 'point.distance <= 1.6 ** 2', 'Sin estaciones hidrométricas cercanas para este departamento']) {
   if (!app.includes(requirement)) throw Error(`Falta la búsqueda espacial de hidrometría relevante: ${requirement}`);
 }

@@ -1216,7 +1216,7 @@ function wireClimatePointControls() {
     refreshClimateDepartmentMap();
   });
   $('climateDepartmentOpacity')?.addEventListener('input', event => {
-    state.climateMap.departmentFillOpacity = Math.max(0.15, Math.min(0.8, Number(event.target.value) / 100));
+    state.climateMap.departmentFillOpacity = Math.max(0, Math.min(0.8, Number(event.target.value) / 100));
     state.climateMap.departmentFillOpacityUserSet = true;
     if ($('climateDepartmentOpacityValue')) $('climateDepartmentOpacityValue').textContent = `${Math.round(state.climateMap.departmentFillOpacity * 100)} %`;
     state.climateMap.geoLayer?.setStyle(climateDepartmentStyle);
@@ -1310,7 +1310,7 @@ function applyClimateViewFromUrl(params = new URLSearchParams(location.search)) 
   if (satellite && state.climateMap.wmsLayers.has(satellite)) selectClimateHydrologyLayer(satellite);
   if (satelliteDate && satellite && state.climateMap.activeHydrologyLayer === satellite) selectClimateSatelliteDate(satelliteDate, { explicit: true, updateUrl: false });
   if (Number.isFinite(opacity) && opacity >= 10 && opacity <= 100) setClimateSatelliteOpacity(opacity / 100);
-  if (Number.isFinite(fillOpacity) && fillOpacity >= 15 && fillOpacity <= 80) {
+  if (Number.isFinite(fillOpacity) && fillOpacity >= 0 && fillOpacity <= 80) {
     state.climateMap.departmentFillOpacity = fillOpacity / 100;
     state.climateMap.departmentFillOpacityUserSet = true;
     if ($('climateDepartmentOpacity')) $('climateDepartmentOpacity').value = String(fillOpacity);
@@ -3494,6 +3494,10 @@ function renderOperationalSignalDetail(status, signal, comparison) {
   const source = rainTrigger ? 'Lluvia diaria observada' : riverTrigger ? (riverTrigger.point.sourceLabel || 'Fuente hidrométrica oficial') : 'Datos diarios observados';
   const rule = rainTrigger ? `Umbral operativo configurable · ${rainTrigger.windowLabel}` : riverTrigger ? 'Umbral hidrométrico publicado por la fuente' : 'No se superó ningún umbral operativo configurable';
   if (container.dataset) container.dataset.level = signal.level;
+  if (signal.level === 'none') {
+    container.innerHTML = `<div class="operational-status-card"><span class="operational-card-title">Estado operativo</span><strong class="operational-status-chip">${escapeHtml(displayLabel)}</strong><span class="operational-updated">Actualizado ${escapeHtml(formatDailyDatasetUpdatedAt(state.dailyGeneratedAt))}</span><p class="operational-empty">No se superan umbrales operativos con los datos recientes disponibles.</p></div>`;
+    return;
+  }
   container.innerHTML = `<div class="operational-status-card"><span class="operational-card-title">Estado operativo</span><strong class="operational-status-chip">${escapeHtml(displayLabel)}</strong><span class="operational-updated">Actualizado ${escapeHtml(formatDailyDatasetUpdatedAt(state.dailyGeneratedAt))}</span></div><section class="operational-detail-card operational-primary-card"><h4 class="operational-card-title">¿Por qué se activó?</h4><div class="operational-row"><span class="operational-label">Variable</span><strong class="operational-value">${escapeHtml(rainTrigger ? 'Lluvia diaria' : riverTrigger ? 'Hidrometría' : 'Sin señal')}</strong></div><div class="operational-row"><span class="operational-label">Ventana</span><strong class="operational-value">${escapeHtml(rainTrigger ? rainTrigger.windowLabel : riverTrigger ? riverTrigger.thresholdLabel : '—')}</strong></div><div class="operational-row"><span class="operational-label">Observado</span><strong class="operational-value operational-number">${escapeHtml(triggerValue)}</strong></div><div class="operational-row"><span class="operational-label">Umbral</span><strong class="operational-value operational-number">${escapeHtml(triggerThreshold)}</strong></div><div class="operational-row operational-excess-row"><span class="operational-label">Exceso</span><strong class="operational-value operational-number">${escapeHtml(excess)}</strong></div>${!trigger ? '<p class="operational-empty">No se superan umbrales operativos con los datos recientes disponibles.</p>' : ''}</section><section class="operational-detail-card"><h4 class="operational-card-title">¿Qué acompaña?</h4><div class="operational-row"><span class="operational-label">Estado hidrométrico</span><strong class="operational-value">${escapeHtml(hydrometryState)}</strong></div>${nearbyStation ? `<div class="operational-row"><span class="operational-label">Estación</span><strong class="operational-value">${escapeHtml(nearbyStation.name || 'Estación cercana')}</strong></div><div class="operational-row"><span class="operational-label">Valor actual</span><strong class="operational-value operational-number">${escapeHtml(Number.isFinite(Number(nearbyHeight?.valueM)) ? `${format(Number(nearbyHeight.valueM))} m` : 'Sin dato')}</strong></div><div class="operational-row"><span class="operational-label">Umbral</span><strong class="operational-value">${escapeHtml(hydrometryThreshold)}</strong></div><div class="operational-row"><span class="operational-label">Estado</span><strong class="operational-value">${escapeHtml(nearbyHeight?.status || hydrometryState)}</strong></div>` : '<div class="operational-row"><span class="operational-label">Estación</span><strong class="operational-value">Sin estación cercana relevante</strong></div>'}</section><section class="operational-detail-card"><h4 class="operational-card-title">Contexto histórico</h4><div class="operational-row"><span class="operational-label">Diferencia mensual</span><strong class="operational-value operational-number">${escapeHtml(contextValue)}</strong></div><div class="operational-row"><span class="operational-label">Lectura</span><strong class="operational-value">${escapeHtml(contextReading)}</strong></div></section><section class="operational-detail-card"><h4 class="operational-card-title">Fuente</h4><div class="operational-row"><span class="operational-label">Fuente lluvia</span><strong class="operational-value">${escapeHtml(source)}</strong></div><div class="operational-row"><span class="operational-label">Regla aplicada</span><strong class="operational-value">${escapeHtml(rule)}</strong></div></section><p class="operational-disclaimer">Señal operativa interna. No constituye alerta oficial.${signal.level === 'critical' ? ' Crítico operativo.' : ''}</p>`;
 }
 
@@ -3648,11 +3652,21 @@ function renderSelectedPointSummary(detail, action = null) {
   if (!section || !content) return;
   const kind = detail.presentationType || (String(detail.nature || '').includes('Modelado') ? 'forecast' : 'station');
   if (title) title.textContent = kind === 'forecast' ? 'Modelo / pronóstico seleccionado' : kind === 'satellite' ? 'Capa seleccionada' : 'Punto seleccionado';
-  const rows = kind === 'forecast'
-    ? [['Fuente', detail.source], ['Valor', detail.value || detail.status], ['Horizonte', detail.date]]
-    : [['Fuente', detail.source], ['Valor', detail.value], ['Fecha / hora', detail.date], ['Estado', detail.status]];
-  content.innerHTML = `<dl class="climate-detail-list climate-point-summary-list">${rows.map(([label, value]) => `<div><dt>${escapeHtml(label)}</dt><dd>${escapeHtml(value || 'Sin dato')}</dd></div>`).join('')}</dl>${action ? `<button type="button" class="climate-point-action climate-point-summary-action" id="climatePointSummaryAction">${escapeHtml(action.label)}</button>` : ''}`;
+  const evolutionAction = detail.presentationType === 'ina-height' ? '<button type="button" class="climate-point-action climate-point-summary-action" id="climateHydrometryEvolutionLink">Ver evolución hidrométrica</button>' : '';
+  const location = detail.location ? String(detail.location).split(' · ')[0] : '';
+  const reading = kind === 'rain'
+    ? [detail.value].filter(Boolean).join('')
+    : kind === 'forecast'
+      ? [detail.value || detail.status].filter(Boolean).join(' · ')
+      : [detail.value, detail.status].filter(Boolean).join(' · ');
+  const metadata = kind === 'rain'
+    ? [detail.date, `Fuente: ${detail.source}`].filter(Boolean).join(' · ')
+    : kind === 'forecast'
+      ? [detail.date, `Fuente: ${detail.source}`].filter(Boolean).join(' · ')
+      : [location, detail.date, `Fuente: ${detail.source}`].filter(Boolean).join(' · ');
+  content.innerHTML = `<strong class="climate-point-summary-name">${escapeHtml(detail.title || 'Información seleccionada')}</strong><p class="climate-point-summary-reading">${escapeHtml(reading || 'Sin dato')}</p><small class="climate-point-summary-meta">${escapeHtml(metadata || 'Sin dato')}</small>${evolutionAction}${action ? `<button type="button" class="climate-point-action climate-point-summary-action" id="climatePointSummaryAction">${escapeHtml(action.label)}</button>` : ''}`;
   section.hidden = false;
+  $('climateHydrometryEvolutionLink')?.addEventListener('click', () => $('inaHydrometryDetailCard')?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
   if (action) $('climatePointSummaryAction')?.addEventListener('click', async event => {
     event.currentTarget.disabled = true;
     try { await action.handler(); } catch (error) { console.warn(`No se pudo completar la consulta del punto: ${error.message}`); }

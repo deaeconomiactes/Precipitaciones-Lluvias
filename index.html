@@ -84,7 +84,7 @@
           </div>
           <div class="climate-map-mode-bar" hidden aria-hidden="true"><select id="climateMapMode"><option value="departments" selected>Departamentos / lluvia</option><option value="hydrology">Hidrología / puntos</option></select><span class="climate-mode-explanation" id="climateModeExplanation">Departamentos / lluvia con hidrometría superpuesta.</span></div>
           <div class="climate-map-toolbar" id="climateDepartmentControls" aria-label="Controles del mapa departamental">
-            <label><span>Variable del mapa</span><select id="climateMapVariable"><option value="rainLastDateMm">Lluvia del día de referencia</option><option value="rain7dMm" selected>Acumulado 7 días</option><option value="rain15dMm">Acumulado 15 días</option><option value="rain30dMm">Acumulado 30 días</option><option value="monthlyDifferencePct">Comparación mensual vs histórico</option><option value="monthlyCategory">Categoría mensual descriptiva</option></select></label><label class="climate-opacity-control climate-department-opacity-control"><span>Relleno departamental <output id="climateDepartmentOpacityValue">80 %</output></span><input id="climateDepartmentOpacity" type="range" min="15" max="80" step="5" value="80"></label>
+            <label><span>Variable del mapa</span><select id="climateMapVariable"><option value="rainLastDateMm">Lluvia del día de referencia</option><option value="rain7dMm" selected>Acumulado 7 días</option><option value="rain15dMm">Acumulado 15 días</option><option value="rain30dMm">Acumulado 30 días</option><option value="monthlyDifferencePct">Comparación mensual vs histórico</option><option value="monthlyCategory">Categoría mensual descriptiva</option></select></label><label class="climate-opacity-control climate-department-opacity-control"><span>Relleno departamental <output id="climateDepartmentOpacityValue">80 %</output></span><input id="climateDepartmentOpacity" type="range" min="0" max="80" step="5" value="80"></label>
             <label class="climate-signal-toggle"><input id="climateOperationalSignalsToggle" type="checkbox" checked><span>Mostrar señales operativas</span></label><span class="climate-map-reference" id="climateMapReference">Cargando información territorial…</span>
           </div>
           <div class="climate-map-toolbar climate-point-toolbar" id="climateHydrologyControls" aria-label="Capas hidrológicas y fuentes puntuales">
@@ -105,13 +105,11 @@
               <div class="climate-external-legend" id="climateExternalLegend" aria-label="Leyenda de la capa hidrológica externa" hidden></div>
               <div class="climate-map-message" id="climateMapMessage" hidden></div>
             </div>
-              <section class="climate-hydrometry-summary" id="climateHydrometrySummary" aria-live="polite"><h4>Resumen hidrométrico</h4><div id="climateHydrometrySummaryContent">Sin estación hidrométrica asociada en esta vista.</div><small class="climate-hydrometry-trend-help">Tendencia: ↑ sube · ↓ baja · • permanece/sin dato</small></section>
             </div>
             <aside class="climate-map-detail" id="climateDepartmentDetail" aria-live="polite">
               <span class="eyebrow">Detalle territorial</span>
               <h3 id="mapDetailDepartment">Seleccioná un departamento</h3>
-              <section class="climate-operational-signal" id="mapDetailOperationalSignal" aria-live="polite"><div class="climate-operational-status"><span class="climate-operational-kicker">Estado operativo</span><strong class="climate-operational-badge">Sin señal</strong><span class="climate-operational-updated">Seleccione un departamento</span></div><section class="climate-signal-card climate-signal-primary"><h4>¿Por qué se activó?</h4><p class="climate-signal-empty">Seleccione un departamento para ver su estado.</p></section><p class="climate-signal-method">Señal operativa interna. No constituye alerta oficial.</p></section>
-              <section class="climate-selected-point-summary" id="climateSelectedPointSummary" aria-live="polite" hidden><h4 id="climateSelectedPointTitle">Punto seleccionado</h4><div id="climateSelectedPointContent"></div></section>
+              <section class="climate-operational-signal" id="mapDetailOperationalSignal" aria-live="polite"><div class="climate-operational-status"><span class="climate-operational-kicker">Estado operativo</span><strong class="climate-operational-badge">Sin señal</strong><span class="climate-operational-updated">Seleccione un departamento</span><p class="climate-signal-empty">No se superan umbrales operativos con los datos recientes disponibles.</p></div></section>
               <dl class="climate-detail-list">
                 <div class="climate-detail-wide"><dt>Período comparable</dt><dd id="mapDetailComparablePeriod">Sin dato</dd></div>
                 <div><dt>Observado del período</dt><dd id="mapDetailMonthlyObserved">Sin dato</dd></div><div><dt>Promedio histórico comparable</dt><dd id="mapDetailMonthlyHistorical">Sin dato</dd></div>
@@ -127,6 +125,10 @@
               <button class="climate-point-action" id="mapPointDetailAction" type="button" hidden>Cargar pronóstico</button>
               <button class="climate-point-action source-info-button" id="sourceInfoButton" type="button">Información de la fuente</button>
             </aside>
+          </div>
+          <div class="climate-map-underlay">
+            <section class="climate-hydrometry-summary" id="climateHydrometrySummary" aria-live="polite"><h4>Resumen hidrométrico</h4><div id="climateHydrometrySummaryContent">Sin estación hidrométrica asociada en esta vista.</div><small class="climate-hydrometry-trend-help">Tendencia: ↑ sube · ↓ baja · • permanece/sin dato</small></section>
+            <section class="climate-selected-point-summary" id="climateSelectedPointSummary" aria-live="polite" hidden><h4 id="climateSelectedPointTitle">Punto seleccionado</h4><div id="climateSelectedPointContent"></div></section>
           </div>
           <section class="ina-hydrometry-card" id="inaHydrometryDetailCard" aria-live="polite" hidden></section>
           <section class="climate-api-grid" id="climateApiGrid" aria-label="Estado de las fuentes API del mapa" hidden>
@@ -288,6 +290,6 @@
   <footer><p>Dashboard independiente · Datos exclusivos de Precipitaciones-Lluvias</p><p id="dataNote"></p></footer>
   <div class="error-banner" id="errorBanner"></div>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="app.js?v=20260827-1"></script>
+  <script src="app.js?v=20260904-2"></script>
 </body>
 </html>

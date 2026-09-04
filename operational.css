@@ -707,9 +707,9 @@ main {
 
 .climate-map-left-column {
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
+  grid-template-rows: auto auto auto;
   gap: 10px;
-  align-self: stretch;
+  align-self: start;
   min-width: 0;
 }
 
@@ -2498,8 +2498,23 @@ footer {
   transform: rotate(45deg) scale(.78);
 }
 
-.climate-hydrometry-summary{height:100%;box-sizing:border-box;margin:0;padding:14px;border:1px solid #d4e1de;border-radius:14px;background:linear-gradient(180deg,#f8fbfa 0%,#eef6f3 100%);color:var(--muted);font-size:.72rem;line-height:1.45}.climate-hydrometry-summary h4{margin:0 0 7px;color:var(--deep);font-size:.68rem;letter-spacing:.08em;text-transform:uppercase}.climate-hydrometry-summary ul{margin:6px 0 0 16px}.climate-hydrometry-summary button{border:0;background:none;color:#087d94;text-decoration:underline;cursor:pointer;font:inherit;font-weight:750}.climate-hydrometry-trend-help{display:block;margin-top:8px;color:var(--muted);font-size:.6rem;line-height:1.35}
-.climate-selected-point-summary{margin-top:12px;padding:12px 0 0;border-top:1px solid var(--border);color:var(--muted);font-size:.72rem}.climate-selected-point-summary h4{margin-bottom:7px;color:var(--deep);font-size:.68rem;letter-spacing:.08em;text-transform:uppercase}.climate-point-summary-list{margin-top:0}.climate-point-summary-action{margin-top:8px}
+.climate-map-underlay{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;align-items:start}.climate-hydrometry-summary{height:auto;box-sizing:border-box;margin:0;padding:14px;border:1px solid #d4e1de;border-radius:14px;background:linear-gradient(180deg,#f8fbfa 0%,#eef6f3 100%);color:var(--muted);font-size:.72rem;line-height:1.45}.climate-hydrometry-summary h4{margin:0 0 7px;color:var(--deep);font-size:.68rem;letter-spacing:.08em;text-transform:uppercase}.climate-hydrometry-summary ul{margin:6px 0 0 16px}.climate-hydrometry-summary button{border:0;background:none;color:#087d94;text-decoration:underline;cursor:pointer;font:inherit;font-weight:750}.climate-hydrometry-trend-help{display:block;margin-top:8px;color:var(--muted);font-size:.6rem;line-height:1.35}
+.climate-selected-point-summary{height:auto;margin:0;padding:14px;border:1px solid #d4e1de;border-left:4px solid #087d94;border-radius:14px;background:#f8fbfa;color:var(--muted);font-size:.72rem}.climate-selected-point-summary h4{margin:0 0 7px;color:var(--deep);font-size:.68rem;letter-spacing:.08em;text-transform:uppercase}.climate-point-summary-list{margin-top:0}.climate-point-summary-action{margin-top:8px}@media(max-width:760px){.climate-map-underlay{grid-template-columns:1fr}}
+.climate-map-underlay:has(.climate-selected-point-summary[hidden]) .climate-hydrometry-summary{grid-column:1 / -1}
+.climate-point-summary-name{display:block;margin:0 0 7px;color:var(--deep);font-size:.84rem;line-height:1.25}
+.climate-point-summary-reading{margin:0;color:var(--text);font-size:.72rem;font-weight:750;line-height:1.35}
+.climate-point-summary-meta{display:block;margin-top:4px;color:var(--muted);font-size:.62rem;line-height:1.35}
+.climate-selected-point-summary .climate-point-summary-list{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.climate-selected-point-summary .climate-point-summary-list div{padding:7px 8px}
+.climate-selected-point-summary .climate-point-summary-list dt{margin-bottom:2px;font-size:.52rem}
+.climate-selected-point-summary .climate-point-summary-list dd{font-size:.66rem}
+.climate-selected-point-summary .climate-point-summary-action{width:auto;min-height:0;margin-top:7px;padding:5px 8px;background:#edf6f4;color:#17647f;border:1px solid #a9c5bf;font-size:.61rem}
+.climate-selected-point-summary{min-height:0;padding:10px 12px}
+.climate-selected-point-summary .climate-point-action{min-height:0;padding:5px 8px}
+.climate-map-left-column > .ina-hydrometry-card{margin-top:0;padding:12px}
+.climate-map-card > .climate-map-underlay{width:100%;margin-top:10px}
+.climate-map-card > .ina-hydrometry-card{width:100%;margin-top:8px;padding:12px}
+@media(max-width:760px){.climate-selected-point-summary .climate-point-summary-list{grid-template-columns:1fr}.climate-map-left-column > .ina-hydrometry-card{padding:10px}}
 .weather-advanced-frame-wrap { min-height: 360px; }
 #windyEmbed { height: 360px; }
 .weather-advanced-heading { gap: 10px; }

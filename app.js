@@ -54,7 +54,9 @@ async function init() {
       dailyRecords,
       dailyDataSource: combinedDailyResult?.source || 'operational',
       dailyGeneratedAt: typeof dailySummary?.generatedAt === 'string' ? dailySummary.generatedAt : null,
-      dailyDateMax: typeof dailySummary?.dateMax === 'string' ? dailySummary.dateMax : null,
+      dailyDateMax: typeof dailySummary?.latestDataDate === 'string'
+        ? dailySummary.latestDataDate
+        : (typeof dailySummary?.dateMax === 'string' ? dailySummary.dateMax : null),
       stations,
       metadata
     });
@@ -3736,7 +3738,17 @@ function dailyCalendarParts(date = new Date()) {
   };
 }
 
+function latestDailyDataDate(records = state.dailyRecords) {
+  const metadataDate = String(state.dailyDateMax || '').trim();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(metadataDate)) return metadataDate;
+  return records.reduce((latest, record) => (
+    /^\d{4}-\d{2}-\d{2}$/.test(record.date || '') && record.date > latest ? record.date : latest
+  ), '');
+}
+
 function dailyReferenceDate(f, today = new Date()) {
+  const latestDataDate = latestDailyDataDate();
+  if (latestDataDate) return latestDataDate;
   const current = dailyCalendarParts(today);
   const selectedYear = f.years?.length ? Math.max(...f.years) : current.year;
   const selectedMonth = f.months?.length ? Math.max(...f.months) : null;

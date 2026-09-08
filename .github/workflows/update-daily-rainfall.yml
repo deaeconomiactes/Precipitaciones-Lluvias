@@ -59,36 +59,9 @@ jobs:
           $global:LASTEXITCODE = 0
 
       - name: Validate generated daily metadata
-        shell: bash
         run: |
-          set -euo pipefail
           echo "[daily-rainfall] Validando data/rainfall-daily-summary.json"
-          python - <<'PY'
-          import json
-          from datetime import datetime, timezone
-          from pathlib import Path
-
-          path = Path("data/rainfall-daily-summary.json")
-          if not path.is_file() or path.stat().st_size == 0:
-              raise SystemExit("ERROR: no se generó data/rainfall-daily-summary.json.")
-          try:
-              summary = json.loads(path.read_text(encoding="utf-8-sig"))
-          except Exception as exc:
-              raise SystemExit(f"ERROR: summary inválido: {exc}") from exc
-          generated_at = summary.get("generatedAt")
-          if not isinstance(generated_at, str) or not generated_at.strip():
-              raise SystemExit("ERROR: el summary no contiene generatedAt.")
-          try:
-              parsed = datetime.fromisoformat(generated_at.replace("Z", "+00:00"))
-          except ValueError as exc:
-              raise SystemExit(f"ERROR: generatedAt no es una fecha ISO válida: {generated_at}") from exc
-          if parsed.tzinfo is None:
-              parsed = parsed.replace(tzinfo=timezone.utc)
-          age_hours = (datetime.now(timezone.utc) - parsed.astimezone(timezone.utc)).total_seconds() / 3600
-          if age_hours < -0.1 or age_hours > 36:
-              raise SystemExit(f"ERROR: generatedAt no es reciente ({generated_at}; antigüedad {age_hours:.1f} h).")
-          print(f"[daily-rainfall] Validación OK: generatedAt={generated_at}, records={summary.get('records')}, dateMax={summary.get('dateMax')}")
-          PY
+          node scripts/validate-daily-rainfall.js
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -134,14 +107,65 @@ jobs:
           echo "[daily-rainfall] Archivos esperados: ${expected_files[*]}"
           echo "[daily-rainfall] Estado antes del commit:"
           git status --short
-          if git diff --quiet -- "${expected_files[@]}"; then
-            echo "No hay cambios nuevos para publicar."
+          changed_files_output="$(python - <<'PY'
+          import json
+          import subprocess
+          from pathlib import Path
+
+          expected_files = [
+              "data/rainfall-daily.json",
+              "data/rainfall-daily-summary.json",
+              "data/rainfall-daily-history.json",
+              "data/rainfall-daily-combined.json",
+              "data/department-climate-status.json",
+          ]
+
+          def read_json(path: str, content: bytes):
+              try:
+                  return json.loads(content.decode("utf-8-sig"))
+              except Exception as exc:
+                  raise SystemExit(f"ERROR: JSON inválido en {path}: {exc}") from exc
+
+          def head_json(path: str):
+              result = subprocess.run(["git", "show", f"HEAD:{path}"], capture_output=True)
+              if result.returncode:
+                  return None
+              return read_json(path, result.stdout)
+
+          def comparable(path: str, value):
+              if path.endswith("rainfall-daily-summary.json"):
+                  value = dict(value)
+                  # La consulta diaria puede modificar estas dos marcas sin datos nuevos.
+                  value.pop("generatedAt", None)
+                  value.pop("daysSinceLatestData", None)
+              elif path.endswith("department-climate-status.json"):
+                  value = [{key: item for key, item in row.items() if key != "updatedAt"} for row in value]
+              return value
+
+          for file_path in expected_files:
+              working_path = Path(file_path)
+              if not working_path.is_file():
+                  raise SystemExit(f"ERROR: falta el archivo esperado {file_path}.")
+              current = read_json(file_path, working_path.read_bytes())
+              previous = head_json(file_path)
+              if previous is None or comparable(file_path, current) != comparable(file_path, previous):
+                  print(file_path)
+          PY
+          )"
+          changed_files=()
+          while IFS= read -r file_path; do
+            if [ -n "$file_path" ]; then changed_files+=("$file_path"); fi
+          done <<< "$changed_files_output"
+          if [ "${#changed_files[@]}" -eq 0 ]; then
+            echo "[daily-rainfall] Fuente consultada correctamente; no hay registros ni metadata sustantiva nuevos."
+            echo "[daily-rainfall] Se evita el commit: solo variaron marcas de generación o formato no semántico."
             echo "changes_detected=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
+          echo "[daily-rainfall] Archivos con cambios sustantivos: ${changed_files[*]}"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -- "${expected_files[@]}"
+          git add -- "${changed_files[@]}"
           git commit -m "Update daily rainfall data"
           echo "[daily-rainfall] Commit creado: $(git rev-parse --short HEAD)"
           git push
@@ -159,10 +183,12 @@ jobs:
 
           summary = json.loads(Path("data/rainfall-daily-summary.json").read_text(encoding="utf-8-sig"))
           departments = summary.get("departments") or []
-          print(f"[daily-rainfall] Última fecha diaria disponible: {summary.get('dateMax')}")
+          print(f"[daily-rainfall] Última fecha diaria real: {summary.get('latestDataDate') or summary.get('dateMax')}")
           print(f"[daily-rainfall] Registros diarios: {summary.get('records')}")
           print(f"[daily-rainfall] Departamentos con datos recientes: {len(departments)}")
           print(f"[daily-rainfall] generatedAt: {summary.get('generatedAt')}")
+          print(f"[daily-rainfall] daysSinceLatestData: {summary.get('daysSinceLatestData')}")
+          print(f"[daily-rainfall] freshnessStatus: {summary.get('freshnessStatus')}")
           PY
 
       - name: Configure GitHub Pages

@@ -84,6 +84,18 @@ if (temporalFilterChecks.latestDate !== context.inputLatestDate || temporalFilte
   throw new Error(`La referencia diaria no uso toda la base combinada: ${JSON.stringify(temporalFilterChecks)}`);
 }
 
+const metadataReferenceChecks = vm.runInContext(`(() => {
+  state.dailyRecords = inputRecords;
+  state.dailyDateMax = inputLatestDate;
+  const fromMetadata = dailyReferenceDate({ departments: null, years: null, months: null }, new Date("2026-09-08T12:00:00-03:00"));
+  state.dailyDateMax = null;
+  const fromRecords = dailyReferenceDate({ departments: null, years: null, months: null }, new Date("2026-09-08T12:00:00-03:00"));
+  return { fromMetadata, fromRecords };
+})()`, context);
+if (metadataReferenceChecks.fromMetadata !== context.inputLatestDate || metadataReferenceChecks.fromRecords !== context.inputLatestDate) {
+  throw new Error(`La fecha diaria visible no usa la última fecha real de datos: ${JSON.stringify(metadataReferenceChecks)}`);
+}
+
 const realSignals = vm.runInContext(`[
   dailyReferenceSignal(inputRecords, inputDepartments, inputLatestDate, 7, "base diaria combinada"),
   dailyReferenceSignal(inputRecords, inputDepartments, inputLatestDate, 15, "base diaria combinada"),
@@ -209,6 +221,7 @@ if (!appSource.includes("deriveMonthlyFromDailyRecords(state.operationalDailyRec
 console.log("Categorias descriptivas: limites validados.");
 console.log("Cobertura historica: 70% validado; 0 mm cuenta como dia observado.");
 console.log("Filtros Año/Mes: no recortan la referencia diaria 2015-2026.");
+console.log("Fecha diaria visible: usa latestDataDate/dateMax con respaldo en los registros.");
 console.log(`Referencia real: ventanas 7/15/30 con ${realSignals[0].yearsComparable.length} años; año actual excluido.`);
 console.log(`Todos los departamentos: promedio de ${realSignals[0].departmentsComparable} comparables, sin suma provincial.`);
 console.log(`Curuzu Cuatia: ventanas recalculadas con ${curuzuSignals[0].yearsComparable.length} años comparables.`);

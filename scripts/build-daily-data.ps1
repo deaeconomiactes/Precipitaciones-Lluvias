@@ -4,7 +4,8 @@ param(
     [string]$SourceJsonPath = $env:DAILY_RAIN_JSON_PATH,
     [string]$SourceCsvUrl = $env:DAILY_RAIN_CSV_URL,
     [string]$SourceCsvUrls = $env:DAILY_RAIN_CSV_URLS,
-    [string]$SourceCsvPath = $env:DAILY_RAIN_CSV_PATH
+    [string]$SourceCsvPath = $env:DAILY_RAIN_CSV_PATH,
+    [datetime]$GeneratedAt = (Get-Date).ToUniversalTime()
 )
 
 Set-StrictMode -Version Latest
@@ -266,6 +267,15 @@ if ($records.Count -eq 0) { throw 'No se generaron registros diarios validos.' }
 
 $dataDir = Join-Path $ProjectRoot 'data'
 New-Item -ItemType Directory -Force -Path $dataDir | Out-Null
+$summaryOutputPath = Join-Path $dataDir 'rainfall-daily-summary.json'
+$previousSummary = $null
+if (Test-Path -LiteralPath $summaryOutputPath) {
+    try {
+        $previousSummary = Get-Content -Raw -LiteralPath $summaryOutputPath | ConvertFrom-Json
+    } catch {
+        Write-Warning "No se pudo leer el summary anterior; se calculará la frescura sin comparación previa."
+    }
+}
 
 $lookup = @{}
 foreach ($record in $records) {
@@ -310,20 +320,50 @@ foreach ($days in $windows) {
 $jsonOptions = @{ Depth = 8 }
 @($records) | ConvertTo-Json @jsonOptions | Set-Content -Encoding UTF8 (Join-Path $dataDir 'rainfall-daily.json')
 
+$generatedAtUtc = $GeneratedAt.ToUniversalTime()
+$generatedAtIso = $generatedAtUtc.ToString('yyyy-MM-ddTHH:mm:ssZ', [Globalization.CultureInfo]::InvariantCulture)
+$latestDataDate = $dates[-1]
+$latestDataDateValue = [datetime]::ParseExact($latestDataDate, 'yyyy-MM-dd', [Globalization.CultureInfo]::InvariantCulture)
+$daysSinceLatestData = ($generatedAtUtc.Date - $latestDataDateValue.Date).Days
+if ($daysSinceLatestData -lt 0) {
+    throw "La última fecha diaria ($latestDataDate) es posterior a la fecha de generación ($generatedAtIso)."
+}
+
+$previousLatestDataDate = $null
+if ($null -ne $previousSummary) {
+    $candidate = Get-RowValue $previousSummary @('latestDataDate', 'dateMax')
+    $parsedCandidate = [datetime]::MinValue
+    if ([datetime]::TryParseExact($candidate, 'yyyy-MM-dd', [Globalization.CultureInfo]::InvariantCulture, [Globalization.DateTimeStyles]::None, [ref]$parsedCandidate)) {
+        $previousLatestDataDate = $parsedCandidate.ToString('yyyy-MM-dd')
+    }
+}
+
+# La fuente suele publicar el cierre diario con hasta un día calendario de demora.
+# "no_new_data" solo se usa cuando la fuente respondió y mantuvo una fecha aún reciente.
+$freshnessStatus = if ($daysSinceLatestData -gt 1) {
+    'stale'
+} elseif ($null -ne $previousLatestDataDate -and $latestDataDate -le $previousLatestDataDate) {
+    'no_new_data'
+} else {
+    'updated'
+}
+
 $summary = [ordered]@{
-    generatedAt = (Get-Date).ToString('s')
+    generatedAt = $generatedAtIso
     source = $script:DailySourceLabel
     dateMin = $dates[0]
-    dateMax = $dates[-1]
+    dateMax = $latestDataDate
+    latestDataDate = $latestDataDate
+    daysSinceLatestData = $daysSinceLatestData
+    freshnessStatus = $freshnessStatus
     records = $records.Count
     departments = $departments
     windows = $windows
     rows = @($summaryRows)
 }
-$summary | ConvertTo-Json @jsonOptions | Set-Content -Encoding UTF8 (Join-Path $dataDir 'rainfall-daily-summary.json')
+$summary | ConvertTo-Json @jsonOptions | Set-Content -Encoding UTF8 $summaryOutputPath
 
 $dailyOutputPath = Join-Path $dataDir 'rainfall-daily.json'
-$summaryOutputPath = Join-Path $dataDir 'rainfall-daily-summary.json'
 foreach ($outputPath in @($dailyOutputPath, $summaryOutputPath)) {
     if (-not (Test-Path -LiteralPath $outputPath) -or (Get-Item -LiteralPath $outputPath).Length -eq 0) {
         throw "No se genero el archivo diario esperado: $outputPath"
@@ -336,11 +376,16 @@ try {
     $generatedSummary = Get-Content -Raw -LiteralPath $summaryOutputPath | ConvertFrom-Json
     if ([string]::IsNullOrWhiteSpace([string]$generatedSummary.generatedAt)) { throw 'rainfall-daily-summary.json no contiene generatedAt.' }
     [datetime]::Parse([string]$generatedSummary.generatedAt, [Globalization.CultureInfo]::InvariantCulture) | Out-Null
+    if ([string]::IsNullOrWhiteSpace([string]$generatedSummary.dateMax)) { throw 'rainfall-daily-summary.json no contiene dateMax.' }
+    if ([string]$generatedSummary.latestDataDate -ne [string]$generatedSummary.dateMax) { throw 'latestDataDate debe coincidir con dateMax.' }
+    if ($generatedSummary.daysSinceLatestData -ne $daysSinceLatestData) { throw 'daysSinceLatestData no coincide con la fecha de generación.' }
+    if (@('updated', 'stale', 'no_new_data') -notcontains [string]$generatedSummary.freshnessStatus) { throw 'freshnessStatus no es válido.' }
 } catch {
     throw "La validacion de los JSON diarios fallo: $($_.Exception.Message)"
 }
 
 Write-Host "Generados rainfall-daily.json ($($records.Count) registros) y rainfall-daily-summary.json."
+Write-Host "[daily-rainfall] Última fecha real: $latestDataDate; antigüedad: $daysSinceLatestData día(s); estado: $freshnessStatus."
 Write-Host "[daily-rainfall] Generacion diaria completada correctamente."
 $global:LASTEXITCODE = 0
 exit 0

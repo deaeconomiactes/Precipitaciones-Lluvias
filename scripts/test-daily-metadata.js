@@ -12,6 +12,12 @@ const validatorPath = path.join(projectRoot, "scripts", "validate-daily-rainfall
 
 function run(command, args, options = {}) { return childProcess.spawnSync(command, args, { cwd: projectRoot, encoding: "utf8", ...options }); }
 function output(result) { return [`exit=${result.status}`, result.stdout && `stdout:\n${result.stdout}`, result.stderr && `stderr:\n${result.stderr}`].filter(Boolean).join("\n"); }
+function normalizedOutput(result) {
+  return output(result)
+    .replace(/\u001B\[[0-?]*[ -/]*[@-~]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
 function assertExit(result, expected, scenario) { assert.strictEqual(result.status, expected, `[daily-metadata-test] ${scenario}\n${output(result)}`); }
 function runBuilder(root, sourcePath, generatedAt) {
   return run("pwsh", ["-NoProfile", "-File", builderPath, "-ProjectRoot", root, "-SourceJsonPath", sourcePath, "-GeneratedAt", generatedAt], {
@@ -94,7 +100,7 @@ try {
   // La inconsistencia temporal es un caso separado y debe seguir siendo fatal.
   const futureData = runBuilder(temporaryRoot, sourcePath, generatedAtFrom(fixtureDateMax, -1));
   assertExit(futureData, 1, "rechaza latestDataDate posterior a generatedAt");
-  assert.match(output(futureData), /es posterior a la fecha de generación/);
+  assert.match(normalizedOutput(futureData), /es posterior a la fecha de generación/);
 
   const validSummary = { ...summary };
   // D. Metadata inválida.

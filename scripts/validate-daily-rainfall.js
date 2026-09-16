@@ -74,7 +74,11 @@ function validate() {
   if (summary.generatedAt && !generatedDate) warning("generated_at_parseable", "generatedAt", summary.generatedAt, "parseable date-time", "generatedAt está presente pero no pudo interpretarse como fecha/hora.");
   if (generatedDate && isIsoDate(summary.latestDataDate) && typeof summary.daysSinceLatestData === "number" && Number.isFinite(summary.daysSinceLatestData)) {
     const calculatedDays = calendarDaysBetween(summary.latestDataDate, generatedDate);
-    if (summary.daysSinceLatestData !== calculatedDays) warning("freshness_age_consistency", "daysSinceLatestData", summary.daysSinceLatestData, calculatedDays, "La antigüedad informada no coincide con generatedAt y latestDataDate.");
+    if (calculatedDays < 0) {
+      error("temporal_order", "latestDataDate", summary.latestDataDate, `<= ${generatedDate}`, "latestDataDate no puede ser posterior a generatedAt.");
+    } else if (summary.daysSinceLatestData !== calculatedDays) {
+      warning("freshness_age_consistency", "daysSinceLatestData", summary.daysSinceLatestData, calculatedDays, "La antigüedad informada no coincide con generatedAt y latestDataDate.");
+    }
   }
   if (summary.freshnessStatus === "stale") {
     warning("data_freshness", "latestDataDate", summary.latestDataDate, "informational only", `latestDataDate está atrasado. Último dato real: ${summary.latestDataDate}; archivo generado: ${summary.generatedAt}; daysSinceLatestData: ${summary.daysSinceLatestData}; freshnessStatus: stale.`);

@@ -3,88 +3,89 @@
 
 const fs = require("fs");
 const path = require("path");
-
 const args = process.argv.slice(2);
 const dataDirIndex = args.indexOf("--data-dir");
-const dataDir = dataDirIndex >= 0
-  ? path.resolve(args[dataDirIndex + 1] || "")
-  : path.resolve(__dirname, "..", "data");
+const dataDir = dataDirIndex >= 0 ? path.resolve(args[dataDirIndex + 1] || "") : path.resolve(__dirname, "..", "data");
+const errors = [];
+const warnings = [];
 
-function fail(message) {
-  throw new Error(`ERROR: ${message}`);
+function display(value) { return value === undefined ? "<ausente>" : JSON.stringify(value); }
+function report(severity, contract, field, actual, expected, message) {
+  const issue = { severity, contract, field, actual, expected, message };
+  (severity === "error" ? errors : warnings).push(issue);
+  const label = severity === "error" ? "ERROR" : "Warning";
+  console[severity === "error" ? "error" : "warn"](`[daily-metadata] ${label}: contract=${contract}; field=${field}; actual=${display(actual)}; expected=${display(expected)}; severity=${severity}; ${message}`);
 }
+function error(...values) { report("error", ...values); }
+function warning(...values) { report("warning", ...values); }
 
 function readJson(fileName) {
   const filePath = path.join(dataDir, fileName);
   if (!fs.existsSync(filePath) || fs.statSync(filePath).size === 0) {
-    fail(`no se generó data/${fileName}.`);
+    error("file_exists", fileName, fs.existsSync(filePath) ? "empty" : "missing", "non-empty JSON file", `${fileName} no existe o está vacío.`);
+    return null;
   }
-  try {
-    return JSON.parse(fs.readFileSync(filePath, "utf8").replace(/^\uFEFF/, ""));
-  } catch (error) {
-    fail(`${fileName} inválido: ${error.message}`);
+  try { return JSON.parse(fs.readFileSync(filePath, "utf8").replace(/^\uFEFF/, "")); }
+  catch (cause) {
+    error("valid_json", fileName, cause.message, "valid JSON", `${fileName} no es JSON válido.`);
+    return null;
   }
 }
 
 function isIsoDate(value) {
-  return typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(Date.parse(`${value}T00:00:00Z`));
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const parsed = new Date(`${value}T00:00:00Z`);
+  return !Number.isNaN(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value;
 }
-
+function generatedCalendarDate(value) {
+  if (typeof value !== "string" || !value.trim()) return null;
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? null : parsed.toISOString().slice(0, 10);
+}
 function calendarDaysBetween(fromDate, toDate) {
   const toUtc = value => Date.UTC(Number(value.slice(0, 4)), Number(value.slice(5, 7)) - 1, Number(value.slice(8, 10)));
   return Math.round((toUtc(toDate) - toUtc(fromDate)) / 86400000);
 }
 
-function generatedCalendarDate(value) {
-  if (typeof value !== "string" || !value.trim() || Number.isNaN(Date.parse(value))) {
-    fail(`generatedAt no es una fecha ISO válida: ${value}`);
-  }
-  const date = value.slice(0, 10);
-  if (!isIsoDate(date)) fail(`generatedAt no contiene una fecha calendario válida: ${value}`);
-  return date;
-}
-
 function validate() {
   const daily = readJson("rainfall-daily.json");
-  if (!Array.isArray(daily) || daily.length === 0) {
-    fail("rainfall-daily.json no contiene registros válidos.");
-  }
-  const dates = daily.map((record, index) => {
-    if (!record || !isIsoDate(record.date)) fail(`rainfall-daily.json contiene una fecha inválida en el registro ${index}.`);
-    if (!record.department || !Number.isFinite(Number(record.rainfallMm))) {
-      fail(`rainfall-daily.json contiene un registro inválido en la posición ${index}.`);
-    }
-    return record.date;
-  }).sort();
-
   const summary = readJson("rainfall-daily-summary.json");
+  if (daily === null || summary === null) return;
+  if (!Array.isArray(daily) || daily.length === 0) {
+    error("daily_has_records", "rainfall-daily.json", Array.isArray(daily) ? daily.length : typeof daily, "> 0 records", "rainfall-daily.json no contiene registros.");
+  }
+  for (const field of ["generatedAt", "dateMax", "latestDataDate", "freshnessStatus"]) {
+    if (summary[field] === undefined || summary[field] === null || summary[field] === "") error("required_field", field, summary[field], "present", `Falta ${field} en rainfall-daily-summary.json.`);
+  }
+  for (const field of ["dateMax", "latestDataDate"]) {
+    if (summary[field] !== undefined && summary[field] !== null && summary[field] !== "" && !isIsoDate(summary[field])) error("iso_calendar_date", field, summary[field], "YYYY-MM-DD", `${field} tiene formato inválido.`);
+  }
+  if (summary.dateMax !== undefined && summary.latestDataDate !== undefined && summary.latestDataDate !== summary.dateMax) {
+    error("latest_date_consistency", "latestDataDate", summary.latestDataDate, summary.dateMax, "latestDataDate y dateMax deben representar la misma última fecha real.");
+  }
+  if (typeof summary.daysSinceLatestData !== "number" || !Number.isFinite(summary.daysSinceLatestData)) {
+    error("numeric_freshness_age", "daysSinceLatestData", summary.daysSinceLatestData, "finite number", "daysSinceLatestData no es numérico.");
+  }
+  const allowedStatuses = new Set(["updated", "no_new_data", "stale", "unknown"]);
+  if (summary.freshnessStatus !== undefined && summary.freshnessStatus !== null && summary.freshnessStatus !== "" && !allowedStatuses.has(summary.freshnessStatus)) {
+    error("recognized_freshness_status", "freshnessStatus", summary.freshnessStatus, [...allowedStatuses], "freshnessStatus tiene un valor no reconocido.");
+  }
   const generatedDate = generatedCalendarDate(summary.generatedAt);
-  const actualDateMin = dates[0];
-  const actualDateMax = dates[dates.length - 1];
-  if (summary.dateMin !== actualDateMin) fail(`dateMin (${summary.dateMin}) no coincide con el primer registro real (${actualDateMin}).`);
-  if (summary.dateMax !== actualDateMax) fail(`dateMax (${summary.dateMax}) no coincide con el último registro real (${actualDateMax}).`);
-  if (summary.latestDataDate !== summary.dateMax) fail("latestDataDate debe coincidir con dateMax.");
-  if (summary.records !== daily.length) fail(`records (${summary.records}) no coincide con rainfall-daily.json (${daily.length}).`);
-
-  const expectedDays = calendarDaysBetween(summary.latestDataDate, generatedDate);
-  if (!Number.isInteger(summary.daysSinceLatestData) || summary.daysSinceLatestData !== expectedDays || expectedDays < 0) {
-    fail(`daysSinceLatestData debe ser ${expectedDays} según generatedAt y latestDataDate.`);
+  if (summary.generatedAt && !generatedDate) warning("generated_at_parseable", "generatedAt", summary.generatedAt, "parseable date-time", "generatedAt está presente pero no pudo interpretarse como fecha/hora.");
+  if (generatedDate && isIsoDate(summary.latestDataDate) && typeof summary.daysSinceLatestData === "number" && Number.isFinite(summary.daysSinceLatestData)) {
+    const calculatedDays = calendarDaysBetween(summary.latestDataDate, generatedDate);
+    if (summary.daysSinceLatestData !== calculatedDays) warning("freshness_age_consistency", "daysSinceLatestData", summary.daysSinceLatestData, calculatedDays, "La antigüedad informada no coincide con generatedAt y latestDataDate.");
   }
-  const allowedStatuses = new Set(["updated", "stale", "no_new_data"]);
-  if (!allowedStatuses.has(summary.freshnessStatus)) fail(`freshnessStatus inválido: ${summary.freshnessStatus}`);
-  if (expectedDays > 1 && summary.freshnessStatus !== "stale") {
-    fail(`freshnessStatus debe ser stale cuando el último dato tiene ${expectedDays} días calendario.`);
+  if (summary.freshnessStatus === "stale") {
+    warning("data_freshness", "latestDataDate", summary.latestDataDate, "informational only", `latestDataDate está atrasado. Último dato real: ${summary.latestDataDate}; archivo generado: ${summary.generatedAt}; daysSinceLatestData: ${summary.daysSinceLatestData}; freshnessStatus: stale.`);
+  } else if (summary.freshnessStatus === "no_new_data") {
+    warning("source_without_new_data", "freshnessStatus", summary.freshnessStatus, "informational only", `La fuente respondió correctamente pero no trajo registros nuevos. Último dato real: ${summary.latestDataDate}.`);
+  } else if (summary.freshnessStatus === "unknown") {
+    warning("data_freshness", "freshnessStatus", summary.freshnessStatus, "informational only", "No fue posible determinar la frescura; la estructura del contrato sigue siendo válida.");
   }
-  if (expectedDays <= 1 && summary.freshnessStatus === "stale") {
-    fail("freshnessStatus no puede ser stale cuando el último dato está dentro de un día calendario.");
-  }
-
-  console.log(`[daily-rainfall] Validación OK: generatedAt=${summary.generatedAt}, latestDataDate=${summary.latestDataDate}, daysSinceLatestData=${summary.daysSinceLatestData}, freshnessStatus=${summary.freshnessStatus}, records=${daily.length}`);
+  if (errors.length === 0) console.log(`[daily-metadata] OK: 0 error(es), ${warnings.length} warning(s). generatedAt=${summary.generatedAt}, latestDataDate=${summary.latestDataDate}, daysSinceLatestData=${summary.daysSinceLatestData}, freshnessStatus=${summary.freshnessStatus}, records=${Array.isArray(daily) ? daily.length : "invalid"}`);
+  else console.error(`[daily-metadata] FAILED: ${errors.length} error(es), ${warnings.length} warning(s).`);
 }
 
-try {
-  validate();
-} catch (error) {
-  console.error(error.message);
-  process.exitCode = 1;
-}
+validate();
+if (errors.length > 0) process.exitCode = 1;

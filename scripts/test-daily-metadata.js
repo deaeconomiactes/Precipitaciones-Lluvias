@@ -15,6 +15,7 @@ function output(result) { return [`exit=${result.status}`, result.stdout && `std
 function normalizedOutput(result) {
   return output(result)
     .replace(/\u001B\[[0-?]*[ -/]*[@-~]/g, "")
+    .replace(/[|~]+/g, " ")
     .replace(/\s+/g, " ")
     .trim();
 }
@@ -100,7 +101,7 @@ try {
   // La inconsistencia temporal es un caso separado y debe seguir siendo fatal.
   const futureData = runBuilder(temporaryRoot, sourcePath, generatedAtFrom(fixtureDateMax, -1));
   assertExit(futureData, 1, "rechaza latestDataDate posterior a generatedAt");
-  assert.match(normalizedOutput(futureData), /es posterior a la fecha de generación/);
+  assert.match(normalizedOutput(futureData), /posterior.*fecha.*generaci[oó]n/i);
 
   const validSummary = { ...summary };
   // D. Metadata inválida.

@@ -121,7 +121,7 @@ try {
 
   const sourceFailure = runBuilder(temporaryRoot, path.join(temporaryRoot, "missing-source.json"), "2026-09-05T12:00:00Z");
   assert.notStrictEqual(sourceFailure.status, 0, `[daily-metadata-test] una fuente inexistente debía fallar\n${output(sourceFailure)}`);
-  assert.match(output(sourceFailure), /No se encontro la fuente JSON local/);
+  assert.match(normalizedOutput(sourceFailure), /No se encontro la fuente JSON local/);
   console.log("[daily-metadata-test] OK: escenarios A-G, unknown y falla de fuente validados; stale/no_new_data son warnings no fatales.");
 } finally {
   fs.rmSync(temporaryRoot, { recursive: true, force: true });

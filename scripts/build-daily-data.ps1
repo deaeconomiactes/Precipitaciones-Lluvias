@@ -5,6 +5,7 @@ param(
     [string]$SourceCsvUrl = $env:DAILY_RAIN_CSV_URL,
     [string]$SourceCsvUrls = $env:DAILY_RAIN_CSV_URLS,
     [string]$SourceCsvPath = $env:DAILY_RAIN_CSV_PATH,
+    [int[]]$RetryDelaysSeconds = @(10, 30),
     [datetime]$GeneratedAt = (Get-Date).ToUniversalTime()
 )
 
@@ -71,79 +72,133 @@ function Get-RowValue($row, [string[]]$names) {
     return $null
 }
 
+function Get-SourceLabel([string]$url) {
+    try { return ([uri]$url).Host } catch { return 'fuente remota' }
+}
+
+function Test-HtmlResponse([string]$content, [string]$contentType) {
+    $trimmed = if ($null -eq $content) { '' } else { $content.TrimStart() }
+    return $contentType -match 'text/html' -or $trimmed -match '^(?i:<!doctype\s+html|<html|<head|<body)' -or $content -match '(?i)unable to open the file at this time'
+}
+
+function Invoke-DailySourceRequest([string]$url, [string]$expectedFormat) {
+    $sourceLabel = Get-SourceLabel $url
+    $attempts = $RetryDelaysSeconds.Count + 1
+    $lastReason = 'error no especificado.'
+    for ($attempt = 1; $attempt -le $attempts; $attempt++) {
+        try {
+            $response = Invoke-WebRequest -Uri $url -UseBasicParsing -MaximumRedirection 5 -TimeoutSec 60
+            $contentType = [string]$response.Headers['Content-Type']
+            if ([string]::IsNullOrWhiteSpace($response.Content)) { throw 'respuesta vacía.' }
+            if (Test-HtmlResponse $response.Content $contentType) {
+                if ($expectedFormat -eq 'JSON') {
+                    throw 'La fuente diaria respondió HTML/no JSON. Verificar permisos o deployment de Apps Script.'
+                }
+                throw 'La fuente diaria respondió HTML/no CSV.'
+            }
+            return $response
+        } catch {
+            $reason = $_.Exception.Message
+            $lastReason = $reason
+            Write-Warning "[daily-rainfall] Intento $attempt/$attempts en $sourceLabel falló: $reason"
+            if ($attempt -lt $attempts) {
+                $delayIndex = [Math]::Min($attempt - 1, $RetryDelaysSeconds.Count - 1)
+                $delay = $RetryDelaysSeconds[$delayIndex]
+                Write-Host "[daily-rainfall] Reintentando $sourceLabel en ${delay}s..."
+                if ($delay -gt 0) { Start-Sleep -Seconds $delay }
+            }
+        }
+    }
+    throw "La fuente $expectedFormat ($sourceLabel) falló después de $attempts intento(s): $lastReason"
+}
+
+function Get-JsonRows([string]$content) {
+    try { $payload = $content | ConvertFrom-Json -ErrorAction Stop } catch { throw "JSON inválido: $($_.Exception.Message)" }
+    if ($payload.PSObject.Properties.Name -contains 'ok' -and -not $payload.ok) { throw "La fuente JSON respondió con error: $($payload.error)" }
+    if ($payload.PSObject.Properties.Name -contains 'records') { return @($payload.records) }
+    if ($payload.PSObject.Properties.Name -contains 'data') { return @($payload.data) }
+    if ($payload -is [array]) { return @($payload) }
+    if ($payload.PSObject.Properties.Name -contains 'date') { return @($payload) }
+    throw 'La fuente JSON no contiene records ni data.'
+}
+
+function Get-CsvRows([string]$content) {
+    try { return @($content | ConvertFrom-Csv -ErrorAction Stop) } catch { throw "CSV inválido: $($_.Exception.Message)" }
+}
+
+function Get-UsableDailyRowCount($rows) {
+    $count = 0
+    foreach ($row in @($rows)) {
+        $date = Parse-DateValue (Get-RowValue $row @('date','fecha','Fecha','FECHA'))
+        $department = Normalize-Department (Get-RowValue $row @('department','departamento','Departamento','DEPARTAMENTO'))
+        $rain = Get-RainValue $row
+        if ($null -ne $date -and $null -ne $department -and $null -ne $rain) { $count++ }
+    }
+    return $count
+}
+
 function Read-CsvRows {
-    $allRows = @()
-    $sourceLabels = @()
+    $script:DailySourceErrors = @()
+    $trySource = {
+        param([string]$label, [scriptblock]$loader)
+        try {
+            $rows = @(& $loader)
+            if ($rows.Count -eq 0) { throw 'no devolvió registros.' }
+            if ((Get-UsableDailyRowCount $rows) -eq 0) { throw 'no devolvió registros diarios válidos.' }
+            $script:DailySourceLabel = $label
+            Write-Host "[daily-rainfall] Fuente válida encontrada: $label ($($rows.Count) registros)."
+            return ,$rows
+        } catch {
+            $script:DailySourceErrors += "${label}: $($_.Exception.Message)"
+            Write-Warning "[daily-rainfall] Fuente $label falló."
+            return $null
+        }
+    }
 
     if (-not [string]::IsNullOrWhiteSpace($SourceJsonPath)) {
-        if (-not (Test-Path $SourceJsonPath)) {
-            throw "No se encontro la fuente JSON local: $SourceJsonPath"
+        $result = & $trySource 'JSON local' {
+            if (-not (Test-Path -LiteralPath $SourceJsonPath)) { throw "No se encontro la fuente JSON local: $SourceJsonPath" }
+            Get-JsonRows (Get-Content -Raw -LiteralPath $SourceJsonPath)
         }
-        Write-Host "Leyendo registros diarios JSON desde $SourceJsonPath"
-        $payload = Get-Content -Raw -Path $SourceJsonPath | ConvertFrom-Json
-        if ($payload.PSObject.Properties.Name -contains 'records') {
-            $allRows += @($payload.records)
-        } elseif ($payload -is [array]) {
-            $allRows += @($payload)
-        } else {
-            throw 'La fuente JSON local no contiene records ni es un array.'
-        }
-        $sourceLabels += 'JSON local'
+        if ($null -ne $result) { return @($result) }
     }
 
     if (-not [string]::IsNullOrWhiteSpace($SourceJsonUrl)) {
-        Write-Host "Descargando registros diarios JSON desde $SourceJsonUrl"
-        $response = Invoke-WebRequest -Uri $SourceJsonUrl -UseBasicParsing -MaximumRedirection 5 -TimeoutSec 60
-        $payload = $response.Content | ConvertFrom-Json
-        if ($payload.PSObject.Properties.Name -contains 'ok' -and -not $payload.ok) {
-            throw "La fuente JSON respondio con error: $($payload.error)"
+        $result = & $trySource 'Apps Script JSON' {
+            $response = Invoke-DailySourceRequest $SourceJsonUrl 'JSON'
+            Get-JsonRows $response.Content
         }
-        if ($payload.PSObject.Properties.Name -contains 'records') {
-            $allRows += @($payload.records)
-        } elseif ($payload.PSObject.Properties.Name -contains 'data') {
-            $allRows += @($payload.data)
-        } elseif ($payload -is [array]) {
-            $allRows += @($payload)
-        } else {
-            throw 'La fuente JSON no contiene records ni data.'
-        }
-        $sourceLabels += 'Apps Script JSON'
+        if ($null -ne $result) { return @($result) }
+        Write-Host '[daily-rainfall] Fuente JSON falló. Probando fuente CSV alternativa.'
     }
 
     $urls = @()
-    if (-not [string]::IsNullOrWhiteSpace($SourceCsvUrls)) {
-        $urls += @($SourceCsvUrls -split '[;\r\n]+' | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
-    }
-    if (-not [string]::IsNullOrWhiteSpace($SourceCsvUrl)) {
-        $urls += $SourceCsvUrl
-    }
-
-    if ($urls.Count -gt 0) {
-        foreach ($url in ($urls | Select-Object -Unique)) {
-            Write-Host "Descargando registros diarios desde $url"
-            $response = Invoke-WebRequest -Uri $url -UseBasicParsing -MaximumRedirection 5 -TimeoutSec 60
-            $allRows += @($response.Content | ConvertFrom-Csv)
+    if (-not [string]::IsNullOrWhiteSpace($SourceCsvUrl)) { $urls += $SourceCsvUrl }
+    if (-not [string]::IsNullOrWhiteSpace($SourceCsvUrls)) { $urls += @($SourceCsvUrls -split '[;\r\n]+' | Where-Object { -not [string]::IsNullOrWhiteSpace($_) }) }
+    $csvIndex = 0
+    foreach ($url in ($urls | Select-Object -Unique)) {
+        $csvIndex++
+        $result = & $trySource "CSV #$csvIndex" {
+            $response = Invoke-DailySourceRequest $url 'CSV'
+            Get-CsvRows $response.Content
         }
-        $sourceLabels += 'Google Sheets CSV'
+        if ($null -ne $result) { return @($result) }
     }
 
     if ([string]::IsNullOrWhiteSpace($script:SourceCsvPath)) {
         $candidate = Join-Path (Split-Path $ProjectRoot -Parent) 'Registro-de-lluvias\plantilla_registro_lluvias.csv'
-        if (Test-Path $candidate) { $script:SourceCsvPath = $candidate }
+        if (Test-Path -LiteralPath $candidate) { $script:SourceCsvPath = $candidate }
+    }
+    if (-not [string]::IsNullOrWhiteSpace($script:SourceCsvPath)) {
+        $result = & $trySource 'CSV local' {
+            if (-not (Test-Path -LiteralPath $script:SourceCsvPath)) { throw "No se encontró la fuente CSV local configurada." }
+            @(Import-Csv -LiteralPath $script:SourceCsvPath)
+        }
+        if ($null -ne $result) { return @($result) }
     }
 
-    if (-not [string]::IsNullOrWhiteSpace($script:SourceCsvPath) -and (Test-Path $script:SourceCsvPath)) {
-        Write-Host "Leyendo registros diarios desde $script:SourceCsvPath"
-        $allRows += @(Import-Csv -Path $script:SourceCsvPath)
-        $sourceLabels += 'Registro-de-lluvias/plantilla_registro_lluvias.csv'
-    }
-
-    if ($allRows.Count -eq 0) {
-        throw 'No se encontro una fuente diaria. Defina DAILY_RAIN_JSON_URL, DAILY_RAIN_CSV_URL o DAILY_RAIN_CSV_PATH.'
-    }
-
-    $script:DailySourceLabel = ($sourceLabels | Select-Object -Unique) -join ' + '
-    return $allRows
+    $details = if ($script:DailySourceErrors.Count -gt 0) { $script:DailySourceErrors -join ' | ' } else { 'No hay fuentes configuradas.' }
+    throw "[daily-rainfall] ERROR: No se encontraron fuentes diarias válidas. $details No se actualizaron datos."
 }
 
 function Parse-DateValue($value) {

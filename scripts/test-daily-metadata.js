@@ -54,8 +54,16 @@ try {
   const fixtureRecords = [{ date: "2026-09-01", department: "Capital", rain: 12.5 }, { date: "2026-09-01", department: "Goya", rain: 0 }];
   const fixtureDateMax = fixtureLatestDate(fixtureRecords);
   const generatedAt = generatedAtFrom(fixtureDateMax);
+  const previousFixtureDate = generatedAtFrom(fixtureDateMax, -1).slice(0, 10);
   writeJson(sourcePath, fixtureRecords);
-  writeJson(path.join(dataDir, "rainfall-daily-summary.json"), { generatedAt: "2026-08-31T12:00:00Z", dateMin: "2026-08-31", dateMax: "2026-08-31", latestDataDate: "2026-08-31", daysSinceLatestData: 0, freshnessStatus: "updated" });
+  writeJson(path.join(dataDir, "rainfall-daily-summary.json"), {
+    generatedAt: generatedAtFrom(previousFixtureDate),
+    dateMin: previousFixtureDate,
+    dateMax: previousFixtureDate,
+    latestDataDate: previousFixtureDate,
+    daysSinceLatestData: 0,
+    freshnessStatus: "updated"
+  });
 
   // A. Metadata válida y actualizada.
   const updated = runBuilder(temporaryRoot, sourcePath, generatedAt);
@@ -98,7 +106,7 @@ try {
   const withoutGenerated = { ...validSummary }; delete withoutGenerated.generatedAt;
   expectContractFailure(dataDir, withoutGenerated, "required_field", "generatedAt");
   // G. Sin justificación, latestDataDate distinto de dateMax es error crítico.
-  expectContractFailure(dataDir, { ...validSummary, latestDataDate: "2026-08-31" }, "latest_date_consistency", "latestDataDate");
+  expectContractFailure(dataDir, { ...validSummary, latestDataDate: previousFixtureDate }, "latest_date_consistency", "latestDataDate");
 
   writeJson(path.join(dataDir, "rainfall-daily-summary.json"), { ...validSummary, freshnessStatus: "unknown" });
   validation = runValidator(dataDir);

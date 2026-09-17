@@ -12,6 +12,8 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 $script:DailySourceLabel = ''
+$script:DailyFetchStatus = 'ok'
+$script:DailyFallbackUsed = $false
 
 function Normalize-Text([string]$value) {
     if ([string]::IsNullOrWhiteSpace($value)) { return $null }
@@ -126,6 +128,63 @@ function Get-CsvRows([string]$content) {
     try { return @($content | ConvertFrom-Csv -ErrorAction Stop) } catch { throw "CSV inválido: $($_.Exception.Message)" }
 }
 
+function Use-PreviousDailyDataFallback {
+    $dataPath = Join-Path $ProjectRoot 'data\rainfall-daily.json'
+    $summaryPath = Join-Path $ProjectRoot 'data\rainfall-daily-summary.json'
+    if (-not (Test-Path -LiteralPath $dataPath) -or -not (Test-Path -LiteralPath $summaryPath)) {
+        throw '[daily-rainfall] ERROR: No hay fuente remota válida ni base local previa utilizable.'
+    }
+    try {
+        $daily = @(Get-Content -Raw -LiteralPath $dataPath | ConvertFrom-Json -ErrorAction Stop)
+        $summary = Get-Content -Raw -LiteralPath $summaryPath | ConvertFrom-Json -ErrorAction Stop
+    } catch {
+        throw "[daily-rainfall] ERROR: No hay fuente remota válida ni base local previa utilizable. JSON previo inválido: $($_.Exception.Message)"
+    }
+    if ($daily.Count -eq 0 -or $null -eq $summary) { throw '[daily-rainfall] ERROR: No hay fuente remota válida ni base local previa utilizable.' }
+    $dailyDates = @()
+    foreach ($record in $daily) {
+        $parsed = [datetime]::MinValue
+        $rainfall = [double]0
+        if ($null -eq $record -or [string]::IsNullOrWhiteSpace([string]$record.department) -or
+            -not [double]::TryParse([string]$record.rainfallMm, [Globalization.NumberStyles]::Float, [Globalization.CultureInfo]::InvariantCulture, [ref]$rainfall) -or
+            -not [datetime]::TryParseExact([string]$record.date, 'yyyy-MM-dd', [Globalization.CultureInfo]::InvariantCulture, [Globalization.DateTimeStyles]::None, [ref]$parsed)) {
+            throw '[daily-rainfall] ERROR: No hay fuente remota válida ni base local previa utilizable. rainfall-daily.json tiene registros inválidos.'
+        }
+        $dailyDates += $parsed.ToString('yyyy-MM-dd')
+    }
+    foreach ($field in @('dateMax', 'latestDataDate', 'generatedAt')) {
+        if ([string]::IsNullOrWhiteSpace([string]$summary.$field)) { throw "[daily-rainfall] ERROR: No hay fuente remota válida ni base local previa utilizable. Falta $field." }
+    }
+    $summaryDate = [datetime]::MinValue
+    $latestDate = [datetime]::MinValue
+    $summaryDateText = [string]$summary.dateMax
+    $latestDateText = [string]$summary.latestDataDate
+    $actualLatestDate = [string](($dailyDates | Sort-Object -Descending | Select-Object -First 1))
+    if (-not [datetime]::TryParseExact($summaryDateText, 'yyyy-MM-dd', [Globalization.CultureInfo]::InvariantCulture, [Globalization.DateTimeStyles]::None, [ref]$summaryDate) -or
+        -not [datetime]::TryParseExact($latestDateText, 'yyyy-MM-dd', [Globalization.CultureInfo]::InvariantCulture, [Globalization.DateTimeStyles]::None, [ref]$latestDate) -or
+        $summaryDateText -ne $latestDateText -or $actualLatestDate -ne $latestDateText) {
+        throw '[daily-rainfall] ERROR: No hay fuente remota válida ni base local previa utilizable. latestDataDate/dateMax no coinciden con la última fecha real.'
+    }
+    try { [datetime]::Parse([string]$summary.generatedAt, [Globalization.CultureInfo]::InvariantCulture) | Out-Null } catch { throw '[daily-rainfall] ERROR: No hay fuente remota válida ni base local previa utilizable. generatedAt inválido.' }
+
+    $errorText = ($script:DailySourceErrors -join ' ')
+    $errorType = if ($errorText -match '(?i)html|no json') { 'html_or_non_json' } elseif ($errorText -match '(?i)404|not found') { 'http_404' } elseif ($errorText -match '(?i)timeout|timed out') { 'timeout' } else { 'source_unavailable' }
+    $attemptAt = $GeneratedAt.ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ssZ', [Globalization.CultureInfo]::InvariantCulture)
+    $summary | Add-Member -NotePropertyName sourceStatus -NotePropertyValue 'fallback_previous_valid' -Force
+    $summary | Add-Member -NotePropertyName lastFetchAttemptAt -NotePropertyValue $attemptAt -Force
+    $summary | Add-Member -NotePropertyName lastFetchStatus -NotePropertyValue 'source_unavailable' -Force
+    $summary | Add-Member -NotePropertyName lastFetchErrorType -NotePropertyValue $errorType -Force
+    $summary | Add-Member -NotePropertyName fallbackUsed -NotePropertyValue $true -Force
+    $summary | ConvertTo-Json -Depth 8 | Set-Content -Encoding UTF8 -LiteralPath $summaryPath
+    $script:DailyFetchStatus = 'source_unavailable'
+    $script:DailyFallbackUsed = $true
+    $script:DailySourceLabel = 'última base diaria válida'
+    Write-Warning '[daily-rainfall] WARNING: No se pudo consultar ninguna fuente remota válida.'
+    Write-Host '[daily-rainfall] Se conserva la última base diaria válida.'
+    Write-Host "[daily-rainfall] Último dato real disponible: $($latestDate.ToString('yyyy-MM-dd'))."
+    Write-Host '[daily-rainfall] No se publican cambios nuevos.'
+}
+
 function Get-UsableDailyRowCount($rows) {
     $count = 0
     foreach ($row in @($rows)) {
@@ -174,7 +233,7 @@ function Read-CsvRows {
 
     $urls = @()
     if (-not [string]::IsNullOrWhiteSpace($SourceCsvUrl)) { $urls += $SourceCsvUrl }
-    if (-not [string]::IsNullOrWhiteSpace($SourceCsvUrls)) { $urls += @($SourceCsvUrls -split '[;\r\n]+' | Where-Object { -not [string]::IsNullOrWhiteSpace($_) }) }
+    if (-not [string]::IsNullOrWhiteSpace($SourceCsvUrls)) { $urls += @($SourceCsvUrls -split '[;,|\r\n]+' | Where-Object { -not [string]::IsNullOrWhiteSpace($_) }) }
     $csvIndex = 0
     foreach ($url in ($urls | Select-Object -Unique)) {
         $csvIndex++
@@ -197,8 +256,13 @@ function Read-CsvRows {
         if ($null -ne $result) { return @($result) }
     }
 
-    $details = if ($script:DailySourceErrors.Count -gt 0) { $script:DailySourceErrors -join ' | ' } else { 'No hay fuentes configuradas.' }
-    throw "[daily-rainfall] ERROR: No se encontraron fuentes diarias válidas. $details No se actualizaron datos."
+    try {
+        Use-PreviousDailyDataFallback
+        return @()
+    } catch {
+        $details = if ($script:DailySourceErrors.Count -gt 0) { $script:DailySourceErrors -join ' | ' } else { 'No hay fuentes configuradas.' }
+        throw "[daily-rainfall] ERROR: No se encontraron fuentes diarias válidas. $details $($_.Exception.Message) No se actualizaron datos."
+    }
 }
 
 function Parse-DateValue($value) {
@@ -215,7 +279,7 @@ function Parse-DateValue($value) {
 }
 
 function Get-RainValue($row) {
-    $raw = Get-RowValue $row @('rain','lluvia','precipitacion','precipitacion_mm','precipitacionMm','lluvia_mm','mm')
+    $raw = Get-RowValue $row @('rain','rainfallMm','lluvia','precipitacion','precipitacion_mm','precipitacionMm','lluvia_mm','mm')
     $text = ([string]$raw).Trim() -replace ',', '.'
     $value = 0.0
     if ([double]::TryParse($text, [Globalization.NumberStyles]::Float, [Globalization.CultureInfo]::InvariantCulture, [ref]$value)) {
@@ -270,6 +334,10 @@ function Read-JsonArrayFile([string]$path) {
 }
 
 $rows = Read-CsvRows
+if ($script:DailyFallbackUsed) {
+    $global:LASTEXITCODE = 0
+    exit 0
+}
 $departmentDaily = @{}
 $coordsByDepartment = @{}
 
@@ -411,6 +479,11 @@ $summary = [ordered]@{
     latestDataDate = $latestDataDate
     daysSinceLatestData = $daysSinceLatestData
     freshnessStatus = $freshnessStatus
+    sourceStatus = 'ok'
+    lastFetchAttemptAt = $generatedAtIso
+    lastFetchStatus = 'ok'
+    lastFetchErrorType = $null
+    fallbackUsed = $false
     records = $records.Count
     departments = $departments
     windows = $windows

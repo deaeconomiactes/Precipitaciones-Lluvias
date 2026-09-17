@@ -43,8 +43,12 @@ jobs:
           echo "[daily-rainfall] UTC: $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
           echo "[daily-rainfall] Argentina: $(TZ=America/Argentina/Buenos_Aires date '+%Y-%m-%d %H:%M:%S %Z')"
           if [ -z "$DAILY_RAIN_JSON_URL" ] && [ -z "$DAILY_RAIN_CSV_URL" ] && [ -z "$DAILY_RAIN_CSV_URLS" ]; then
-            echo "ERROR: no está configurada ninguna fuente diaria (DAILY_RAIN_JSON_URL, DAILY_RAIN_CSV_URL o DAILY_RAIN_CSV_URLS)."
-            exit 1
+            if [ -s data/rainfall-daily.json ] && [ -s data/rainfall-daily-summary.json ]; then
+              echo "[daily-rainfall] WARNING: no hay fuente remota configurada; se intentará conservar la base diaria previa."
+            else
+              echo "ERROR: no está configurada ninguna fuente diaria y no existe base diaria previa."
+              exit 1
+            fi
           fi
           echo "[daily-rainfall] Fuente diaria configurada."
 
@@ -138,6 +142,7 @@ jobs:
                   # La consulta diaria puede modificar estas dos marcas sin datos nuevos.
                   value.pop("generatedAt", None)
                   value.pop("daysSinceLatestData", None)
+                  value.pop("lastFetchAttemptAt", None)
               elif path.endswith("department-climate-status.json"):
                   value = [{key: item for key, item in row.items() if key != "updatedAt"} for row in value]
               return value
@@ -157,8 +162,21 @@ jobs:
             if [ -n "$file_path" ]; then changed_files+=("$file_path"); fi
           done <<< "$changed_files_output"
           if [ "${#changed_files[@]}" -eq 0 ]; then
-            echo "[daily-rainfall] Fuente consultada correctamente; no hay registros ni metadata sustantiva nuevos."
-            echo "[daily-rainfall] Se evita el commit: solo variaron marcas de generación o formato no semántico."
+            source_status="$(python - <<'PY'
+          import json
+          from pathlib import Path
+          try:
+              print(json.loads(Path("data/rainfall-daily-summary.json").read_text(encoding="utf-8-sig")).get("sourceStatus", "ok"))
+          except Exception:
+              print("unknown")
+          PY
+          )"
+            if [ "$source_status" = "fallback_previous_valid" ]; then
+              echo "[daily-rainfall] Se conserva la última base diaria válida; no hay cambios semánticos nuevos."
+            else
+              echo "[daily-rainfall] Fuente consultada correctamente; no hay registros ni metadata sustantiva nuevos."
+            fi
+            echo "[daily-rainfall] Se evita el commit: solo variaron marcas operativas o formato no semántico."
             echo "changes_detected=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi

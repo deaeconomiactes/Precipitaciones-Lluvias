@@ -53,8 +53,11 @@ function expectExit(result, expected, label) {
 
 function createScenarioRoot() {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "daily-rainfall-source-"));
-  return { root, dataDir: path.join(root, "data") };
+  const dataDir = path.join(root, "data");
+  fs.mkdirSync(dataDir, { recursive: true });
+  return { root, dataDir };
 }
+function writeJson(filePath, value) { fs.writeFileSync(filePath, JSON.stringify(value)); }
 
 async function startFixtureServer() {
   const records = JSON.stringify([{ date: "2026-09-01", department: "Capital", rain: 12.5 }]);
@@ -63,9 +66,11 @@ async function startFixtureServer() {
     const routes = {
       "/json": [200, "application/json", records],
       "/html": [200, "text/html; charset=utf-8", "<!doctype html><html><body>Unable to open the file at this time.</body></html>"],
+      "/not-found": [404, "text/plain", "Not Found"],
       "/empty": [200, "application/json", ""],
       "/invalid-json": [200, "application/json", "{not-json"],
       "/csv": [200, "text/csv", csv],
+      "/csv-zero": [200, "text/csv", "date,department,rain\n2026-09-01,Capital,0\n"],
       "/invalid-csv": [200, "text/html", "<html>Unable to open the file at this time.</html>"]
     };
     const [status, contentType, body] = routes[request.url] || [404, "text/plain", "not found"];
@@ -96,30 +101,48 @@ async function main() {
 
     // C. Fallback: JSON falla, CSV responde registros válidos.
     scenario = createScenarioRoot();
-    result = await runBuilder(scenario.root, { SourceJsonUrl: `${baseUrl}/html`, SourceCsvUrl: `${baseUrl}/csv` });
+    result = await runBuilder(scenario.root, { SourceJsonUrl: `${baseUrl}/not-found`, SourceCsvUrl: `${baseUrl}/csv-zero` });
     expectExit(result, 0, "C. el CSV alternativo debía recuperarse tras fallar JSON");
     assert.match(output(result), /Fuente válida encontrada: CSV #1/);
+    const csvPayload = JSON.parse(fs.readFileSync(path.join(scenario.dataDir, "rainfall-daily.json"), "utf8"));
+    const csvRows = Array.isArray(csvPayload) ? csvPayload : [csvPayload];
+    assert.strictEqual(csvRows[0].rainfallMm, 0, "0 mm debe conservarse como dato válido.");
     fs.rmSync(scenario.root, { recursive: true, force: true });
 
-    // D. Todas las fuentes fallan.
+    // D. Todas las fuentes remotas fallan, pero la última base publicada es válida.
+    scenario = createScenarioRoot();
+    const previousDaily = [{ date: "2026-08-31", department: "Capital", rainfallMm: 7.5, lat: -27.4692, lng: -58.8306 }];
+    const previousSummary = { generatedAt: "2026-08-31T12:00:00Z", dateMin: "2026-08-31", dateMax: "2026-08-31", latestDataDate: "2026-08-31", daysSinceLatestData: 0, freshnessStatus: "updated", records: 1 };
+    writeJson(path.join(scenario.dataDir, "rainfall-daily.json"), previousDaily);
+    writeJson(path.join(scenario.dataDir, "rainfall-daily-summary.json"), previousSummary);
+    result = await runBuilder(scenario.root, { SourceJsonUrl: `${baseUrl}/html`, SourceCsvUrl: `${baseUrl}/invalid-csv` });
+    expectExit(result, 0, "D. una base previa válida debía activar fallback sin datos nuevos");
+    assert.match(output(result), /Se conserva la última base diaria válida/);
+    assert.deepStrictEqual(JSON.parse(fs.readFileSync(path.join(scenario.dataDir, "rainfall-daily.json"), "utf8")), previousDaily);
+    const fallbackSummary = JSON.parse(fs.readFileSync(path.join(scenario.dataDir, "rainfall-daily-summary.json"), "utf8"));
+    assert.strictEqual(fallbackSummary.sourceStatus, "fallback_previous_valid");
+    assert.strictEqual(fallbackSummary.fallbackUsed, true);
+    fs.rmSync(scenario.root, { recursive: true, force: true });
+
+    // E. Todas las fuentes fallan sin base previa.
     scenario = createScenarioRoot();
     result = await runBuilder(scenario.root, { SourceJsonUrl: `${baseUrl}/html`, SourceCsvUrl: `${baseUrl}/invalid-csv` });
-    expectExit(result, 1, "D. todas las fuentes inválidas debían fallar");
+    expectExit(result, 1, "E. todas las fuentes inválidas sin base previa debían fallar");
     assert.match(output(result), /No se encontraron fuentes diarias válidas/);
     assert.ok(!fs.existsSync(path.join(scenario.dataDir, "rainfall-daily-summary.json")), "No debe sobrescribirse metadata ante fallas.");
     fs.rmSync(scenario.root, { recursive: true, force: true });
 
-    // E. Respuesta vacía.
+    // F. Respuesta vacía.
     scenario = createScenarioRoot();
     result = await runBuilder(scenario.root, { SourceJsonUrl: `${baseUrl}/empty` });
-    expectExit(result, 1, "E. una respuesta vacía debía fallar");
+    expectExit(result, 1, "F. una respuesta vacía debía fallar");
     assert.match(output(result), /respuesta vacía/);
     fs.rmSync(scenario.root, { recursive: true, force: true });
 
-    // F. JSON malformado.
+    // G. JSON malformado.
     scenario = createScenarioRoot();
     result = await runBuilder(scenario.root, { SourceJsonUrl: `${baseUrl}/invalid-json` });
-    expectExit(result, 1, "F. JSON inválido debía fallar");
+    expectExit(result, 1, "G. JSON inválido debía fallar");
     assert.match(output(result), /JSON inválido/);
     fs.rmSync(scenario.root, { recursive: true, force: true });
 

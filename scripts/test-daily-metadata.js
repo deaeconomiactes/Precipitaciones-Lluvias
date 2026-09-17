@@ -119,6 +119,9 @@ try {
   validation = runValidator(dataDir);
   assertExit(validation, 0, "freshnessStatus=unknown debía pasar con warning");
 
+  // Sin base previa, una fuente inexistente debe seguir siendo un error fatal.
+  fs.rmSync(path.join(dataDir, "rainfall-daily.json"), { force: true });
+  fs.rmSync(path.join(dataDir, "rainfall-daily-summary.json"), { force: true });
   const sourceFailure = runBuilder(temporaryRoot, path.join(temporaryRoot, "missing-source.json"), "2026-09-05T12:00:00Z");
   assert.notStrictEqual(sourceFailure.status, 0, `[daily-metadata-test] una fuente inexistente debía fallar\n${output(sourceFailure)}`);
   assert.match(normalizedOutput(sourceFailure), /No se encontro la fuente JSON local/);

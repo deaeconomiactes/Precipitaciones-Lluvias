@@ -1,11 +1,16 @@
 {
-  "generatedAt": "2026-09-17T12:24:43Z",
+  "generatedAt": "2026-09-17T19:08:20Z",
   "source": "Apps Script JSON",
   "dateMin": "2023-01-01",
   "dateMax": "2026-09-11",
   "latestDataDate": "2026-09-11",
   "daysSinceLatestData": 6,
   "freshnessStatus": "stale",
+  "sourceStatus": "ok",
+  "lastFetchAttemptAt": "2026-09-17T19:08:20Z",
+  "lastFetchStatus": "ok",
+  "lastFetchErrorType": null,
+  "fallbackUsed": false,
   "records": 4912,
   "departments": [
     "Bella Vista",
@@ -1141,10 +1146,5 @@
       "level": "normal",
       "historicalYears": 3
     }
-  ],
-  "sourceStatus": "fallback_previous_valid",
-  "lastFetchAttemptAt": "2026-09-17T17:12:04Z",
-  "lastFetchStatus": "source_unavailable",
-  "lastFetchErrorType": "http_404",
-  "fallbackUsed": true
+  ]
 }

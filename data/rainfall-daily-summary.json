@@ -1,11 +1,16 @@
 {
-  "generatedAt": "2026-09-16T14:57:59Z",
+  "generatedAt": "2026-09-17T12:24:43Z",
   "source": "Apps Script JSON",
   "dateMin": "2023-01-01",
   "dateMax": "2026-09-11",
   "latestDataDate": "2026-09-11",
-  "daysSinceLatestData": 5,
+  "daysSinceLatestData": 6,
   "freshnessStatus": "stale",
+  "sourceStatus": "ok",
+  "lastFetchAttemptAt": "2026-09-17T12:24:43Z",
+  "lastFetchStatus": "ok",
+  "lastFetchErrorType": null,
+  "fallbackUsed": false,
   "records": 4912,
   "departments": [
     "Bella Vista",

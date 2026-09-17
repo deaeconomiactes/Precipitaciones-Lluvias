@@ -211,28 +211,57 @@ if (!css.includes('.operational-kpis .executive-comparison strong')) throw new E
 console.log("Resumen provincial: período actual/seleccionado y faltantes validados.");
 console.log("Promedios anuales: meses válidos y referencia histórica comparable validados.");
 
+function parseDateOnly(value, fieldName) {
+  const isoDate = String(value ?? '').trim();
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(isoDate);
+  if (!match) throw new Error(`${fieldName} debe tener formato YYYY-MM-DD: ${isoDate || 'ausente'}`);
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  const probe = new Date(Date.UTC(year, month - 1, day));
+  if (probe.getUTCFullYear() !== year || probe.getUTCMonth() !== month - 1 || probe.getUTCDate() !== day) {
+    throw new Error(`${fieldName} no es una fecha calendario válida: ${isoDate}`);
+  }
+  // app.js representa meses internamente como índices 0–11; aquí se normaliza
+  // una sola vez desde el mes calendario ISO 1–12.
+  return { isoDate, year, month: month - 1, day };
+}
+
+function getReferenceDateFromDailySummary(summary) {
+  const latestDataDate = summary?.latestDataDate || summary?.dateMax;
+  if (summary?.latestDataDate && summary?.dateMax && summary.latestDataDate !== summary.dateMax) {
+    throw new Error(`latestDataDate y dateMax deben coincidir: ${summary.latestDataDate} !== ${summary.dateMax}`);
+  }
+  return parseDateOnly(latestDataDate, 'latestDataDate/dateMax');
+}
+
 context.realRainfall = JSON.parse(fs.readFileSync("data/rainfall.json", "utf8"));
 context.realOperationalDaily = JSON.parse(fs.readFileSync("data/rainfall-daily.json", "utf8"));
 context.realMetadata = JSON.parse(fs.readFileSync("data/metadata.json", "utf8"));
+const realDailySummary = JSON.parse(fs.readFileSync("data/rainfall-daily-summary.json", "utf8"));
+const realReference = getReferenceDateFromDailySummary(realDailySummary);
+context.realReference = realReference;
 const realCurrentYear = vm.runInContext(`(() => {
   state.rainfall = realRainfall;
   state.operationalDailyRecords = realOperationalDaily;
   state.dailyRecords = realOperationalDaily;
+  state.dailyDateMax = realReference.isoDate;
   state.metadata = realMetadata;
   state.monthlyRainfall = [];
   buildCombinedMonthlyRainfall();
-  const referenceDate = new Date("2026-08-14T12:00:00-03:00");
+  const referenceDate = new Date(realReference.isoDate + "T12:00:00-03:00");
   const current = dailyCalendarParts(referenceDate);
   const departments = state.metadata.departments;
-  const summary = monthlySummaryComparison({ departments: null, years: [2026], months: null }, referenceDate);
-  const currentObservation = summaryCurrentMonthFromDaily(departments, 2026, current.month, current.isoDate);
+  const summary = monthlySummaryComparison({ departments: null, years: [realReference.year], months: null }, referenceDate);
+  const currentObservation = summaryCurrentMonthFromDaily(departments, realReference.year, current.month, current.isoDate);
   const monthAudit = ALL_MONTHS.map(month => {
     const entries = departments.map(department => {
-      const row = monthlyRows().find(item => item.department === department && item.year === 2026);
+      const row = monthlyRows().find(item => item.department === department && item.year === realReference.year);
       return { department, value: row?.months?.[month], source: row?.monthSources?.[month] };
     }).filter(entry => Number.isFinite(entry.value));
     const isCurrent = month === current.month;
-    const monthPrefix = '2026-' + String(month + 1).padStart(2, '0') + '-';
+    const isFuture = month > realReference.month;
+    const monthPrefix = String(realReference.year) + '-' + String(month + 1).padStart(2, '0') + '-';
     const dailyDepartments = new Set(state.operationalDailyRecords
       .filter(record => record.department && record.date?.startsWith(monthPrefix) && Number.isFinite(record.rainfallMm))
       .map(record => record.department));
@@ -240,7 +269,7 @@ const realCurrentYear = vm.runInContext(`(() => {
       .filter(record => record.department && record.date?.startsWith(monthPrefix) && (!isCurrent || record.date <= current.isoDate) && Number.isFinite(record.rainfallMm))
       .map(record => record.department));
     const rawMonthlyDepartments = state.rainfall
-      .filter(row => row.year === 2026 && departments.includes(row.department) && Number.isFinite(row.months?.[month]))
+      .filter(row => row.year === realReference.year && departments.includes(row.department) && Number.isFinite(row.months?.[month]))
       .map(row => row.department);
     const monthlyDepartments = entries.filter(entry => entry.source === 'monthly').map(entry => entry.department);
     const dailyDerivedDepartments = entries.filter(entry => entry.source === 'daily_derived').map(entry => entry.department);
@@ -253,7 +282,7 @@ const realCurrentYear = vm.runInContext(`(() => {
       dailyDepartments: [...dailyDepartments],
       expectedDailyDerivedDepartments: [...dailyDepartments].filter(department => !rawMonthlyDepartments.includes(department)),
       operationalZeroDepartments: isCurrent ? departments.filter(department => !referenceDailyDepartments.has(department)) : [],
-      expectedIncluded: isCurrent ? departments.length > 0 : entries.length > 0,
+      expectedIncluded: !isFuture && (isCurrent ? departments.length > 0 : entries.length > 0),
       expectedCoverage: isCurrent ? departments.length : entries.length
     };
   });
@@ -264,11 +293,12 @@ const realCurrentYear = vm.runInContext(`(() => {
     annualDetail: summary.annualDetail,
     departmentCount: departments.length,
     currentOperationalEntries: currentObservation.entries.map(entry => ({ department: entry.department, value: entry.value, daysWithRecords: entry.daysWithRecords })),
-    monthAudit
+    monthAudit,
+    reference: realReference
   };
 })()`, context);
-if (realCurrentYear.period.year !== 2026 || realCurrentYear.period.month !== 7) {
-  throw new Error(`La base real retrocedió desde agosto 2026: ${JSON.stringify(realCurrentYear)}`);
+if (realCurrentYear.period.year !== realReference.year || realCurrentYear.period.month !== realReference.month) {
+  throw new Error(`La base real no usa latestDataDate/dateMax como referencia: ${JSON.stringify({ reference: realReference, period: realCurrentYear.period })}`);
 }
 const monthNames = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
 const expectedAnnualMonths = realCurrentYear.monthAudit.filter(item => item.expectedIncluded).map(item => item.month);
@@ -283,7 +313,7 @@ const minimumCoverage = Math.min(...expectedCoverages);
 const maximumCoverage = Math.max(...expectedCoverages);
 const expectedCoverageLabel = `cobertura ${minimumCoverage === maximumCoverage ? minimumCoverage : `${minimumCoverage}–${maximumCoverage}`} de ${realCurrentYear.departmentCount} deptos.`;
 if (!realCurrentYear.annualDetail.includes(expectedCoverageLabel)) {
-  throw new Error(`Cobertura 2026 incorrecta. Esperada: ${expectedCoverageLabel}. Obtenida: ${realCurrentYear.annualDetail}. Auditoría: ${JSON.stringify(realCurrentYear.monthAudit)}`);
+  throw new Error(`Cobertura ${realReference.year} incorrecta. Esperada: ${expectedCoverageLabel}. Obtenida: ${realCurrentYear.annualDetail}. Auditoría: ${JSON.stringify(realCurrentYear.monthAudit)}`);
 }
 const sortedJson = values => JSON.stringify([...values].sort((a, b) => a.localeCompare(b, "es")));
 const provenanceMismatches = realCurrentYear.monthAudit.filter(item =>
@@ -294,8 +324,8 @@ const provenanceMismatches = realCurrentYear.monthAudit.filter(item =>
 if (provenanceMismatches.length) {
   throw new Error(`La base combinada no preservó la procedencia mensual/diaria: ${JSON.stringify(provenanceMismatches)}`);
 }
-const futureMonthsWithData = realCurrentYear.monthAudit.filter(item => item.month > realCurrentYear.period.month && item.combinedDepartments.length);
-const futureMonthsIncluded = realCurrentYear.annualMonths.filter(month => month > realCurrentYear.period.month);
+const futureMonthsWithData = realCurrentYear.monthAudit.filter(item => item.month > realReference.month && item.combinedDepartments.length);
+const futureMonthsIncluded = realCurrentYear.annualMonths.filter(month => month > realReference.month);
 if (futureMonthsWithData.length || futureMonthsIncluded.length) {
   throw new Error(`Los meses futuros deben permanecer sin datos y fuera del promedio: ${JSON.stringify({ futureMonthsWithData, futureMonthsIncluded })}`);
 }
@@ -307,4 +337,4 @@ const invalidOperationalZeros = currentAudit.operationalZeroDepartments.filter(d
 if (invalidOperationalZeros.length) {
   throw new Error(`Los ceros operativos del mes actual no quedaron separados de las observaciones reales: ${JSON.stringify(currentAudit)}`);
 }
-console.log(`Base real 2026: agosto permanece como referencia; ${realCurrentYear.annualMonths.length} meses válidos en el promedio anual.`);
+console.log(`Base real ${realReference.year}: ${monthNames[realReference.month]} es el último mes disponible; ${realCurrentYear.annualMonths.length} meses válidos en el promedio anual.`);

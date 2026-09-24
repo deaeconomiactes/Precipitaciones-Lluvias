@@ -6,11 +6,6 @@
   "latestDataDate": "2026-09-19",
   "daysSinceLatestData": 2,
   "freshnessStatus": "stale",
-  "sourceStatus": "ok",
-  "lastFetchAttemptAt": "2026-09-21T18:16:49Z",
-  "lastFetchStatus": "ok",
-  "lastFetchErrorType": null,
-  "fallbackUsed": false,
   "records": 4930,
   "departments": [
     "Bella Vista",
@@ -1146,5 +1141,10 @@
       "level": "normal",
       "historicalYears": 3
     }
-  ]
+  ],
+  "sourceStatus": "fallback_previous_valid",
+  "lastFetchAttemptAt": "2026-09-24T17:27:22Z",
+  "lastFetchStatus": "source_unavailable",
+  "lastFetchErrorType": "http_404",
+  "fallbackUsed": true
 }

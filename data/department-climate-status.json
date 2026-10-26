@@ -1,8 +1,8 @@
 [
   {
     "department": "Bella Vista",
-    "referenceDateDaily": "2026-10-24",
-    "rainLastDateMm": 24.2,
+    "referenceDateDaily": "2026-10-25",
+    "rainLastDateMm": null,
     "rain7dMm": 89.23,
     "coverage7d": "4/7",
     "rain15dMm": 89.23,
@@ -17,12 +17,12 @@
     "monthlyCategory": "Muy por encima",
     "sourceDaily": "rainfall-daily-combined",
     "sourceMonthly": "base mensual combinada",
-    "updatedAt": "2026-10-25T16:41:48"
+    "updatedAt": "2026-10-26T18:49:05"
   },
   {
     "department": "Beron de Astrada",
-    "referenceDateDaily": "2026-10-24",
-    "rainLastDateMm": 16.0,
+    "referenceDateDaily": "2026-10-25",
+    "rainLastDateMm": null,
     "rain7dMm": 66.0,
     "coverage7d": "3/7",
     "rain15dMm": 94.0,
@@ -37,16 +37,16 @@
     "monthlyCategory": "Por encima",
     "sourceDaily": "rainfall-daily-combined",
     "sourceMonthly": "base mensual combinada",
-    "updatedAt": "2026-10-25T16:41:48"
+    "updatedAt": "2026-10-26T18:49:05"
   },
   {
     "department": "Capital",
-    "referenceDateDaily": "2026-10-24",
+    "referenceDateDaily": "2026-10-25",
     "rainLastDateMm": null,
     "rain7dMm": 68.63,
     "coverage7d": "1/7",
-    "rain15dMm": 94.73,
-    "coverage15d": "3/15",
+    "rain15dMm": 91.13,
+    "coverage15d": "2/15",
     "rain30dMm": 158.2,
     "coverage30d": "8/30",
     "monthlyReference": "Octubre 2026",
@@ -57,11 +57,11 @@
     "monthlyCategory": "En torno al promedio",
     "sourceDaily": "rainfall-daily-combined",
     "sourceMonthly": "base mensual combinada",
-    "updatedAt": "2026-10-25T16:41:48"
+    "updatedAt": "2026-10-26T18:49:05"
   },
   {
     "department": "Concepcion",
-    "referenceDateDaily": "2026-10-24",
+    "referenceDateDaily": "2026-10-25",
     "rainLastDateMm": null,
     "rain7dMm": null,
     "coverage7d": "0/7",
@@ -77,36 +77,36 @@
     "monthlyCategory": "Muy por debajo",
     "sourceDaily": "rainfall-daily-combined",
     "sourceMonthly": "base mensual combinada",
-    "updatedAt": "2026-10-25T16:41:48"
+    "updatedAt": "2026-10-26T18:49:05"
   },
   {
     "department": "Curuzu Cuatia",
-    "referenceDateDaily": "2026-10-24",
-    "rainLastDateMm": 22.5,
-    "rain7dMm": 67.28,
-    "coverage7d": "4/7",
-    "rain15dMm": 80.78,
+    "referenceDateDaily": "2026-10-25",
+    "rainLastDateMm": 2.0,
+    "rain7dMm": 69.28,
+    "coverage7d": "5/7",
+    "rain15dMm": 81.28,
     "coverage15d": "6/15",
-    "rain30dMm": 311.2,
-    "coverage30d": "12/30",
+    "rain30dMm": 313.2,
+    "coverage30d": "13/30",
     "monthlyReference": "Octubre 2026",
-    "monthlyObservedMm": 240.7,
-    "monthlyHistoricalAvgMm": 161.43,
-    "monthlyDifferenceMm": 79.27,
-    "monthlyDifferencePct": 49.11,
+    "monthlyObservedMm": 242.7,
+    "monthlyHistoricalAvgMm": 161.48,
+    "monthlyDifferenceMm": 81.22,
+    "monthlyDifferencePct": 50.29,
     "monthlyCategory": "Muy por encima",
     "sourceDaily": "rainfall-daily-combined",
     "sourceMonthly": "base mensual combinada",
-    "updatedAt": "2026-10-25T16:41:48"
+    "updatedAt": "2026-10-26T18:49:05"
   },
   {
     "department": "Empedrado",
-    "referenceDateDaily": "2026-10-24",
+    "referenceDateDaily": "2026-10-25",
     "rainLastDateMm": null,
     "rain7dMm": 40.0,
     "coverage7d": "1/7",
-    "rain15dMm": 59.8,
-    "coverage15d": "3/15",
+    "rain15dMm": 54.4,
+    "coverage15d": "2/15",
     "rain30dMm": 169.1,
     "coverage30d": "7/30",
     "monthlyReference": "Octubre 2026",
@@ -117,16 +117,16 @@
     "monthlyCategory": "En torno al promedio",
     "sourceDaily": "rainfall-daily-combined",
     "sourceMonthly": "base mensual combinada",
-    "updatedAt": "2026-10-25T16:41:48"
+    "updatedAt": "2026-10-26T18:49:05"
   },
   {
     "department": "Esquina",
-    "referenceDateDaily": "2026-10-24",
-    "rainLastDateMm": 22.0,
+    "referenceDateDaily": "2026-10-25",
+    "rainLastDateMm": null,
     "rain7dMm": 43.0,
     "coverage7d": "3/7",
-    "rain15dMm": 60.0,
-    "coverage15d": "5/15",
+    "rain15dMm": 55.0,
+    "coverage15d": "4/15",
     "rain30dMm": 239.87,
     "coverage30d": "12/30",
     "monthlyReference": "Octubre 2026",
@@ -137,11 +137,11 @@
     "monthlyCategory": "Muy por encima",
     "sourceDaily": "rainfall-daily-combined",
     "sourceMonthly": "base mensual combinada",
-    "updatedAt": "2026-10-25T16:41:48"
+    "updatedAt": "2026-10-26T18:49:05"
   },
   {
     "department": "General Alvear",
-    "referenceDateDaily": "2026-10-24",
+    "referenceDateDaily": "2026-10-25",
     "rainLastDateMm": null,
     "rain7dMm": null,
     "coverage7d": "0/7",
@@ -157,16 +157,16 @@
     "monthlyCategory": "Muy por debajo",
     "sourceDaily": "rainfall-daily-combined",
     "sourceMonthly": "base mensual combinada",
-    "updatedAt": "2026-10-25T16:41:48"
+    "updatedAt": "2026-10-26T18:49:05"
   },
   {
     "department": "General Paz",
-    "referenceDateDaily": "2026-10-24",
-    "rainLastDateMm": 22.6,
+    "referenceDateDaily": "2026-10-25",
+    "rainLastDateMm": null,
     "rain7dMm": 135.2,
     "coverage7d": "4/7",
-    "rain15dMm": 195.4,
-    "coverage15d": "7/15",
+    "rain15dMm": 189.9,
+    "coverage15d": "6/15",
     "rain30dMm": 398.0,
     "coverage30d": "13/30",
     "monthlyReference": "Octubre 2026",
@@ -177,11 +177,11 @@
     "monthlyCategory": "Muy por encima",
     "sourceDaily": "rainfall-daily-combined",
     "sourceMonthly": "base mensual combinada",
-    "updatedAt": "2026-10-25T16:41:48"
+    "updatedAt": "2026-10-26T18:49:05"
   },
   {
     "department": "Goya",
-    "referenceDateDaily": "2026-10-24",
+    "referenceDateDaily": "2026-10-25",
     "rainLastDateMm": null,
     "rain7dMm": 23.0,
     "coverage7d": "3/7",
@@ -197,16 +197,16 @@
     "monthlyCategory": "Muy por debajo",
     "sourceDaily": "rainfall-daily-combined",
     "sourceMonthly": "base mensual combinada",
-    "updatedAt": "2026-10-25T16:41:48"
+    "updatedAt": "2026-10-26T18:49:05"
   },
   {
     "department": "Itati",
-    "referenceDateDaily": "2026-10-24",
+    "referenceDateDaily": "2026-10-25",
     "rainLastDateMm": null,
     "rain7dMm": 57.8,
     "coverage7d": "1/7",
-    "rain15dMm": 66.6,
-    "coverage15d": "3/15",
+    "rain15dMm": 60.2,
+    "coverage15d": "2/15",
     "rain30dMm": 154.8,
     "coverage30d": "5/30",
     "monthlyReference": "Octubre 2026",
@@ -217,16 +217,16 @@
     "monthlyCategory": "En torno al promedio",
     "sourceDaily": "rainfall-daily-combined",
     "sourceMonthly": "base mensual combinada",
-    "updatedAt": "2026-10-25T16:41:48"
+    "updatedAt": "2026-10-26T18:49:05"
   },
   {
     "department": "Ituzaingo",
-    "referenceDateDaily": "2026-10-24",
-    "rainLastDateMm": 30.3,
+    "referenceDateDaily": "2026-10-25",
+    "rainLastDateMm": null,
     "rain7dMm": 150.73,
     "coverage7d": "4/7",
-    "rain15dMm": 223.33,
-    "coverage15d": "7/15",
+    "rain15dMm": 206.03,
+    "coverage15d": "6/15",
     "rain30dMm": 499.28,
     "coverage30d": "12/30",
     "monthlyReference": "Octubre 2026",
@@ -237,18 +237,18 @@
     "monthlyCategory": "Muy por encima",
     "sourceDaily": "rainfall-daily-combined",
     "sourceMonthly": "base mensual combinada",
-    "updatedAt": "2026-10-25T16:41:48"
+    "updatedAt": "2026-10-26T18:49:05"
   },
   {
     "department": "Lavalle",
-    "referenceDateDaily": "2026-10-24",
+    "referenceDateDaily": "2026-10-25",
     "rainLastDateMm": null,
     "rain7dMm": 8.87,
     "coverage7d": "2/7",
-    "rain15dMm": 12.12,
-    "coverage15d": "3/15",
-    "rain30dMm": 75.5,
-    "coverage30d": "8/30",
+    "rain15dMm": 8.87,
+    "coverage15d": "2/15",
+    "rain30dMm": 73.0,
+    "coverage30d": "7/30",
     "monthlyReference": "Octubre 2026",
     "monthlyObservedMm": 55.75,
     "monthlyHistoricalAvgMm": 124.56,
@@ -257,11 +257,11 @@
     "monthlyCategory": "Muy por debajo",
     "sourceDaily": "rainfall-daily-combined",
     "sourceMonthly": "base mensual combinada",
-    "updatedAt": "2026-10-25T16:41:48"
+    "updatedAt": "2026-10-26T18:49:05"
   },
   {
     "department": "Mburucuya",
-    "referenceDateDaily": "2026-10-24",
+    "referenceDateDaily": "2026-10-25",
     "rainLastDateMm": null,
     "rain7dMm": 70.0,
     "coverage7d": "2/7",
@@ -277,16 +277,16 @@
     "monthlyCategory": "Muy por encima",
     "sourceDaily": "rainfall-daily-combined",
     "sourceMonthly": "base mensual combinada",
-    "updatedAt": "2026-10-25T16:41:48"
+    "updatedAt": "2026-10-26T18:49:05"
   },
   {
     "department": "Mercedes",
-    "referenceDateDaily": "2026-10-24",
+    "referenceDateDaily": "2026-10-25",
     "rainLastDateMm": null,
     "rain7dMm": 61.88,
     "coverage7d": "3/7",
-    "rain15dMm": 78.38,
-    "coverage15d": "5/15",
+    "rain15dMm": 65.88,
+    "coverage15d": "4/15",
     "rain30dMm": 289.88,
     "coverage30d": "12/30",
     "monthlyReference": "Octubre 2026",
@@ -297,11 +297,11 @@
     "monthlyCategory": "Muy por encima",
     "sourceDaily": "rainfall-daily-combined",
     "sourceMonthly": "base mensual combinada",
-    "updatedAt": "2026-10-25T16:41:48"
+    "updatedAt": "2026-10-26T18:49:05"
   },
   {
     "department": "Monte Caseros",
-    "referenceDateDaily": "2026-10-24",
+    "referenceDateDaily": "2026-10-25",
     "rainLastDateMm": null,
     "rain7dMm": 81.5,
     "coverage7d": "3/7",
@@ -317,11 +317,11 @@
     "monthlyCategory": "En torno al promedio",
     "sourceDaily": "rainfall-daily-combined",
     "sourceMonthly": "base mensual combinada",
-    "updatedAt": "2026-10-25T16:41:48"
+    "updatedAt": "2026-10-26T18:49:05"
   },
   {
     "department": "Paso de los Libres",
-    "referenceDateDaily": "2026-10-24",
+    "referenceDateDaily": "2026-10-25",
     "rainLastDateMm": null,
     "rain7dMm": 92.0,
     "coverage7d": "2/7",
@@ -337,12 +337,12 @@
     "monthlyCategory": "Por encima",
     "sourceDaily": "rainfall-daily-combined",
     "sourceMonthly": "base mensual combinada",
-    "updatedAt": "2026-10-25T16:41:48"
+    "updatedAt": "2026-10-26T18:49:05"
   },
   {
     "department": "Saladas",
-    "referenceDateDaily": "2026-10-24",
-    "rainLastDateMm": 25.0,
+    "referenceDateDaily": "2026-10-25",
+    "rainLastDateMm": null,
     "rain7dMm": 44.0,
     "coverage7d": "2/7",
     "rain15dMm": 49.0,
@@ -357,16 +357,16 @@
     "monthlyCategory": "Muy por debajo",
     "sourceDaily": "rainfall-daily-combined",
     "sourceMonthly": "base mensual combinada",
-    "updatedAt": "2026-10-25T16:41:48"
+    "updatedAt": "2026-10-26T18:49:05"
   },
   {
     "department": "San Cosme",
-    "referenceDateDaily": "2026-10-24",
-    "rainLastDateMm": 1.5,
+    "referenceDateDaily": "2026-10-25",
+    "rainLastDateMm": null,
     "rain7dMm": 131.2,
     "coverage7d": "3/7",
-    "rain15dMm": 142.0,
-    "coverage15d": "6/15",
+    "rain15dMm": 140.6,
+    "coverage15d": "5/15",
     "rain30dMm": 221.3,
     "coverage30d": "12/30",
     "monthlyReference": "Octubre 2026",
@@ -377,11 +377,11 @@
     "monthlyCategory": "Muy por encima",
     "sourceDaily": "rainfall-daily-combined",
     "sourceMonthly": "base mensual combinada",
-    "updatedAt": "2026-10-25T16:41:48"
+    "updatedAt": "2026-10-26T18:49:05"
   },
   {
     "department": "San Luis del Palmar",
-    "referenceDateDaily": "2026-10-24",
+    "referenceDateDaily": "2026-10-25",
     "rainLastDateMm": null,
     "rain7dMm": null,
     "coverage7d": "0/7",
@@ -397,16 +397,16 @@
     "monthlyCategory": "Muy por debajo",
     "sourceDaily": "rainfall-daily-combined",
     "sourceMonthly": "base mensual combinada",
-    "updatedAt": "2026-10-25T16:41:48"
+    "updatedAt": "2026-10-26T18:49:05"
   },
   {
     "department": "San Martin",
-    "referenceDateDaily": "2026-10-24",
+    "referenceDateDaily": "2026-10-25",
     "rainLastDateMm": null,
     "rain7dMm": 20.92,
     "coverage7d": "3/7",
-    "rain15dMm": 23.67,
-    "coverage15d": "4/15",
+    "rain15dMm": 20.92,
+    "coverage15d": "3/15",
     "rain30dMm": 231.1,
     "coverage30d": "11/30",
     "monthlyReference": "Octubre 2026",
@@ -417,11 +417,11 @@
     "monthlyCategory": "En torno al promedio",
     "sourceDaily": "rainfall-daily-combined",
     "sourceMonthly": "base mensual combinada",
-    "updatedAt": "2026-10-25T16:41:48"
+    "updatedAt": "2026-10-26T18:49:05"
   },
   {
     "department": "San Miguel",
-    "referenceDateDaily": "2026-10-24",
+    "referenceDateDaily": "2026-10-25",
     "rainLastDateMm": null,
     "rain7dMm": 153.0,
     "coverage7d": "3/7",
@@ -437,12 +437,12 @@
     "monthlyCategory": "Muy por encima",
     "sourceDaily": "rainfall-daily-combined",
     "sourceMonthly": "base mensual combinada",
-    "updatedAt": "2026-10-25T16:41:48"
+    "updatedAt": "2026-10-26T18:49:05"
   },
   {
     "department": "San Roque",
-    "referenceDateDaily": "2026-10-24",
-    "rainLastDateMm": 26.0,
+    "referenceDateDaily": "2026-10-25",
+    "rainLastDateMm": null,
     "rain7dMm": 86.0,
     "coverage7d": "4/7",
     "rain15dMm": 86.0,
@@ -457,16 +457,16 @@
     "monthlyCategory": "Muy por encima",
     "sourceDaily": "rainfall-daily-combined",
     "sourceMonthly": "base mensual combinada",
-    "updatedAt": "2026-10-25T16:41:48"
+    "updatedAt": "2026-10-26T18:49:05"
   },
   {
     "department": "Santo Tome",
-    "referenceDateDaily": "2026-10-24",
+    "referenceDateDaily": "2026-10-25",
     "rainLastDateMm": null,
     "rain7dMm": 60.6,
     "coverage7d": "3/7",
-    "rain15dMm": 132.15,
-    "coverage15d": "6/15",
+    "rain15dMm": 98.4,
+    "coverage15d": "5/15",
     "rain30dMm": 414.43,
     "coverage30d": "12/30",
     "monthlyReference": "Octubre 2026",
@@ -477,26 +477,26 @@
     "monthlyCategory": "Muy por encima",
     "sourceDaily": "rainfall-daily-combined",
     "sourceMonthly": "base mensual combinada",
-    "updatedAt": "2026-10-25T16:41:48"
+    "updatedAt": "2026-10-26T18:49:05"
   },
   {
     "department": "Sauce",
-    "referenceDateDaily": "2026-10-24",
-    "rainLastDateMm": null,
-    "rain7dMm": 24.0,
-    "coverage7d": "3/7",
-    "rain15dMm": 27.0,
-    "coverage15d": "4/15",
-    "rain30dMm": 170.0,
-    "coverage30d": "8/30",
+    "referenceDateDaily": "2026-10-25",
+    "rainLastDateMm": 5.0,
+    "rain7dMm": 29.0,
+    "coverage7d": "4/7",
+    "rain15dMm": 32.0,
+    "coverage15d": "5/15",
+    "rain30dMm": 175.0,
+    "coverage30d": "9/30",
     "monthlyReference": "Octubre 2026",
-    "monthlyObservedMm": 123.0,
-    "monthlyHistoricalAvgMm": 156.98,
-    "monthlyDifferenceMm": -33.98,
-    "monthlyDifferencePct": -21.64,
+    "monthlyObservedMm": 128.0,
+    "monthlyHistoricalAvgMm": 157.13,
+    "monthlyDifferenceMm": -29.13,
+    "monthlyDifferencePct": -18.54,
     "monthlyCategory": "Por debajo",
     "sourceDaily": "rainfall-daily-combined",
     "sourceMonthly": "base mensual combinada",
-    "updatedAt": "2026-10-25T16:41:48"
+    "updatedAt": "2026-10-26T18:49:05"
   }
 ]

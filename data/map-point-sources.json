@@ -1,30 +1,30 @@
 {
   "schemaVersion": 3,
-  "generatedAt": "2026-11-03T18:34:14Z",
+  "generatedAt": "2026-11-05T18:53:51Z",
   "rainObservations": {
     "endpoint": "https://script.google.com/macros/s/AKfycbyWxsaNypgJegUB419DKjF5tXhTRAyY4mT7aH34L3fwUwmGpy_J4ywwwZAsEhJWcEY/exec",
-    "pointCount": 83,
-    "latestDate": "2026-11-01",
+    "pointCount": 84,
+    "latestDate": "2026-11-04",
     "publicCoordinateDecimals": 4,
     "privacyNote": "Solo se publican fecha, departamento, localidad, lluvia y coordenadas aproximadas; no se incluyen identificadores personales.",
     "points": [
       {
-        "date": "2026-11-01",
+        "date": "2026-11-03",
         "department": "Bella Vista",
         "municipality": "Bella Vista",
-        "rainfallMm": 2.2,
+        "rainfallMm": 64.2,
         "lat": -28.5083,
         "lng": -59.0436,
-        "updatedAt": "2026-11-03T13:00:43.253Z"
+        "updatedAt": "2026-11-04T12:43:46.269Z"
       },
       {
-        "date": "2026-10-24",
+        "date": "2026-11-03",
         "department": "Bella Vista",
         "municipality": "Desmochado",
-        "rainfallMm": 11.0,
+        "rainfallMm": 79.4,
         "lat": -28.8,
         "lng": -59.0,
-        "updatedAt": "2026-10-25T15:46:54.592Z"
+        "updatedAt": "2026-11-05T09:50:47.450Z"
       },
       {
         "date": "2026-08-04",
@@ -54,22 +54,22 @@
         "updatedAt": "2026-08-03T17:31:33.855Z"
       },
       {
-        "date": "2026-10-24",
+        "date": "2026-11-03",
         "department": "Beron de Astrada",
         "municipality": "Berón de Astrada",
-        "rainfallMm": 16.0,
+        "rainfallMm": 160.0,
         "lat": -27.5488,
         "lng": -57.5397,
-        "updatedAt": "2026-10-25T15:16:15.839Z"
+        "updatedAt": "2026-11-04T20:23:39.915Z"
       },
       {
-        "date": "2026-11-01",
+        "date": "2026-11-04",
         "department": "Capital",
         "municipality": "Capital (Corrientes)",
-        "rainfallMm": 2.0,
+        "rainfallMm": 10.0,
         "lat": -27.4692,
         "lng": -58.8306,
-        "updatedAt": "2026-11-03T12:59:51.258Z"
+        "updatedAt": "2026-11-05T17:32:43.078Z"
       },
       {
         "date": "2026-06-12",
@@ -126,13 +126,13 @@
         "updatedAt": "2026-10-22T10:51:08.120Z"
       },
       {
-        "date": "2026-08-01",
+        "date": "2026-11-03",
         "department": "Capital",
         "municipality": "Riachuelo",
         "rainfallMm": 60.0,
         "lat": -27.5794,
         "lng": -58.7472,
-        "updatedAt": "2026-08-01T15:30:24.369Z"
+        "updatedAt": "2026-11-04T15:08:51.083Z"
       },
       {
         "date": "2026-10-03",
@@ -198,22 +198,22 @@
         "updatedAt": "2026-10-25T15:50:43.241Z"
       },
       {
-        "date": "2026-10-21",
+        "date": "2026-11-04",
         "department": "Empedrado",
         "municipality": "El Sombrero",
-        "rainfallMm": 63.0,
+        "rainfallMm": 11.5,
         "lat": -27.6744,
         "lng": -58.7831,
-        "updatedAt": "2026-10-22T14:02:38.529Z"
+        "updatedAt": "2026-11-05T13:48:05.857Z"
       },
       {
-        "date": "2026-10-24",
+        "date": "2026-11-03",
         "department": "Empedrado",
         "municipality": "Empedrado",
-        "rainfallMm": 26.0,
+        "rainfallMm": 65.0,
         "lat": -27.9014,
         "lng": -58.8058,
-        "updatedAt": "2026-11-03T13:02:20.125Z"
+        "updatedAt": "2026-11-04T14:53:11.916Z"
       },
       {
         "date": "2026-08-19",
@@ -225,13 +225,13 @@
         "updatedAt": "2026-08-21T09:54:59.099Z"
       },
       {
-        "date": "2026-10-23",
+        "date": "2026-11-04",
         "department": "Esquina",
         "municipality": "Esquina",
-        "rainfallMm": 20.0,
+        "rainfallMm": 1.0,
         "lat": -30.0139,
         "lng": -59.5267,
-        "updatedAt": "2026-10-25T15:20:25.111Z"
+        "updatedAt": "2026-11-05T17:32:12.600Z"
       },
       {
         "date": "2026-07-18",
@@ -279,13 +279,22 @@
         "updatedAt": "2026-09-11T15:06:58.995Z"
       },
       {
-        "date": "2026-10-24",
+        "date": "2026-11-03",
+        "department": "General Alvear",
+        "municipality": "Alvear (Itaqui - BR)",
+        "rainfallMm": 9.8,
+        "lat": -29.1176,
+        "lng": -56.554,
+        "updatedAt": "2026-11-05T11:20:10.987Z"
+      },
+      {
+        "date": "2026-11-03",
         "department": "General Paz",
         "municipality": "Caá Catí",
-        "rainfallMm": 22.6,
+        "rainfallMm": 106.4,
         "lat": -27.7511,
         "lng": -57.6208,
-        "updatedAt": "2026-10-25T15:36:26.241Z"
+        "updatedAt": "2026-11-04T12:45:41.806Z"
       },
       {
         "date": "2026-09-12",
@@ -297,22 +306,22 @@
         "updatedAt": "2026-10-08T14:31:09.040Z"
       },
       {
-        "date": "2026-10-23",
+        "date": "2026-11-03",
         "department": "General Paz",
         "municipality": "Itá Ibaté",
-        "rainfallMm": 37.8,
+        "rainfallMm": 2.0,
         "lat": -27.4265,
         "lng": -57.3361,
-        "updatedAt": "2026-10-25T15:26:53.909Z"
+        "updatedAt": "2026-11-04T14:46:09.851Z"
       },
       {
-        "date": "2026-10-22",
+        "date": "2026-11-03",
         "department": "General Paz",
         "municipality": "Palmar Grande",
-        "rainfallMm": 66.0,
+        "rainfallMm": 80.0,
         "lat": -27.8767,
         "lng": -57.7411,
-        "updatedAt": "2026-10-23T11:08:45.575Z"
+        "updatedAt": "2026-11-04T12:51:46.376Z"
       },
       {
         "date": "2026-10-11",
@@ -324,13 +333,13 @@
         "updatedAt": "2026-10-12T16:31:18.023Z"
       },
       {
-        "date": "2026-11-01",
+        "date": "2026-11-03",
         "department": "Goya",
         "municipality": "Goya",
-        "rainfallMm": 7.0,
+        "rainfallMm": 3.0,
         "lat": -29.1442,
         "lng": -59.2635,
-        "updatedAt": "2026-11-03T13:01:19.816Z"
+        "updatedAt": "2026-11-05T09:52:55.114Z"
       },
       {
         "date": "2026-08-19",
@@ -360,31 +369,31 @@
         "updatedAt": "2026-08-18T14:01:59.911Z"
       },
       {
-        "date": "2026-10-23",
+        "date": "2026-11-04",
         "department": "Itati",
         "municipality": "La Palmira",
-        "rainfallMm": 57.8,
+        "rainfallMm": 1.8,
         "lat": -27.3223,
         "lng": -58.0398,
-        "updatedAt": "2026-10-25T15:26:01.132Z"
+        "updatedAt": "2026-11-05T11:25:32.847Z"
       },
       {
-        "date": "2026-10-24",
+        "date": "2026-11-04",
         "department": "Ituzaingo",
         "municipality": "Ituzaingó",
-        "rainfallMm": 30.3,
+        "rainfallMm": 121.0,
         "lat": -27.5808,
         "lng": -56.6853,
-        "updatedAt": "2026-10-25T15:39:05.639Z"
+        "updatedAt": "2026-11-05T17:31:44.638Z"
       },
       {
-        "date": "2026-10-23",
+        "date": "2026-11-04",
         "department": "Lavalle",
         "municipality": "Aº Batel - Paso Cerrito",
-        "rainfallMm": 1.75,
+        "rainfallMm": 9.5,
         "lat": -29.0311,
         "lng": -58.7883,
-        "updatedAt": "2026-10-25T16:00:45.388Z"
+        "updatedAt": "2026-11-05T11:29:01.416Z"
       },
       {
         "date": "2025-09-01",
@@ -405,31 +414,31 @@
         "updatedAt": "2026-10-25T16:01:26.375Z"
       },
       {
-        "date": "2026-10-23",
+        "date": "2026-11-03",
         "department": "Mburucuya",
         "municipality": "Mburucuyá",
-        "rainfallMm": 52.5,
+        "rainfallMm": 14.0,
         "lat": -28.0478,
         "lng": -58.2283,
-        "updatedAt": "2026-10-24T13:25:07.918Z"
+        "updatedAt": "2026-11-04T14:18:20.686Z"
       },
       {
-        "date": "2026-11-01",
+        "date": "2026-11-03",
         "department": "Mercedes",
         "municipality": "Mercedes",
-        "rainfallMm": 1.0,
+        "rainfallMm": 58.0,
         "lat": -29.1842,
         "lng": -58.0753,
-        "updatedAt": "2026-11-03T13:00:16.742Z"
+        "updatedAt": "2026-11-04T14:16:40.230Z"
       },
       {
-        "date": "2026-10-23",
+        "date": "2026-11-04",
         "department": "Mercedes",
         "municipality": "Miriñay - San Roquito",
-        "rainfallMm": 8.25,
+        "rainfallMm": 7.0,
         "lat": -29.2969,
         "lng": -57.5656,
-        "updatedAt": "2026-10-25T15:59:37.372Z"
+        "updatedAt": "2026-11-05T11:28:28.788Z"
       },
       {
         "date": "2026-10-21",
@@ -477,13 +486,13 @@
         "updatedAt": "2026-10-08T21:26:36.657Z"
       },
       {
-        "date": "2026-10-23",
+        "date": "2026-11-03",
         "department": "Paso de los Libres",
         "municipality": "Paso de los Libres",
-        "rainfallMm": 54.0,
+        "rainfallMm": 5.0,
         "lat": -29.7122,
         "lng": -57.0869,
-        "updatedAt": "2026-10-25T15:17:58.795Z"
+        "updatedAt": "2026-11-04T14:11:56.793Z"
       },
       {
         "date": "2026-09-11",
@@ -495,31 +504,31 @@
         "updatedAt": "2026-09-11T14:59:33.809Z"
       },
       {
-        "date": "2026-10-24",
+        "date": "2026-11-03",
         "department": "Saladas",
         "municipality": "Saladas",
-        "rainfallMm": 25.0,
+        "rainfallMm": 87.0,
         "lat": -28.2536,
         "lng": -58.6256,
-        "updatedAt": "2026-10-25T15:16:47.386Z"
+        "updatedAt": "2026-11-04T14:13:56.400Z"
       },
       {
-        "date": "2026-10-08",
+        "date": "2026-11-03",
         "department": "Saladas",
         "municipality": "San Lorenzo",
-        "rainfallMm": 50.0,
+        "rainfallMm": 80.1,
         "lat": -28.1347,
         "lng": -58.7667,
-        "updatedAt": "2026-10-08T14:27:42.837Z"
+        "updatedAt": "2026-11-04T12:39:50.971Z"
       },
       {
-        "date": "2026-10-24",
+        "date": "2026-11-03",
         "department": "San Cosme",
         "municipality": "Paso de la Patria",
-        "rainfallMm": 1.5,
+        "rainfallMm": 7.8,
         "lat": -27.3175,
         "lng": -58.5747,
-        "updatedAt": "2026-10-25T15:29:22.788Z"
+        "updatedAt": "2026-11-04T12:48:11.771Z"
       },
       {
         "date": "2025-12-28",
@@ -540,13 +549,13 @@
         "updatedAt": ""
       },
       {
-        "date": "2026-10-22",
+        "date": "2026-11-04",
         "department": "San Martin",
         "municipality": "Aguapey - La Sirena",
-        "rainfallMm": 1.25,
+        "rainfallMm": 42.25,
         "lat": -28.4167,
         "lng": -56.5422,
-        "updatedAt": "2026-10-25T15:57:06.539Z"
+        "updatedAt": "2026-11-05T11:27:33.168Z"
       },
       {
         "date": "2026-10-23",
@@ -576,22 +585,22 @@
         "updatedAt": "2026-10-25T15:58:56.028Z"
       },
       {
-        "date": "2026-10-23",
+        "date": "2026-11-03",
         "department": "San Martin",
         "municipality": "La Cruz",
-        "rainfallMm": 21.0,
+        "rainfallMm": 9.8,
         "lat": -29.1744,
         "lng": -56.6433,
-        "updatedAt": "2026-10-25T15:21:14.089Z"
+        "updatedAt": "2026-11-05T09:52:17.384Z"
       },
       {
-        "date": "2026-10-10",
+        "date": "2026-11-02",
         "department": "San Martin",
         "municipality": "Laguna Iberá - Carlos Pellegrini",
         "rainfallMm": 1.5,
         "lat": -28.5381,
         "lng": -57.1869,
-        "updatedAt": "2026-10-12T16:36:37.066Z"
+        "updatedAt": "2026-11-04T14:48:28.189Z"
       },
       {
         "date": "2026-09-11",
@@ -621,49 +630,49 @@
         "updatedAt": "2026-08-18T15:52:57.310Z"
       },
       {
-        "date": "2026-10-23",
+        "date": "2026-11-03",
         "department": "San Miguel",
         "municipality": "San Miguel",
-        "rainfallMm": 80.0,
+        "rainfallMm": 110.0,
         "lat": -27.9861,
         "lng": -57.5894,
-        "updatedAt": "2026-10-25T15:20:40.481Z"
+        "updatedAt": "2026-11-05T09:51:42.546Z"
       },
       {
-        "date": "2026-11-01",
+        "date": "2026-11-03",
         "department": "San Roque",
         "municipality": "Chavarría",
-        "rainfallMm": 8.0,
+        "rainfallMm": 91.0,
         "lat": -28.9567,
         "lng": -58.5744,
-        "updatedAt": "2026-11-03T13:01:03.085Z"
+        "updatedAt": "2026-11-05T09:51:58.687Z"
       },
       {
-        "date": "2026-10-24",
+        "date": "2026-11-03",
         "department": "San Roque",
         "municipality": "San Roque",
-        "rainfallMm": 26.0,
+        "rainfallMm": 77.0,
         "lat": -28.5744,
         "lng": -58.7089,
-        "updatedAt": "2026-10-25T15:15:49.427Z"
+        "updatedAt": "2026-11-04T20:24:11.721Z"
       },
       {
-        "date": "2026-10-23",
+        "date": "2026-11-03",
         "department": "Santo Tome",
         "municipality": "Garruchos",
-        "rainfallMm": 39.5,
+        "rainfallMm": 15.0,
         "lat": -28.1819,
         "lng": -55.6456,
-        "updatedAt": "2026-10-25T15:54:29.557Z"
+        "updatedAt": "2026-11-05T11:23:49.941Z"
       },
       {
-        "date": "2026-10-23",
+        "date": "2026-11-03",
         "department": "Santo Tome",
         "municipality": "Gobernador Virasoro",
-        "rainfallMm": 37.8,
+        "rainfallMm": 79.5,
         "lat": -28.0494,
         "lng": -56.0219,
-        "updatedAt": "2026-10-25T15:20:04.733Z"
+        "updatedAt": "2026-11-05T09:51:16.291Z"
       },
       {
         "date": "2026-10-21",
@@ -684,13 +693,13 @@
         "updatedAt": "2026-10-08T14:02:28.194Z"
       },
       {
-        "date": "2026-10-23",
+        "date": "2026-11-03",
         "department": "Santo Tome",
         "municipality": "Santo Tomé",
-        "rainfallMm": 11.8,
+        "rainfallMm": 74.7,
         "lat": -28.5492,
         "lng": -56.0428,
-        "updatedAt": "2026-10-25T15:56:06.241Z"
+        "updatedAt": "2026-11-04T14:59:22.197Z"
       },
       {
         "date": "2026-10-03",
@@ -764,17 +773,17 @@
     "stationCount": 97,
     "hydrologicalCount": 48,
     "meteorologicalCount": 49,
-    "latestHeightCount": 31,
-    "heightObservationCount": 35,
+    "latestHeightCount": 32,
+    "heightObservationCount": 36,
     "stationWfsCount": 76,
     "heightObservations": [
       {
         "name": "Alvear",
         "lat": -29.1,
         "lng": -56.55,
-        "date": "2026-11-03T03:00:00Z",
-        "valueM": 6.98,
-        "previousValueM": 7.52,
+        "date": "2026-11-05T03:00:00Z",
+        "valueM": 5.8,
+        "previousValueM": 6.15,
         "trend": "baja",
         "status": "normal",
         "condition": "baja:n",
@@ -784,14 +793,6 @@
         "evacuationLevelM": 11.0,
         "lowWaterLevelM": 0.8899999856948853,
         "timeseries": [
-          [
-            "2026-10-28T03:00:00.000Z",
-            9.03
-          ],
-          [
-            "2026-10-29T03:00:00.000Z",
-            9.29
-          ],
           [
             "2026-10-30T03:00:00.000Z",
             9.15
@@ -811,6 +812,14 @@
           [
             "2026-11-03T03:00:00.000Z",
             6.98
+          ],
+          [
+            "2026-11-04T03:00:00.000Z",
+            6.15
+          ],
+          [
+            "2026-11-05T03:00:00.000Z",
+            5.8
           ]
         ]
       },
@@ -818,22 +827,18 @@
         "name": "Aº Barrancas - Paso La Llana",
         "lat": -30.21722222,
         "lng": -59.32444444,
-        "date": "2026-10-31T23:00:00Z",
-        "valueM": 2.2,
-        "previousValueM": 2.43,
-        "trend": "baja",
+        "date": "2026-11-02T15:00:00Z",
+        "valueM": 2.3,
+        "previousValueM": 2.2,
+        "trend": "crece",
         "status": "",
-        "condition": "baja:x",
+        "condition": "crece:x",
         "seriesId": 9200,
         "river": null,
         "alertLevelM": null,
         "evacuationLevelM": null,
         "lowWaterLevelM": null,
         "timeseries": [
-          [
-            "2026-10-28T23:00:00.000Z",
-            2.34
-          ],
           [
             "2026-10-30T15:00:00.000Z",
             2.43
@@ -849,6 +854,10 @@
           [
             "2026-10-31T23:00:00.000Z",
             2.2
+          ],
+          [
+            "2026-11-02T15:00:00.000Z",
+            2.3
           ]
         ]
       },
@@ -856,9 +865,9 @@
         "name": "Aº Batel - Paso Cerrito",
         "lat": -29.03111111,
         "lng": -58.78833333,
-        "date": "2026-11-03T07:00:00Z",
-        "valueM": 0.87,
-        "previousValueM": 0.92,
+        "date": "2026-11-05T15:00:00Z",
+        "valueM": 0.84,
+        "previousValueM": 0.85,
         "trend": "baja",
         "status": "",
         "condition": "baja:x",
@@ -868,42 +877,6 @@
         "evacuationLevelM": null,
         "lowWaterLevelM": null,
         "timeseries": [
-          [
-            "2026-10-31T23:00:00.000Z",
-            0.94
-          ],
-          [
-            "2026-11-01T03:00:00.000Z",
-            0.94
-          ],
-          [
-            "2026-11-01T07:00:00.000Z",
-            0.93
-          ],
-          [
-            "2026-11-01T11:00:00.000Z",
-            0.93
-          ],
-          [
-            "2026-11-01T15:00:00.000Z",
-            0.92
-          ],
-          [
-            "2026-11-01T19:00:00.000Z",
-            0.92
-          ],
-          [
-            "2026-11-01T23:00:00.000Z",
-            0.91
-          ],
-          [
-            "2026-11-02T03:00:00.000Z",
-            0.91
-          ],
-          [
-            "2026-11-02T11:00:00.000Z",
-            0.9
-          ],
           [
             "2026-11-02T15:00:00.000Z",
             0.9
@@ -923,6 +896,42 @@
           [
             "2026-11-03T07:00:00.000Z",
             0.87
+          ],
+          [
+            "2026-11-03T11:00:00.000Z",
+            0.87
+          ],
+          [
+            "2026-11-03T19:00:00.000Z",
+            0.86
+          ],
+          [
+            "2026-11-04T03:00:00.000Z",
+            0.85
+          ],
+          [
+            "2026-11-04T07:00:00.000Z",
+            0.84
+          ],
+          [
+            "2026-11-04T11:00:00.000Z",
+            0.85
+          ],
+          [
+            "2026-11-04T15:00:00.000Z",
+            0.86
+          ],
+          [
+            "2026-11-05T03:00:00.000Z",
+            0.85
+          ],
+          [
+            "2026-11-05T11:00:00.000Z",
+            0.84
+          ],
+          [
+            "2026-11-05T15:00:00.000Z",
+            0.84
           ]
         ]
       },
@@ -930,9 +939,9 @@
         "name": "Aº Mocoretá - RN Nº 14",
         "lat": -30.6275,
         "lng": -57.98277778,
-        "date": "2026-11-03T11:00:00Z",
-        "valueM": 2.63,
-        "previousValueM": 2.69,
+        "date": "2026-11-05T15:00:00Z",
+        "valueM": 2.47,
+        "previousValueM": 2.55,
         "trend": "baja",
         "status": "",
         "condition": "baja:x",
@@ -943,60 +952,60 @@
         "lowWaterLevelM": null,
         "timeseries": [
           [
-            "2026-11-01T07:00:00.000Z",
-            2.69
-          ],
-          [
-            "2026-11-01T11:00:00.000Z",
-            2.7
-          ],
-          [
-            "2026-11-01T15:00:00.000Z",
-            2.7
-          ],
-          [
-            "2026-11-01T19:00:00.000Z",
-            2.71
-          ],
-          [
-            "2026-11-01T23:00:00.000Z",
-            2.65
-          ],
-          [
-            "2026-11-02T03:00:00.000Z",
-            2.67
-          ],
-          [
-            "2026-11-02T07:00:00.000Z",
-            2.68
-          ],
-          [
-            "2026-11-02T11:00:00.000Z",
-            2.7
-          ],
-          [
-            "2026-11-02T15:00:00.000Z",
-            2.69
-          ],
-          [
-            "2026-11-02T19:00:00.000Z",
-            2.65
-          ],
-          [
-            "2026-11-02T23:00:00.000Z",
-            2.61
-          ],
-          [
-            "2026-11-03T03:00:00.000Z",
-            2.6
-          ],
-          [
             "2026-11-03T07:00:00.000Z",
             2.63
           ],
           [
             "2026-11-03T11:00:00.000Z",
             2.63
+          ],
+          [
+            "2026-11-03T19:00:00.000Z",
+            2.57
+          ],
+          [
+            "2026-11-03T23:00:00.000Z",
+            2.57
+          ],
+          [
+            "2026-11-04T03:00:00.000Z",
+            2.54
+          ],
+          [
+            "2026-11-04T07:00:00.000Z",
+            2.58
+          ],
+          [
+            "2026-11-04T11:00:00.000Z",
+            2.55
+          ],
+          [
+            "2026-11-04T15:00:00.000Z",
+            2.52
+          ],
+          [
+            "2026-11-04T19:00:00.000Z",
+            2.52
+          ],
+          [
+            "2026-11-04T23:00:00.000Z",
+            2.48
+          ],
+          [
+            "2026-11-05T03:00:00.000Z",
+            2.46
+          ],
+          [
+            "2026-11-05T07:00:00.000Z",
+            2.45
+          ],
+          [
+            "2026-11-05T11:00:00.000Z",
+            2.48
+          ],
+          [
+            "2026-11-05T15:00:00.000Z",
+            2.47
           ]
         ]
       },
@@ -1004,12 +1013,12 @@
         "name": "Aº Riachuelo - RP Nº5",
         "lat": -27.51055556,
         "lng": -58.56972222,
-        "date": "2026-11-03T17:00:00Z",
-        "valueM": 1.42,
-        "previousValueM": 1.48,
-        "trend": "baja",
+        "date": "2026-11-05T17:00:00Z",
+        "valueM": 1.48,
+        "previousValueM": 1.43,
+        "trend": "crece",
         "status": "",
-        "condition": "baja:x",
+        "condition": "crece:x",
         "seriesId": 9551,
         "river": null,
         "alertLevelM": null,
@@ -1017,60 +1026,60 @@
         "lowWaterLevelM": null,
         "timeseries": [
           [
-            "2026-11-03T03:00:00.000Z",
-            1.46
+            "2026-11-05T04:00:00.000Z",
+            1.48
           ],
           [
-            "2026-11-03T04:00:00.000Z",
-            1.46
+            "2026-11-05T05:00:00.000Z",
+            1.48
           ],
           [
-            "2026-11-03T05:00:00.000Z",
-            1.46
+            "2026-11-05T06:00:00.000Z",
+            1.49
           ],
           [
-            "2026-11-03T06:00:00.000Z",
-            1.46
+            "2026-11-05T07:00:00.000Z",
+            1.49
           ],
           [
-            "2026-11-03T07:00:00.000Z",
-            1.45
+            "2026-11-05T08:00:00.000Z",
+            1.49
           ],
           [
-            "2026-11-03T08:00:00.000Z",
-            1.45
+            "2026-11-05T09:00:00.000Z",
+            1.49
           ],
           [
-            "2026-11-03T09:00:00.000Z",
-            1.45
+            "2026-11-05T10:00:00.000Z",
+            1.49
           ],
           [
-            "2026-11-03T10:00:00.000Z",
-            1.44
+            "2026-11-05T11:00:00.000Z",
+            1.48
           ],
           [
-            "2026-11-03T11:00:00.000Z",
-            1.44
+            "2026-11-05T12:00:00.000Z",
+            1.48
           ],
           [
-            "2026-11-03T12:00:00.000Z",
-            1.43
+            "2026-11-05T13:00:00.000Z",
+            1.48
           ],
           [
-            "2026-11-03T13:00:00.000Z",
-            1.43
+            "2026-11-05T14:00:00.000Z",
+            1.47
           ],
           [
-            "2026-11-03T14:00:00.000Z",
-            1.43
+            "2026-11-05T15:00:00.000Z",
+            1.48
           ],
           [
-            "2026-11-03T15:00:00.000Z",
-            1.42
+            "2026-11-05T16:00:00.000Z",
+            1.48
           ],
           [
-            "2026-11-03T17:00:00.000Z",
-            1.42
+            "2026-11-05T17:00:00.000Z",
+            1.48
           ]
         ]
       },
@@ -1078,26 +1087,18 @@
         "name": "Bella Vista",
         "lat": -28.51840072,
         "lng": -59.05931723,
-        "date": "2026-11-03T03:00:00Z",
-        "valueM": 6.46,
-        "previousValueM": 6.53,
-        "trend": "baja",
+        "date": "2026-11-05T03:00:00Z",
+        "valueM": 6.44,
+        "previousValueM": 6.44,
+        "trend": "permanece",
         "status": "evacuación",
-        "condition": "baja:e",
+        "condition": "permanece:e",
         "seriesId": 22,
         "river": "PARANAINF",
         "alertLevelM": 6.0,
         "evacuationLevelM": 6.400000095367432,
         "lowWaterLevelM": 3.0,
         "timeseries": [
-          [
-            "2026-10-28T03:00:00.000Z",
-            6.43
-          ],
-          [
-            "2026-10-29T03:00:00.000Z",
-            6.45
-          ],
           [
             "2026-10-30T03:00:00.000Z",
             6.45
@@ -1117,6 +1118,14 @@
           [
             "2026-11-03T03:00:00.000Z",
             6.46
+          ],
+          [
+            "2026-11-04T03:00:00.000Z",
+            6.44
+          ],
+          [
+            "2026-11-05T03:00:00.000Z",
+            6.44
           ]
         ]
       },
@@ -1124,9 +1133,9 @@
         "name": "Bompland",
         "lat": -29.872652,
         "lng": -57.332887,
-        "date": "2026-10-30T03:00:00Z",
-        "valueM": 4.1,
-        "previousValueM": null,
+        "date": "2026-11-05T03:00:00Z",
+        "valueM": 5.14,
+        "previousValueM": 5.85,
         "trend": "baja",
         "status": "normal",
         "condition": "baja:n",
@@ -1139,6 +1148,48 @@
           [
             "2026-10-30T03:00:00.000Z",
             4.1
+          ],
+          [
+            "2026-11-04T03:00:00.000Z",
+            5.85
+          ],
+          [
+            "2026-11-05T03:00:00.000Z",
+            5.14
+          ]
+        ]
+      },
+      {
+        "name": "Chimiray - Colonia Liebig",
+        "lat": -27.91222222,
+        "lng": -55.81777778,
+        "date": "2026-11-05T18:00:00Z",
+        "valueM": 2.94,
+        "previousValueM": null,
+        "trend": "baja",
+        "status": "",
+        "condition": "baja:x",
+        "seriesId": 33369,
+        "river": null,
+        "alertLevelM": null,
+        "evacuationLevelM": null,
+        "lowWaterLevelM": null,
+        "timeseries": [
+          [
+            "2026-11-05T15:00:00.000Z",
+            3.05
+          ],
+          [
+            "2026-11-05T16:00:00.000Z",
+            3.01
+          ],
+          [
+            "2026-11-05T17:00:00.000Z",
+            2.97
+          ],
+          [
+            "2026-11-05T18:00:00.000Z",
+            2.94
           ]
         ]
       },
@@ -1146,12 +1197,12 @@
         "name": "Corriente - Paso Lucero",
         "lat": -28.995,
         "lng": -58.55833333,
-        "date": "2026-11-03T18:00:00Z",
-        "valueM": 2.25,
-        "previousValueM": 2.28,
-        "trend": "baja",
+        "date": "2026-11-05T18:00:00Z",
+        "valueM": 2.34,
+        "previousValueM": 2.25,
+        "trend": "crece",
         "status": "",
-        "condition": "baja:x",
+        "condition": "crece:x",
         "seriesId": 9021,
         "river": null,
         "alertLevelM": null,
@@ -1159,60 +1210,60 @@
         "lowWaterLevelM": null,
         "timeseries": [
           [
-            "2026-11-03T05:00:00.000Z",
-            2.26
+            "2026-11-05T05:00:00.000Z",
+            2.29
           ],
           [
-            "2026-11-03T06:00:00.000Z",
-            2.26
+            "2026-11-05T06:00:00.000Z",
+            2.29
           ],
           [
-            "2026-11-03T07:00:00.000Z",
-            2.26
+            "2026-11-05T07:00:00.000Z",
+            2.29
           ],
           [
-            "2026-11-03T08:00:00.000Z",
-            2.26
+            "2026-11-05T08:00:00.000Z",
+            2.3
           ],
           [
-            "2026-11-03T09:00:00.000Z",
-            2.26
+            "2026-11-05T09:00:00.000Z",
+            2.3
           ],
           [
-            "2026-11-03T10:00:00.000Z",
-            2.26
+            "2026-11-05T10:00:00.000Z",
+            2.3
           ],
           [
-            "2026-11-03T11:00:00.000Z",
-            2.26
+            "2026-11-05T11:00:00.000Z",
+            2.31
           ],
           [
-            "2026-11-03T12:00:00.000Z",
-            2.26
+            "2026-11-05T12:00:00.000Z",
+            2.31
           ],
           [
-            "2026-11-03T13:00:00.000Z",
-            2.25
+            "2026-11-05T13:00:00.000Z",
+            2.32
           ],
           [
-            "2026-11-03T14:00:00.000Z",
-            2.25
+            "2026-11-05T14:00:00.000Z",
+            2.32
           ],
           [
-            "2026-11-03T15:00:00.000Z",
-            2.25
+            "2026-11-05T15:00:00.000Z",
+            2.32
           ],
           [
-            "2026-11-03T16:00:00.000Z",
-            2.25
+            "2026-11-05T16:00:00.000Z",
+            2.33
           ],
           [
-            "2026-11-03T17:00:00.000Z",
-            2.25
+            "2026-11-05T17:00:00.000Z",
+            2.33
           ],
           [
-            "2026-11-03T18:00:00.000Z",
-            2.25
+            "2026-11-05T18:00:00.000Z",
+            2.34
           ]
         ]
       },
@@ -1220,26 +1271,18 @@
         "name": "Corrientes",
         "lat": -27.46364349,
         "lng": -58.8388696,
-        "date": "2026-11-03T03:00:00Z",
-        "valueM": 7.06,
-        "previousValueM": 7.11,
-        "trend": "baja",
+        "date": "2026-11-05T03:00:00Z",
+        "valueM": 7.02,
+        "previousValueM": 7.02,
+        "trend": "permanece",
         "status": "evacuación",
-        "condition": "baja:e",
+        "condition": "permanece:e",
         "seriesId": 19,
         "river": "PARANAMED",
         "alertLevelM": 6.5,
         "evacuationLevelM": 7.0,
         "lowWaterLevelM": 1.8300000429153442,
         "timeseries": [
-          [
-            "2026-10-28T03:00:00.000Z",
-            7.39
-          ],
-          [
-            "2026-10-29T03:00:00.000Z",
-            7.38
-          ],
           [
             "2026-10-30T03:00:00.000Z",
             7.35
@@ -1259,6 +1302,14 @@
           [
             "2026-11-03T03:00:00.000Z",
             7.06
+          ],
+          [
+            "2026-11-04T03:00:00.000Z",
+            7.02
+          ],
+          [
+            "2026-11-05T03:00:00.000Z",
+            7.02
           ]
         ]
       },
@@ -1266,9 +1317,9 @@
         "name": "Corrientes - Los Laureles",
         "lat": -29.75722222,
         "lng": -59.21722222,
-        "date": "2026-11-03T11:00:00Z",
-        "valueM": 1.8,
-        "previousValueM": 1.91,
+        "date": "2026-11-05T11:00:00Z",
+        "valueM": 1.76,
+        "previousValueM": 1.78,
         "trend": "baja",
         "status": "",
         "condition": "baja:x",
@@ -1278,50 +1329,6 @@
         "evacuationLevelM": null,
         "lowWaterLevelM": null,
         "timeseries": [
-          [
-            "2026-11-01T07:00:00.000Z",
-            1.96
-          ],
-          [
-            "2026-11-01T11:00:00.000Z",
-            1.95
-          ],
-          [
-            "2026-11-01T15:00:00.000Z",
-            1.94
-          ],
-          [
-            "2026-11-01T19:00:00.000Z",
-            1.93
-          ],
-          [
-            "2026-11-01T23:00:00.000Z",
-            1.92
-          ],
-          [
-            "2026-11-02T03:00:00.000Z",
-            1.91
-          ],
-          [
-            "2026-11-02T07:00:00.000Z",
-            1.9
-          ],
-          [
-            "2026-11-02T11:00:00.000Z",
-            1.88
-          ],
-          [
-            "2026-11-02T15:00:00.000Z",
-            1.86
-          ],
-          [
-            "2026-11-02T19:00:00.000Z",
-            1.85
-          ],
-          [
-            "2026-11-02T23:00:00.000Z",
-            1.84
-          ],
           [
             "2026-11-03T03:00:00.000Z",
             1.83
@@ -1333,6 +1340,50 @@
           [
             "2026-11-03T11:00:00.000Z",
             1.8
+          ],
+          [
+            "2026-11-03T15:00:00.000Z",
+            1.8
+          ],
+          [
+            "2026-11-03T19:00:00.000Z",
+            1.79
+          ],
+          [
+            "2026-11-03T23:00:00.000Z",
+            1.79
+          ],
+          [
+            "2026-11-04T03:00:00.000Z",
+            1.78
+          ],
+          [
+            "2026-11-04T07:00:00.000Z",
+            1.77
+          ],
+          [
+            "2026-11-04T11:00:00.000Z",
+            1.77
+          ],
+          [
+            "2026-11-04T15:00:00.000Z",
+            1.77
+          ],
+          [
+            "2026-11-04T19:00:00.000Z",
+            1.76
+          ],
+          [
+            "2026-11-04T23:00:00.000Z",
+            1.76
+          ],
+          [
+            "2026-11-05T03:00:00.000Z",
+            1.76
+          ],
+          [
+            "2026-11-05T11:00:00.000Z",
+            1.76
           ]
         ]
       },
@@ -1340,26 +1391,18 @@
         "name": "Empedrado",
         "lat": -27.95412346,
         "lng": -58.81852419,
-        "date": "2026-11-03T03:00:00Z",
-        "valueM": 6.09,
-        "previousValueM": 6.15,
-        "trend": "baja",
+        "date": "2026-11-05T03:00:00Z",
+        "valueM": 6.1,
+        "previousValueM": 6.07,
+        "trend": "crece",
         "status": "normal",
-        "condition": "baja:n",
+        "condition": "crece:n",
         "seriesId": 21,
         "river": "PARANAINF",
         "alertLevelM": 6.5,
         "evacuationLevelM": 6.699999809265137,
         "lowWaterLevelM": 2.799999952316284,
         "timeseries": [
-          [
-            "2026-10-28T03:00:00.000Z",
-            6.25
-          ],
-          [
-            "2026-10-29T03:00:00.000Z",
-            6.25
-          ],
           [
             "2026-10-30T03:00:00.000Z",
             6.2
@@ -1379,6 +1422,14 @@
           [
             "2026-11-03T03:00:00.000Z",
             6.09
+          ],
+          [
+            "2026-11-04T03:00:00.000Z",
+            6.07
+          ],
+          [
+            "2026-11-05T03:00:00.000Z",
+            6.1
           ]
         ]
       },
@@ -1386,9 +1437,9 @@
         "name": "Esquina",
         "lat": -30.01924089,
         "lng": -59.53663483,
-        "date": "2026-11-03T03:00:00Z",
-        "valueM": 5.51,
-        "previousValueM": 5.44,
+        "date": "2026-11-05T03:00:00Z",
+        "valueM": 5.58,
+        "previousValueM": 5.56,
         "trend": "crece",
         "status": "evacuación",
         "condition": "crece:e",
@@ -1398,14 +1449,6 @@
         "evacuationLevelM": 5.400000095367432,
         "lowWaterLevelM": 2.200000047683716,
         "timeseries": [
-          [
-            "2026-10-28T03:00:00.000Z",
-            5.16
-          ],
-          [
-            "2026-10-29T03:00:00.000Z",
-            5.19
-          ],
           [
             "2026-10-30T03:00:00.000Z",
             5.21
@@ -1425,6 +1468,14 @@
           [
             "2026-11-03T03:00:00.000Z",
             5.51
+          ],
+          [
+            "2026-11-04T03:00:00.000Z",
+            5.56
+          ],
+          [
+            "2026-11-05T03:00:00.000Z",
+            5.58
           ]
         ]
       },
@@ -1432,26 +1483,18 @@
         "name": "Garruchos",
         "lat": -28.18333333,
         "lng": -55.65,
-        "date": "2026-11-03T03:00:00Z",
-        "valueM": 4.18,
-        "previousValueM": 4.78,
-        "trend": "baja",
+        "date": "2026-11-05T03:00:00Z",
+        "valueM": 5.1,
+        "previousValueM": 3.41,
+        "trend": "crece",
         "status": "normal",
-        "condition": "baja:n",
+        "condition": "crece:n",
         "seriesId": 67,
         "river": "URUGUAY",
         "alertLevelM": 12.0,
         "evacuationLevelM": 14.0,
         "lowWaterLevelM": 0.029999999329447746,
         "timeseries": [
-          [
-            "2026-10-28T03:00:00.000Z",
-            11.24
-          ],
-          [
-            "2026-10-29T03:00:00.000Z",
-            9.0
-          ],
           [
             "2026-10-30T03:00:00.000Z",
             6.55
@@ -1471,6 +1514,14 @@
           [
             "2026-11-03T03:00:00.000Z",
             4.18
+          ],
+          [
+            "2026-11-04T03:00:00.000Z",
+            3.41
+          ],
+          [
+            "2026-11-05T03:00:00.000Z",
+            5.1
           ]
         ]
       },
@@ -1478,26 +1529,18 @@
         "name": "Goya",
         "lat": -29.14376844,
         "lng": -59.27303952,
-        "date": "2026-11-03T03:00:00Z",
+        "date": "2026-11-05T03:00:00Z",
         "valueM": 6.1,
-        "previousValueM": 6.09,
-        "trend": "crece",
+        "previousValueM": 6.1,
+        "trend": "permanece",
         "status": "evacuación",
-        "condition": "crece:e",
+        "condition": "permanece:e",
         "seriesId": 23,
         "river": "PARANAINF",
         "alertLevelM": 5.199999809265137,
         "evacuationLevelM": 5.699999809265137,
         "lowWaterLevelM": 2.2300000190734863,
         "timeseries": [
-          [
-            "2026-10-28T03:00:00.000Z",
-            5.68
-          ],
-          [
-            "2026-10-29T03:00:00.000Z",
-            5.76
-          ],
           [
             "2026-10-30T03:00:00.000Z",
             5.82
@@ -1517,6 +1560,14 @@
           [
             "2026-11-03T03:00:00.000Z",
             6.1
+          ],
+          [
+            "2026-11-04T03:00:00.000Z",
+            6.1
+          ],
+          [
+            "2026-11-05T03:00:00.000Z",
+            6.1
           ]
         ]
       },
@@ -1524,26 +1575,18 @@
         "name": "Itá Ibaté",
         "lat": -27.42336098,
         "lng": -57.33326783,
-        "date": "2026-11-03T03:00:00Z",
-        "valueM": 6.0,
-        "previousValueM": 6.06,
-        "trend": "baja",
+        "date": "2026-11-05T03:00:00Z",
+        "valueM": 6.02,
+        "previousValueM": 5.98,
+        "trend": "crece",
         "status": "normal",
-        "condition": "baja:n",
+        "condition": "crece:n",
         "seriesId": 16,
         "river": "PARANAMED",
         "alertLevelM": 7.0,
         "evacuationLevelM": 7.5,
         "lowWaterLevelM": 1.340000033378601,
         "timeseries": [
-          [
-            "2026-10-28T03:00:00.000Z",
-            6.7
-          ],
-          [
-            "2026-10-29T03:00:00.000Z",
-            6.54
-          ],
           [
             "2026-10-30T03:00:00.000Z",
             6.28
@@ -1563,6 +1606,14 @@
           [
             "2026-11-03T03:00:00.000Z",
             6.0
+          ],
+          [
+            "2026-11-04T03:00:00.000Z",
+            5.98
+          ],
+          [
+            "2026-11-05T03:00:00.000Z",
+            6.02
           ]
         ]
       },
@@ -1570,26 +1621,18 @@
         "name": "Itatí",
         "lat": -27.26677773,
         "lng": -58.24407387,
-        "date": "2026-11-03T03:00:00Z",
-        "valueM": 7.55,
-        "previousValueM": 7.56,
+        "date": "2026-11-05T03:00:00Z",
+        "valueM": 7.44,
+        "previousValueM": 7.48,
         "trend": "baja",
-        "status": "evacuación",
-        "condition": "baja:e",
+        "status": "alerta",
+        "condition": "baja:a",
         "seriesId": 17,
         "river": "PARANAMED",
         "alertLevelM": 6.800000190734863,
         "evacuationLevelM": 7.5,
         "lowWaterLevelM": 2.700000047683716,
         "timeseries": [
-          [
-            "2026-10-28T03:00:00.000Z",
-            8.2
-          ],
-          [
-            "2026-10-29T03:00:00.000Z",
-            8.11
-          ],
           [
             "2026-10-30T03:00:00.000Z",
             7.99
@@ -1609,6 +1652,14 @@
           [
             "2026-11-03T03:00:00.000Z",
             7.55
+          ],
+          [
+            "2026-11-04T03:00:00.000Z",
+            7.48
+          ],
+          [
+            "2026-11-05T03:00:00.000Z",
+            7.44
           ]
         ]
       },
@@ -1616,26 +1667,18 @@
         "name": "Ituzaingó",
         "lat": -27.58333333,
         "lng": -56.7,
-        "date": "2026-11-03T03:00:00Z",
-        "valueM": 3.74,
-        "previousValueM": 3.75,
-        "trend": "baja",
+        "date": "2026-11-05T03:00:00Z",
+        "valueM": 3.75,
+        "previousValueM": 3.74,
+        "trend": "crece",
         "status": "alerta",
-        "condition": "baja:a",
+        "condition": "crece:a",
         "seriesId": 15,
         "river": "PARANAMED",
         "alertLevelM": 3.5,
         "evacuationLevelM": 4.0,
         "lowWaterLevelM": 0.8100000023841858,
         "timeseries": [
-          [
-            "2026-10-28T03:00:00.000Z",
-            4.3
-          ],
-          [
-            "2026-10-29T03:00:00.000Z",
-            4.0
-          ],
           [
             "2026-10-30T03:00:00.000Z",
             3.93
@@ -1655,6 +1698,14 @@
           [
             "2026-11-03T03:00:00.000Z",
             3.74
+          ],
+          [
+            "2026-11-04T03:00:00.000Z",
+            3.74
+          ],
+          [
+            "2026-11-05T03:00:00.000Z",
+            3.75
           ]
         ]
       },
@@ -1662,9 +1713,9 @@
         "name": "La Cruz",
         "lat": -29.18062,
         "lng": -56.633977,
-        "date": "2026-11-03T03:00:00Z",
-        "valueM": 6.9,
-        "previousValueM": 7.44,
+        "date": "2026-11-05T03:00:00Z",
+        "valueM": 5.84,
+        "previousValueM": 6.2,
         "trend": "baja",
         "status": "normal",
         "condition": "baja:n",
@@ -1674,14 +1725,6 @@
         "evacuationLevelM": 11.5,
         "lowWaterLevelM": 0.25999999046325684,
         "timeseries": [
-          [
-            "2026-10-28T03:00:00.000Z",
-            8.83
-          ],
-          [
-            "2026-10-29T03:00:00.000Z",
-            9.08
-          ],
           [
             "2026-10-30T03:00:00.000Z",
             9.0
@@ -1701,6 +1744,14 @@
           [
             "2026-11-03T03:00:00.000Z",
             6.9
+          ],
+          [
+            "2026-11-04T03:00:00.000Z",
+            6.2
+          ],
+          [
+            "2026-11-05T03:00:00.000Z",
+            5.84
           ]
         ]
       },
@@ -1708,9 +1759,9 @@
         "name": "Miriñay - Paso Ledesma",
         "lat": -29.84583333,
         "lng": -57.675,
-        "date": "2026-11-03T11:00:00Z",
-        "valueM": 3.38,
-        "previousValueM": 3.66,
+        "date": "2026-11-05T15:00:00Z",
+        "valueM": 3.0,
+        "previousValueM": 3.23,
         "trend": "baja",
         "status": "",
         "condition": "baja:x",
@@ -1721,60 +1772,60 @@
         "lowWaterLevelM": null,
         "timeseries": [
           [
-            "2026-11-01T07:00:00.000Z",
-            3.81
-          ],
-          [
-            "2026-11-01T11:00:00.000Z",
-            3.78
-          ],
-          [
-            "2026-11-01T15:00:00.000Z",
-            3.75
-          ],
-          [
-            "2026-11-01T19:00:00.000Z",
-            3.71
-          ],
-          [
-            "2026-11-01T23:00:00.000Z",
-            3.68
-          ],
-          [
-            "2026-11-02T03:00:00.000Z",
-            3.64
-          ],
-          [
-            "2026-11-02T07:00:00.000Z",
-            3.61
-          ],
-          [
-            "2026-11-02T11:00:00.000Z",
-            3.58
-          ],
-          [
-            "2026-11-02T15:00:00.000Z",
-            3.55
-          ],
-          [
-            "2026-11-02T19:00:00.000Z",
-            3.52
-          ],
-          [
-            "2026-11-02T23:00:00.000Z",
-            3.48
-          ],
-          [
-            "2026-11-03T03:00:00.000Z",
-            3.45
-          ],
-          [
             "2026-11-03T07:00:00.000Z",
             3.41
           ],
           [
             "2026-11-03T11:00:00.000Z",
             3.38
+          ],
+          [
+            "2026-11-03T19:00:00.000Z",
+            3.31
+          ],
+          [
+            "2026-11-03T23:00:00.000Z",
+            3.27
+          ],
+          [
+            "2026-11-04T03:00:00.000Z",
+            3.24
+          ],
+          [
+            "2026-11-04T07:00:00.000Z",
+            3.21
+          ],
+          [
+            "2026-11-04T11:00:00.000Z",
+            3.18
+          ],
+          [
+            "2026-11-04T15:00:00.000Z",
+            3.16
+          ],
+          [
+            "2026-11-04T19:00:00.000Z",
+            3.14
+          ],
+          [
+            "2026-11-04T23:00:00.000Z",
+            3.1
+          ],
+          [
+            "2026-11-05T03:00:00.000Z",
+            3.07
+          ],
+          [
+            "2026-11-05T07:00:00.000Z",
+            3.04
+          ],
+          [
+            "2026-11-05T11:00:00.000Z",
+            3.02
+          ],
+          [
+            "2026-11-05T15:00:00.000Z",
+            3.0
           ]
         ]
       },
@@ -1782,12 +1833,12 @@
         "name": "Miriñay - Paso Mesa",
         "lat": -28.91666667,
         "lng": -57.23638889,
-        "date": "2026-11-03T15:00:00Z",
-        "valueM": 2.67,
-        "previousValueM": 2.7,
-        "trend": "baja",
+        "date": "2026-11-05T15:00:00Z",
+        "valueM": 2.74,
+        "previousValueM": 2.69,
+        "trend": "crece",
         "status": "",
-        "condition": "baja:x",
+        "condition": "crece:x",
         "seriesId": 9542,
         "river": null,
         "alertLevelM": null,
@@ -1795,60 +1846,60 @@
         "lowWaterLevelM": null,
         "timeseries": [
           [
-            "2026-11-01T11:00:00.000Z",
-            2.7
-          ],
-          [
-            "2026-11-01T15:00:00.000Z",
-            2.71
-          ],
-          [
-            "2026-11-01T19:00:00.000Z",
-            2.7
-          ],
-          [
-            "2026-11-01T23:00:00.000Z",
-            2.7
-          ],
-          [
-            "2026-11-02T03:00:00.000Z",
-            2.7
-          ],
-          [
-            "2026-11-02T07:00:00.000Z",
-            2.7
-          ],
-          [
-            "2026-11-02T11:00:00.000Z",
-            2.7
-          ],
-          [
-            "2026-11-02T15:00:00.000Z",
-            2.69
-          ],
-          [
-            "2026-11-02T19:00:00.000Z",
-            2.69
-          ],
-          [
-            "2026-11-02T23:00:00.000Z",
-            2.69
-          ],
-          [
-            "2026-11-03T03:00:00.000Z",
-            2.69
-          ],
-          [
-            "2026-11-03T07:00:00.000Z",
-            2.68
-          ],
-          [
             "2026-11-03T11:00:00.000Z",
             2.68
           ],
           [
             "2026-11-03T15:00:00.000Z",
             2.67
+          ],
+          [
+            "2026-11-03T19:00:00.000Z",
+            2.67
+          ],
+          [
+            "2026-11-03T23:00:00.000Z",
+            2.67
+          ],
+          [
+            "2026-11-04T03:00:00.000Z",
+            2.67
+          ],
+          [
+            "2026-11-04T07:00:00.000Z",
+            2.67
+          ],
+          [
+            "2026-11-04T11:00:00.000Z",
+            2.73
+          ],
+          [
+            "2026-11-04T15:00:00.000Z",
+            2.74
+          ],
+          [
+            "2026-11-04T19:00:00.000Z",
+            2.73
+          ],
+          [
+            "2026-11-04T23:00:00.000Z",
+            2.73
+          ],
+          [
+            "2026-11-05T03:00:00.000Z",
+            2.74
+          ],
+          [
+            "2026-11-05T07:00:00.000Z",
+            2.74
+          ],
+          [
+            "2026-11-05T11:00:00.000Z",
+            2.74
+          ],
+          [
+            "2026-11-05T15:00:00.000Z",
+            2.74
           ]
         ]
       },
@@ -1856,12 +1907,12 @@
         "name": "Miriñay - San Roquito",
         "lat": -29.29694444,
         "lng": -57.56555556,
-        "date": "2026-11-03T11:00:00Z",
-        "valueM": 4.28,
-        "previousValueM": 4.49,
-        "trend": "baja",
+        "date": "2026-11-05T11:00:00Z",
+        "valueM": 4.32,
+        "previousValueM": 4.1,
+        "trend": "crece",
         "status": "",
-        "condition": "baja:x",
+        "condition": "crece:x",
         "seriesId": 34121,
         "river": null,
         "alertLevelM": null,
@@ -1869,60 +1920,60 @@
         "lowWaterLevelM": null,
         "timeseries": [
           [
-            "2026-11-01T07:00:00.000Z",
-            4.59
-          ],
-          [
-            "2026-11-01T11:00:00.000Z",
-            4.59
-          ],
-          [
-            "2026-11-01T15:00:00.000Z",
-            4.52
-          ],
-          [
-            "2026-11-01T19:00:00.000Z",
-            4.49
-          ],
-          [
-            "2026-11-01T23:00:00.000Z",
-            4.49
-          ],
-          [
-            "2026-11-02T03:00:00.000Z",
-            4.5
-          ],
-          [
-            "2026-11-02T07:00:00.000Z",
-            4.5
-          ],
-          [
-            "2026-11-02T11:00:00.000Z",
-            4.46
-          ],
-          [
-            "2026-11-02T15:00:00.000Z",
-            4.37
-          ],
-          [
-            "2026-11-02T19:00:00.000Z",
-            4.3
-          ],
-          [
-            "2026-11-02T23:00:00.000Z",
-            4.34
-          ],
-          [
-            "2026-11-03T03:00:00.000Z",
-            4.35
-          ],
-          [
             "2026-11-03T07:00:00.000Z",
             4.33
           ],
           [
             "2026-11-03T11:00:00.000Z",
             4.28
+          ],
+          [
+            "2026-11-03T15:00:00.000Z",
+            4.19
+          ],
+          [
+            "2026-11-03T19:00:00.000Z",
+            4.08
+          ],
+          [
+            "2026-11-03T23:00:00.000Z",
+            4.08
+          ],
+          [
+            "2026-11-04T03:00:00.000Z",
+            4.07
+          ],
+          [
+            "2026-11-04T07:00:00.000Z",
+            4.05
+          ],
+          [
+            "2026-11-04T11:00:00.000Z",
+            4.11
+          ],
+          [
+            "2026-11-04T15:00:00.000Z",
+            4.15
+          ],
+          [
+            "2026-11-04T19:00:00.000Z",
+            4.13
+          ],
+          [
+            "2026-11-04T23:00:00.000Z",
+            4.21
+          ],
+          [
+            "2026-11-05T03:00:00.000Z",
+            4.27
+          ],
+          [
+            "2026-11-05T07:00:00.000Z",
+            4.29
+          ],
+          [
+            "2026-11-05T11:00:00.000Z",
+            4.32
           ]
         ]
       },
@@ -1930,9 +1981,9 @@
         "name": "Mocoretá",
         "lat": -30.715682,
         "lng": -57.81776,
-        "date": "2026-11-03T03:00:00Z",
-        "valueM": 9.16,
-        "previousValueM": 9.2,
+        "date": "2026-11-05T03:00:00Z",
+        "valueM": 8.98,
+        "previousValueM": 9.08,
         "trend": "baja",
         "status": "normal",
         "condition": "baja:n",
@@ -1942,14 +1993,6 @@
         "evacuationLevelM": 12.0,
         "lowWaterLevelM": 5.239999771118164,
         "timeseries": [
-          [
-            "2026-10-28T03:00:00.000Z",
-            8.72
-          ],
-          [
-            "2026-10-29T03:00:00.000Z",
-            8.81
-          ],
           [
             "2026-10-30T03:00:00.000Z",
             8.96
@@ -1969,6 +2012,14 @@
           [
             "2026-11-03T03:00:00.000Z",
             9.16
+          ],
+          [
+            "2026-11-04T03:00:00.000Z",
+            9.08
+          ],
+          [
+            "2026-11-05T03:00:00.000Z",
+            8.98
           ]
         ]
       },
@@ -1976,9 +2027,9 @@
         "name": "Mocoretá - RN Nº 127",
         "lat": -30.10833333,
         "lng": -58.05888889,
-        "date": "2026-11-03T11:00:00Z",
-        "valueM": 1.3,
-        "previousValueM": 1.82,
+        "date": "2026-11-05T15:00:00Z",
+        "valueM": 1.44,
+        "previousValueM": 1.47,
         "trend": "baja",
         "status": "",
         "condition": "baja:x",
@@ -1989,60 +2040,60 @@
         "lowWaterLevelM": null,
         "timeseries": [
           [
-            "2026-11-01T07:00:00.000Z",
-            2.17
-          ],
-          [
-            "2026-11-01T11:00:00.000Z",
-            2.09
-          ],
-          [
-            "2026-11-01T15:00:00.000Z",
-            2.0
-          ],
-          [
-            "2026-11-01T19:00:00.000Z",
-            1.93
-          ],
-          [
-            "2026-11-01T23:00:00.000Z",
-            1.85
-          ],
-          [
-            "2026-11-02T03:00:00.000Z",
-            1.78
-          ],
-          [
-            "2026-11-02T07:00:00.000Z",
-            1.71
-          ],
-          [
-            "2026-11-02T11:00:00.000Z",
-            1.64
-          ],
-          [
-            "2026-11-02T15:00:00.000Z",
-            1.58
-          ],
-          [
-            "2026-11-02T19:00:00.000Z",
-            1.51
-          ],
-          [
-            "2026-11-02T23:00:00.000Z",
-            1.46
-          ],
-          [
-            "2026-11-03T03:00:00.000Z",
-            1.41
-          ],
-          [
             "2026-11-03T07:00:00.000Z",
             1.36
           ],
           [
             "2026-11-03T11:00:00.000Z",
             1.3
+          ],
+          [
+            "2026-11-03T19:00:00.000Z",
+            1.44
+          ],
+          [
+            "2026-11-03T23:00:00.000Z",
+            1.46
+          ],
+          [
+            "2026-11-04T03:00:00.000Z",
+            1.5
+          ],
+          [
+            "2026-11-04T07:00:00.000Z",
+            1.5
+          ],
+          [
+            "2026-11-04T11:00:00.000Z",
+            1.38
+          ],
+          [
+            "2026-11-04T15:00:00.000Z",
+            1.53
+          ],
+          [
+            "2026-11-04T19:00:00.000Z",
+            1.54
+          ],
+          [
+            "2026-11-04T23:00:00.000Z",
+            1.46
+          ],
+          [
+            "2026-11-05T03:00:00.000Z",
+            1.37
+          ],
+          [
+            "2026-11-05T07:00:00.000Z",
+            1.62
+          ],
+          [
+            "2026-11-05T11:00:00.000Z",
+            1.41
+          ],
+          [
+            "2026-11-05T15:00:00.000Z",
+            1.44
           ]
         ]
       },
@@ -2050,9 +2101,9 @@
         "name": "Monte Caseros",
         "lat": -30.25,
         "lng": -57.63333333,
-        "date": "2026-11-03T03:00:00Z",
-        "valueM": 5.42,
-        "previousValueM": 5.8,
+        "date": "2026-11-05T03:00:00Z",
+        "valueM": 4.42,
+        "previousValueM": 4.92,
         "trend": "baja",
         "status": "normal",
         "condition": "baja:n",
@@ -2062,14 +2113,6 @@
         "evacuationLevelM": 8.5,
         "lowWaterLevelM": 0.800000011920929,
         "timeseries": [
-          [
-            "2026-10-28T03:00:00.000Z",
-            5.58
-          ],
-          [
-            "2026-10-29T03:00:00.000Z",
-            5.8
-          ],
           [
             "2026-10-30T03:00:00.000Z",
             6.02
@@ -2089,6 +2132,14 @@
           [
             "2026-11-03T03:00:00.000Z",
             5.42
+          ],
+          [
+            "2026-11-04T03:00:00.000Z",
+            4.92
+          ],
+          [
+            "2026-11-05T03:00:00.000Z",
+            4.42
           ]
         ]
       },
@@ -2096,9 +2147,9 @@
         "name": "Paraná - Bella Vista",
         "lat": -28.50527778,
         "lng": -59.04972222,
-        "date": "2026-11-03T18:00:00Z",
-        "valueM": 6.11,
-        "previousValueM": 6.15,
+        "date": "2026-11-05T18:00:00Z",
+        "valueM": 6.1,
+        "previousValueM": 6.13,
         "trend": "baja",
         "status": "",
         "condition": "baja:x",
@@ -2109,60 +2160,60 @@
         "lowWaterLevelM": null,
         "timeseries": [
           [
-            "2026-11-03T05:00:00.000Z",
+            "2026-11-05T05:00:00.000Z",
+            6.13
+          ],
+          [
+            "2026-11-05T06:00:00.000Z",
+            6.14
+          ],
+          [
+            "2026-11-05T07:00:00.000Z",
+            6.12
+          ],
+          [
+            "2026-11-05T08:00:00.000Z",
+            6.13
+          ],
+          [
+            "2026-11-05T09:00:00.000Z",
+            6.11
+          ],
+          [
+            "2026-11-05T10:00:00.000Z",
+            6.12
+          ],
+          [
+            "2026-11-05T11:00:00.000Z",
+            6.09
+          ],
+          [
+            "2026-11-05T12:00:00.000Z",
             6.1
           ],
           [
-            "2026-11-03T06:00:00.000Z",
-            6.13
-          ],
-          [
-            "2026-11-03T07:00:00.000Z",
-            6.13
-          ],
-          [
-            "2026-11-03T08:00:00.000Z",
-            6.14
-          ],
-          [
-            "2026-11-03T09:00:00.000Z",
-            6.13
-          ],
-          [
-            "2026-11-03T10:00:00.000Z",
-            6.14
-          ],
-          [
-            "2026-11-03T11:00:00.000Z",
-            6.13
-          ],
-          [
-            "2026-11-03T12:00:00.000Z",
-            6.14
-          ],
-          [
-            "2026-11-03T13:00:00.000Z",
-            6.13
-          ],
-          [
-            "2026-11-03T14:00:00.000Z",
+            "2026-11-05T13:00:00.000Z",
             6.11
           ],
           [
-            "2026-11-03T15:00:00.000Z",
-            6.11
+            "2026-11-05T14:00:00.000Z",
+            6.12
           ],
           [
-            "2026-11-03T16:00:00.000Z",
-            6.14
+            "2026-11-05T15:00:00.000Z",
+            6.1
           ],
           [
-            "2026-11-03T17:00:00.000Z",
-            6.13
+            "2026-11-05T16:00:00.000Z",
+            6.09
           ],
           [
-            "2026-11-03T18:00:00.000Z",
-            6.11
+            "2026-11-05T17:00:00.000Z",
+            6.1
+          ],
+          [
+            "2026-11-05T18:00:00.000Z",
+            6.1
           ]
         ]
       },
@@ -2170,12 +2221,12 @@
         "name": "Paraná - Goya",
         "lat": -29.165,
         "lng": -59.32833333,
-        "date": "2026-11-03T11:00:00Z",
-        "valueM": 6.06,
-        "previousValueM": 6.04,
-        "trend": "crece",
+        "date": "2026-11-05T15:00:00Z",
+        "valueM": 6.05,
+        "previousValueM": 6.06,
+        "trend": "baja",
         "status": "evacuación",
-        "condition": "crece:e",
+        "condition": "baja:e",
         "seriesId": 32710,
         "river": null,
         "alertLevelM": 5.199999809265137,
@@ -2183,60 +2234,60 @@
         "lowWaterLevelM": 2.2300000190734863,
         "timeseries": [
           [
-            "2026-11-01T07:00:00.000Z",
-            6.01
-          ],
-          [
-            "2026-11-01T11:00:00.000Z",
-            6.02
-          ],
-          [
-            "2026-11-01T15:00:00.000Z",
-            6.03
-          ],
-          [
-            "2026-11-01T19:00:00.000Z",
-            6.04
-          ],
-          [
-            "2026-11-01T23:00:00.000Z",
-            6.04
-          ],
-          [
-            "2026-11-02T03:00:00.000Z",
-            6.04
-          ],
-          [
-            "2026-11-02T07:00:00.000Z",
-            6.05
-          ],
-          [
-            "2026-11-02T11:00:00.000Z",
-            6.05
-          ],
-          [
-            "2026-11-02T15:00:00.000Z",
-            6.05
-          ],
-          [
-            "2026-11-02T19:00:00.000Z",
-            6.06
-          ],
-          [
-            "2026-11-02T23:00:00.000Z",
-            6.06
-          ],
-          [
-            "2026-11-03T03:00:00.000Z",
-            6.06
-          ],
-          [
             "2026-11-03T07:00:00.000Z",
             6.06
           ],
           [
             "2026-11-03T11:00:00.000Z",
             6.06
+          ],
+          [
+            "2026-11-03T19:00:00.000Z",
+            6.06
+          ],
+          [
+            "2026-11-03T23:00:00.000Z",
+            6.06
+          ],
+          [
+            "2026-11-04T03:00:00.000Z",
+            6.06
+          ],
+          [
+            "2026-11-04T07:00:00.000Z",
+            6.05
+          ],
+          [
+            "2026-11-04T11:00:00.000Z",
+            6.07
+          ],
+          [
+            "2026-11-04T15:00:00.000Z",
+            6.07
+          ],
+          [
+            "2026-11-04T19:00:00.000Z",
+            6.06
+          ],
+          [
+            "2026-11-04T23:00:00.000Z",
+            6.06
+          ],
+          [
+            "2026-11-05T03:00:00.000Z",
+            6.06
+          ],
+          [
+            "2026-11-05T07:00:00.000Z",
+            6.06
+          ],
+          [
+            "2026-11-05T11:00:00.000Z",
+            6.05
+          ],
+          [
+            "2026-11-05T15:00:00.000Z",
+            6.05
           ]
         ]
       },
@@ -2244,12 +2295,12 @@
         "name": "Paraná - Itatí",
         "lat": -27.26638889,
         "lng": -58.24444444,
-        "date": "2026-11-03T17:00:00Z",
-        "valueM": 7.43,
-        "previousValueM": 7.53,
-        "trend": "baja",
+        "date": "2026-11-05T17:00:00Z",
+        "valueM": 7.42,
+        "previousValueM": 7.4,
+        "trend": "crece",
         "status": "alerta",
-        "condition": "baja:a",
+        "condition": "crece:a",
         "seriesId": 6711,
         "river": null,
         "alertLevelM": 6.840000152587891,
@@ -2257,60 +2308,60 @@
         "lowWaterLevelM": 2.740000009536743,
         "timeseries": [
           [
-            "2026-11-03T04:00:00.000Z",
-            7.47
+            "2026-11-05T04:00:00.000Z",
+            7.4
           ],
           [
-            "2026-11-03T05:00:00.000Z",
-            7.46
+            "2026-11-05T05:00:00.000Z",
+            7.4
           ],
           [
-            "2026-11-03T06:00:00.000Z",
-            7.46
+            "2026-11-05T06:00:00.000Z",
+            7.41
           ],
           [
-            "2026-11-03T07:00:00.000Z",
-            7.46
+            "2026-11-05T07:00:00.000Z",
+            7.41
           ],
           [
-            "2026-11-03T08:00:00.000Z",
-            7.45
+            "2026-11-05T08:00:00.000Z",
+            7.41
           ],
           [
-            "2026-11-03T09:00:00.000Z",
-            7.45
+            "2026-11-05T09:00:00.000Z",
+            7.41
           ],
           [
-            "2026-11-03T10:00:00.000Z",
-            7.45
+            "2026-11-05T10:00:00.000Z",
+            7.41
           ],
           [
-            "2026-11-03T11:00:00.000Z",
-            7.44
+            "2026-11-05T11:00:00.000Z",
+            7.41
           ],
           [
-            "2026-11-03T12:00:00.000Z",
-            7.44
+            "2026-11-05T12:00:00.000Z",
+            7.41
           ],
           [
-            "2026-11-03T13:00:00.000Z",
-            7.44
+            "2026-11-05T13:00:00.000Z",
+            7.41
           ],
           [
-            "2026-11-03T14:00:00.000Z",
-            7.44
+            "2026-11-05T14:00:00.000Z",
+            7.42
           ],
           [
-            "2026-11-03T15:00:00.000Z",
-            7.43
+            "2026-11-05T15:00:00.000Z",
+            7.42
           ],
           [
-            "2026-11-03T16:00:00.000Z",
-            7.43
+            "2026-11-05T16:00:00.000Z",
+            7.42
           ],
           [
-            "2026-11-03T17:00:00.000Z",
-            7.43
+            "2026-11-05T17:00:00.000Z",
+            7.42
           ]
         ]
       },
@@ -2318,9 +2369,9 @@
         "name": "Paso de la Patria",
         "lat": -27.33333333,
         "lng": -58.58333333,
-        "date": "2026-11-03T03:00:00Z",
-        "valueM": 7.27,
-        "previousValueM": 7.35,
+        "date": "2026-11-05T03:00:00Z",
+        "valueM": 7.2,
+        "previousValueM": 7.22,
         "trend": "baja",
         "status": "evacuación",
         "condition": "baja:e",
@@ -2330,14 +2381,6 @@
         "evacuationLevelM": 7.0,
         "lowWaterLevelM": 2.200000047683716,
         "timeseries": [
-          [
-            "2026-10-28T03:00:00.000Z",
-            7.74
-          ],
-          [
-            "2026-10-29T03:00:00.000Z",
-            7.74
-          ],
           [
             "2026-10-30T03:00:00.000Z",
             7.63
@@ -2357,6 +2400,14 @@
           [
             "2026-11-03T03:00:00.000Z",
             7.27
+          ],
+          [
+            "2026-11-04T03:00:00.000Z",
+            7.22
+          ],
+          [
+            "2026-11-05T03:00:00.000Z",
+            7.2
           ]
         ]
       },
@@ -2364,9 +2415,9 @@
         "name": "Paso de los Libres",
         "lat": -29.71666667,
         "lng": -57.08333333,
-        "date": "2026-11-03T03:00:00Z",
-        "valueM": 6.65,
-        "previousValueM": 7.24,
+        "date": "2026-11-05T03:00:00Z",
+        "valueM": 5.31,
+        "previousValueM": 6.02,
         "trend": "baja",
         "status": "normal",
         "condition": "baja:n",
@@ -2376,14 +2427,6 @@
         "evacuationLevelM": 8.5,
         "lowWaterLevelM": 0.8999999761581421,
         "timeseries": [
-          [
-            "2026-10-28T03:00:00.000Z",
-            7.5
-          ],
-          [
-            "2026-10-29T03:00:00.000Z",
-            8.01
-          ],
           [
             "2026-10-30T03:00:00.000Z",
             8.04
@@ -2403,6 +2446,14 @@
           [
             "2026-11-03T03:00:00.000Z",
             6.65
+          ],
+          [
+            "2026-11-04T03:00:00.000Z",
+            6.02
+          ],
+          [
+            "2026-11-05T03:00:00.000Z",
+            5.31
           ]
         ]
       },
@@ -2410,30 +2461,18 @@
         "name": "Riachuelo - P.P. San Cayetano",
         "lat": -27.54638889,
         "lng": -58.68166667,
-        "date": "2026-11-03T03:00:00Z",
+        "date": "2026-11-04T15:00:00Z",
         "valueM": 4.14,
-        "previousValueM": 4.23,
-        "trend": "baja",
+        "previousValueM": 4.14,
+        "trend": "permanece",
         "status": "",
-        "condition": "baja:x",
+        "condition": "permanece:x",
         "seriesId": 43191,
         "river": null,
         "alertLevelM": null,
         "evacuationLevelM": null,
         "lowWaterLevelM": null,
         "timeseries": [
-          [
-            "2026-10-29T07:00:00.000Z",
-            4.5
-          ],
-          [
-            "2026-10-29T11:00:00.000Z",
-            4.5
-          ],
-          [
-            "2026-10-29T23:00:00.000Z",
-            4.48
-          ],
           [
             "2026-10-30T03:00:00.000Z",
             4.46
@@ -2477,6 +2516,18 @@
           [
             "2026-11-03T03:00:00.000Z",
             4.14
+          ],
+          [
+            "2026-11-04T07:00:00.000Z",
+            4.08
+          ],
+          [
+            "2026-11-04T11:00:00.000Z",
+            4.16
+          ],
+          [
+            "2026-11-04T15:00:00.000Z",
+            4.14
           ]
         ]
       },
@@ -2484,26 +2535,18 @@
         "name": "Santo Tomé",
         "lat": -28.55,
         "lng": -56.03333333,
-        "date": "2026-11-03T03:00:00Z",
-        "valueM": 5.71,
-        "previousValueM": 6.2,
-        "trend": "baja",
+        "date": "2026-11-05T03:00:00Z",
+        "valueM": 5.5,
+        "previousValueM": 5.01,
+        "trend": "crece",
         "status": "normal",
-        "condition": "baja:n",
+        "condition": "crece:n",
         "seriesId": 68,
         "river": "URUGUAY",
         "alertLevelM": 11.5,
         "evacuationLevelM": 12.5,
         "lowWaterLevelM": 1.3200000524520874,
         "timeseries": [
-          [
-            "2026-10-28T03:00:00.000Z",
-            11.35
-          ],
-          [
-            "2026-10-29T03:00:00.000Z",
-            10.43
-          ],
           [
             "2026-10-30T03:00:00.000Z",
             8.9
@@ -2523,6 +2566,14 @@
           [
             "2026-11-03T03:00:00.000Z",
             5.71
+          ],
+          [
+            "2026-11-04T03:00:00.000Z",
+            5.01
+          ],
+          [
+            "2026-11-05T03:00:00.000Z",
+            5.5
           ]
         ]
       },
@@ -2530,9 +2581,9 @@
         "name": "Uruguay - Monte Caseros",
         "lat": -30.25166667,
         "lng": -57.62166667,
-        "date": "2026-11-03T17:00:00Z",
-        "valueM": 5.1,
-        "previousValueM": 5.74,
+        "date": "2026-11-05T17:00:00Z",
+        "valueM": 4.13,
+        "previousValueM": 4.83,
         "trend": "baja",
         "status": "",
         "condition": "baja:x",
@@ -2543,60 +2594,60 @@
         "lowWaterLevelM": null,
         "timeseries": [
           [
-            "2026-11-03T04:00:00.000Z",
-            5.37
+            "2026-11-05T04:00:00.000Z",
+            4.36
           ],
           [
-            "2026-11-03T05:00:00.000Z",
-            5.34
+            "2026-11-05T05:00:00.000Z",
+            4.34
           ],
           [
-            "2026-11-03T06:00:00.000Z",
-            5.32
+            "2026-11-05T06:00:00.000Z",
+            4.33
           ],
           [
-            "2026-11-03T07:00:00.000Z",
-            5.31
+            "2026-11-05T07:00:00.000Z",
+            4.31
           ],
           [
-            "2026-11-03T08:00:00.000Z",
-            5.28
+            "2026-11-05T08:00:00.000Z",
+            4.29
           ],
           [
-            "2026-11-03T09:00:00.000Z",
-            5.26
+            "2026-11-05T09:00:00.000Z",
+            4.27
           ],
           [
-            "2026-11-03T10:00:00.000Z",
-            5.24
+            "2026-11-05T10:00:00.000Z",
+            4.25
           ],
           [
-            "2026-11-03T11:00:00.000Z",
-            5.22
+            "2026-11-05T11:00:00.000Z",
+            4.23
           ],
           [
-            "2026-11-03T12:00:00.000Z",
-            5.2
+            "2026-11-05T12:00:00.000Z",
+            4.22
           ],
           [
-            "2026-11-03T13:00:00.000Z",
-            5.18
+            "2026-11-05T13:00:00.000Z",
+            4.2
           ],
           [
-            "2026-11-03T14:00:00.000Z",
-            5.16
+            "2026-11-05T14:00:00.000Z",
+            4.18
           ],
           [
-            "2026-11-03T15:00:00.000Z",
-            5.14
+            "2026-11-05T15:00:00.000Z",
+            4.16
           ],
           [
-            "2026-11-03T16:00:00.000Z",
-            5.11
+            "2026-11-05T16:00:00.000Z",
+            4.15
           ],
           [
-            "2026-11-03T17:00:00.000Z",
-            5.1
+            "2026-11-05T17:00:00.000Z",
+            4.13
           ]
         ]
       },
@@ -2604,9 +2655,9 @@
         "name": "Uruguay - Paso de los Libres",
         "lat": -29.72194444,
         "lng": -57.08305556,
-        "date": "2026-11-03T11:00:00Z",
-        "valueM": 6.39,
-        "previousValueM": 7.27,
+        "date": "2026-11-05T15:00:00Z",
+        "valueM": 5.14,
+        "previousValueM": 5.88,
         "trend": "baja",
         "status": "",
         "condition": "baja:x",
@@ -2617,60 +2668,60 @@
         "lowWaterLevelM": null,
         "timeseries": [
           [
-            "2026-11-01T07:00:00.000Z",
-            7.66
-          ],
-          [
-            "2026-11-01T11:00:00.000Z",
-            7.59
-          ],
-          [
-            "2026-11-01T15:00:00.000Z",
-            7.5
-          ],
-          [
-            "2026-11-01T19:00:00.000Z",
-            7.42
-          ],
-          [
-            "2026-11-01T23:00:00.000Z",
-            7.32
-          ],
-          [
-            "2026-11-02T03:00:00.000Z",
-            7.23
-          ],
-          [
-            "2026-11-02T07:00:00.000Z",
-            7.13
-          ],
-          [
-            "2026-11-02T11:00:00.000Z",
-            7.03
-          ],
-          [
-            "2026-11-02T15:00:00.000Z",
-            6.92
-          ],
-          [
-            "2026-11-02T19:00:00.000Z",
-            6.82
-          ],
-          [
-            "2026-11-02T23:00:00.000Z",
-            6.71
-          ],
-          [
-            "2026-11-03T03:00:00.000Z",
-            6.6
-          ],
-          [
             "2026-11-03T07:00:00.000Z",
             6.5
           ],
           [
             "2026-11-03T11:00:00.000Z",
             6.39
+          ],
+          [
+            "2026-11-03T19:00:00.000Z",
+            6.16
+          ],
+          [
+            "2026-11-03T23:00:00.000Z",
+            6.05
+          ],
+          [
+            "2026-11-04T03:00:00.000Z",
+            5.93
+          ],
+          [
+            "2026-11-04T07:00:00.000Z",
+            5.82
+          ],
+          [
+            "2026-11-04T11:00:00.000Z",
+            5.73
+          ],
+          [
+            "2026-11-04T15:00:00.000Z",
+            5.62
+          ],
+          [
+            "2026-11-04T19:00:00.000Z",
+            5.52
+          ],
+          [
+            "2026-11-04T23:00:00.000Z",
+            5.41
+          ],
+          [
+            "2026-11-05T03:00:00.000Z",
+            5.32
+          ],
+          [
+            "2026-11-05T07:00:00.000Z",
+            5.25
+          ],
+          [
+            "2026-11-05T11:00:00.000Z",
+            5.19
+          ],
+          [
+            "2026-11-05T15:00:00.000Z",
+            5.14
           ]
         ]
       },
@@ -2678,12 +2729,12 @@
         "name": "Uruguay - Santo Tomé",
         "lat": -28.545,
         "lng": -56.02888889,
-        "date": "2026-11-03T15:00:00Z",
-        "valueM": 5.44,
-        "previousValueM": 6.21,
-        "trend": "baja",
+        "date": "2026-11-05T15:00:00Z",
+        "valueM": 6.67,
+        "previousValueM": 5.13,
+        "trend": "crece",
         "status": "",
-        "condition": "baja:x",
+        "condition": "crece:x",
         "seriesId": 33189,
         "river": null,
         "alertLevelM": null,
@@ -2691,60 +2742,60 @@
         "lowWaterLevelM": null,
         "timeseries": [
           [
-            "2026-11-01T11:00:00.000Z",
-            6.58
-          ],
-          [
-            "2026-11-01T15:00:00.000Z",
-            6.47
-          ],
-          [
-            "2026-11-01T19:00:00.000Z",
-            6.38
-          ],
-          [
-            "2026-11-01T23:00:00.000Z",
-            6.31
-          ],
-          [
-            "2026-11-02T03:00:00.000Z",
-            6.25
-          ],
-          [
-            "2026-11-02T07:00:00.000Z",
-            6.19
-          ],
-          [
-            "2026-11-02T11:00:00.000Z",
-            6.12
-          ],
-          [
-            "2026-11-02T15:00:00.000Z",
-            6.04
-          ],
-          [
-            "2026-11-02T19:00:00.000Z",
-            5.94
-          ],
-          [
-            "2026-11-02T23:00:00.000Z",
-            5.84
-          ],
-          [
-            "2026-11-03T03:00:00.000Z",
-            5.74
-          ],
-          [
-            "2026-11-03T07:00:00.000Z",
-            5.65
-          ],
-          [
             "2026-11-03T11:00:00.000Z",
             5.55
           ],
           [
             "2026-11-03T15:00:00.000Z",
             5.44
+          ],
+          [
+            "2026-11-03T19:00:00.000Z",
+            5.31
+          ],
+          [
+            "2026-11-03T23:00:00.000Z",
+            5.18
+          ],
+          [
+            "2026-11-04T03:00:00.000Z",
+            5.08
+          ],
+          [
+            "2026-11-04T07:00:00.000Z",
+            5.01
+          ],
+          [
+            "2026-11-04T11:00:00.000Z",
+            5.05
+          ],
+          [
+            "2026-11-04T15:00:00.000Z",
+            5.15
+          ],
+          [
+            "2026-11-04T19:00:00.000Z",
+            5.26
+          ],
+          [
+            "2026-11-04T23:00:00.000Z",
+            5.41
+          ],
+          [
+            "2026-11-05T03:00:00.000Z",
+            5.66
+          ],
+          [
+            "2026-11-05T07:00:00.000Z",
+            5.97
+          ],
+          [
+            "2026-11-05T11:00:00.000Z",
+            6.33
+          ],
+          [
+            "2026-11-05T15:00:00.000Z",
+            6.67
           ]
         ]
       },
@@ -2752,9 +2803,9 @@
         "name": "Yapeyú",
         "lat": -29.470031,
         "lng": -56.810674,
-        "date": "2026-11-03T03:00:00Z",
-        "valueM": 6.7,
-        "previousValueM": 7.32,
+        "date": "2026-11-05T03:00:00Z",
+        "valueM": 5.5,
+        "previousValueM": 6.1,
         "trend": "baja",
         "status": "normal",
         "condition": "baja:n",
@@ -2764,14 +2815,6 @@
         "evacuationLevelM": 10.5,
         "lowWaterLevelM": 0.0,
         "timeseries": [
-          [
-            "2026-10-28T03:00:00.000Z",
-            8.16
-          ],
-          [
-            "2026-10-29T03:00:00.000Z",
-            8.48
-          ],
           [
             "2026-10-30T03:00:00.000Z",
             8.56
@@ -2791,6 +2834,14 @@
           [
             "2026-11-03T03:00:00.000Z",
             6.7
+          ],
+          [
+            "2026-11-04T03:00:00.000Z",
+            6.1
+          ],
+          [
+            "2026-11-05T03:00:00.000Z",
+            5.5
           ]
         ]
       }
@@ -2829,9 +2880,9 @@
           "name": "Alvear",
           "lat": -29.1,
           "lng": -56.55,
-          "date": "2026-11-03T03:00:00Z",
-          "valueM": 6.98,
-          "previousValueM": 7.52,
+          "date": "2026-11-05T03:00:00Z",
+          "valueM": 5.8,
+          "previousValueM": 6.15,
           "trend": "baja",
           "status": "normal",
           "condition": "baja:n",
@@ -2841,14 +2892,6 @@
           "evacuationLevelM": 11.0,
           "lowWaterLevelM": 0.8899999856948853,
           "timeseries": [
-            [
-              "2026-10-28T03:00:00.000Z",
-              9.03
-            ],
-            [
-              "2026-10-29T03:00:00.000Z",
-              9.29
-            ],
             [
               "2026-10-30T03:00:00.000Z",
               9.15
@@ -2868,6 +2911,14 @@
             [
               "2026-11-03T03:00:00.000Z",
               6.98
+            ],
+            [
+              "2026-11-04T03:00:00.000Z",
+              6.15
+            ],
+            [
+              "2026-11-05T03:00:00.000Z",
+              5.8
             ]
           ]
         }
@@ -2890,22 +2941,18 @@
           "name": "Aº Barrancas - Paso La Llana",
           "lat": -30.21722222,
           "lng": -59.32444444,
-          "date": "2026-10-31T23:00:00Z",
-          "valueM": 2.2,
-          "previousValueM": 2.43,
-          "trend": "baja",
+          "date": "2026-11-02T15:00:00Z",
+          "valueM": 2.3,
+          "previousValueM": 2.2,
+          "trend": "crece",
           "status": "",
-          "condition": "baja:x",
+          "condition": "crece:x",
           "seriesId": 9200,
           "river": null,
           "alertLevelM": null,
           "evacuationLevelM": null,
           "lowWaterLevelM": null,
           "timeseries": [
-            [
-              "2026-10-28T23:00:00.000Z",
-              2.34
-            ],
             [
               "2026-10-30T15:00:00.000Z",
               2.43
@@ -2921,6 +2968,10 @@
             [
               "2026-10-31T23:00:00.000Z",
               2.2
+            ],
+            [
+              "2026-11-02T15:00:00.000Z",
+              2.3
             ]
           ]
         }
@@ -2943,9 +2994,9 @@
           "name": "Aº Batel - Paso Cerrito",
           "lat": -29.03111111,
           "lng": -58.78833333,
-          "date": "2026-11-03T07:00:00Z",
-          "valueM": 0.87,
-          "previousValueM": 0.92,
+          "date": "2026-11-05T15:00:00Z",
+          "valueM": 0.84,
+          "previousValueM": 0.85,
           "trend": "baja",
           "status": "",
           "condition": "baja:x",
@@ -2955,42 +3006,6 @@
           "evacuationLevelM": null,
           "lowWaterLevelM": null,
           "timeseries": [
-            [
-              "2026-10-31T23:00:00.000Z",
-              0.94
-            ],
-            [
-              "2026-11-01T03:00:00.000Z",
-              0.94
-            ],
-            [
-              "2026-11-01T07:00:00.000Z",
-              0.93
-            ],
-            [
-              "2026-11-01T11:00:00.000Z",
-              0.93
-            ],
-            [
-              "2026-11-01T15:00:00.000Z",
-              0.92
-            ],
-            [
-              "2026-11-01T19:00:00.000Z",
-              0.92
-            ],
-            [
-              "2026-11-01T23:00:00.000Z",
-              0.91
-            ],
-            [
-              "2026-11-02T03:00:00.000Z",
-              0.91
-            ],
-            [
-              "2026-11-02T11:00:00.000Z",
-              0.9
-            ],
             [
               "2026-11-02T15:00:00.000Z",
               0.9
@@ -3010,6 +3025,42 @@
             [
               "2026-11-03T07:00:00.000Z",
               0.87
+            ],
+            [
+              "2026-11-03T11:00:00.000Z",
+              0.87
+            ],
+            [
+              "2026-11-03T19:00:00.000Z",
+              0.86
+            ],
+            [
+              "2026-11-04T03:00:00.000Z",
+              0.85
+            ],
+            [
+              "2026-11-04T07:00:00.000Z",
+              0.84
+            ],
+            [
+              "2026-11-04T11:00:00.000Z",
+              0.85
+            ],
+            [
+              "2026-11-04T15:00:00.000Z",
+              0.86
+            ],
+            [
+              "2026-11-05T03:00:00.000Z",
+              0.85
+            ],
+            [
+              "2026-11-05T11:00:00.000Z",
+              0.84
+            ],
+            [
+              "2026-11-05T15:00:00.000Z",
+              0.84
             ]
           ]
         }
@@ -3047,26 +3098,18 @@
           "name": "Bella Vista",
           "lat": -28.51840072,
           "lng": -59.05931723,
-          "date": "2026-11-03T03:00:00Z",
-          "valueM": 6.46,
-          "previousValueM": 6.53,
-          "trend": "baja",
+          "date": "2026-11-05T03:00:00Z",
+          "valueM": 6.44,
+          "previousValueM": 6.44,
+          "trend": "permanece",
           "status": "evacuación",
-          "condition": "baja:e",
+          "condition": "permanece:e",
           "seriesId": 22,
           "river": "PARANAINF",
           "alertLevelM": 6.0,
           "evacuationLevelM": 6.400000095367432,
           "lowWaterLevelM": 3.0,
           "timeseries": [
-            [
-              "2026-10-28T03:00:00.000Z",
-              6.43
-            ],
-            [
-              "2026-10-29T03:00:00.000Z",
-              6.45
-            ],
             [
               "2026-10-30T03:00:00.000Z",
               6.45
@@ -3086,6 +3129,14 @@
             [
               "2026-11-03T03:00:00.000Z",
               6.46
+            ],
+            [
+              "2026-11-04T03:00:00.000Z",
+              6.44
+            ],
+            [
+              "2026-11-05T03:00:00.000Z",
+              6.44
             ]
           ]
         }
@@ -3108,9 +3159,9 @@
           "name": "Bompland",
           "lat": -29.872652,
           "lng": -57.332887,
-          "date": "2026-10-30T03:00:00Z",
-          "valueM": 4.1,
-          "previousValueM": null,
+          "date": "2026-11-05T03:00:00Z",
+          "valueM": 5.14,
+          "previousValueM": 5.85,
           "trend": "baja",
           "status": "normal",
           "condition": "baja:n",
@@ -3123,6 +3174,14 @@
             [
               "2026-10-30T03:00:00.000Z",
               4.1
+            ],
+            [
+              "2026-11-04T03:00:00.000Z",
+              5.85
+            ],
+            [
+              "2026-11-05T03:00:00.000Z",
+              5.14
             ]
           ]
         }
@@ -3140,7 +3199,41 @@
         "automatic": false,
         "alertLevelM": null,
         "evacuationLevelM": null,
-        "lowWaterLevelM": null
+        "lowWaterLevelM": null,
+        "latestHeight": {
+          "name": "Chimiray - Colonia Liebig",
+          "lat": -27.91222222,
+          "lng": -55.81777778,
+          "date": "2026-11-05T18:00:00Z",
+          "valueM": 2.94,
+          "previousValueM": null,
+          "trend": "baja",
+          "status": "",
+          "condition": "baja:x",
+          "seriesId": 33369,
+          "river": null,
+          "alertLevelM": null,
+          "evacuationLevelM": null,
+          "lowWaterLevelM": null,
+          "timeseries": [
+            [
+              "2026-11-05T15:00:00.000Z",
+              3.05
+            ],
+            [
+              "2026-11-05T16:00:00.000Z",
+              3.01
+            ],
+            [
+              "2026-11-05T17:00:00.000Z",
+              2.97
+            ],
+            [
+              "2026-11-05T18:00:00.000Z",
+              2.94
+            ]
+          ]
+        }
       },
       {
         "siteCode": 2091,
@@ -3175,26 +3268,18 @@
           "name": "Corrientes",
           "lat": -27.46364349,
           "lng": -58.8388696,
-          "date": "2026-11-03T03:00:00Z",
-          "valueM": 7.06,
-          "previousValueM": 7.11,
-          "trend": "baja",
+          "date": "2026-11-05T03:00:00Z",
+          "valueM": 7.02,
+          "previousValueM": 7.02,
+          "trend": "permanece",
           "status": "evacuación",
-          "condition": "baja:e",
+          "condition": "permanece:e",
           "seriesId": 19,
           "river": "PARANAMED",
           "alertLevelM": 6.5,
           "evacuationLevelM": 7.0,
           "lowWaterLevelM": 1.8300000429153442,
           "timeseries": [
-            [
-              "2026-10-28T03:00:00.000Z",
-              7.39
-            ],
-            [
-              "2026-10-29T03:00:00.000Z",
-              7.38
-            ],
             [
               "2026-10-30T03:00:00.000Z",
               7.35
@@ -3214,6 +3299,14 @@
             [
               "2026-11-03T03:00:00.000Z",
               7.06
+            ],
+            [
+              "2026-11-04T03:00:00.000Z",
+              7.02
+            ],
+            [
+              "2026-11-05T03:00:00.000Z",
+              7.02
             ]
           ]
         }
@@ -3236,26 +3329,18 @@
           "name": "Empedrado",
           "lat": -27.95412346,
           "lng": -58.81852419,
-          "date": "2026-11-03T03:00:00Z",
-          "valueM": 6.09,
-          "previousValueM": 6.15,
-          "trend": "baja",
+          "date": "2026-11-05T03:00:00Z",
+          "valueM": 6.1,
+          "previousValueM": 6.07,
+          "trend": "crece",
           "status": "normal",
-          "condition": "baja:n",
+          "condition": "crece:n",
           "seriesId": 21,
           "river": "PARANAINF",
           "alertLevelM": 6.5,
           "evacuationLevelM": 6.699999809265137,
           "lowWaterLevelM": 2.799999952316284,
           "timeseries": [
-            [
-              "2026-10-28T03:00:00.000Z",
-              6.25
-            ],
-            [
-              "2026-10-29T03:00:00.000Z",
-              6.25
-            ],
             [
               "2026-10-30T03:00:00.000Z",
               6.2
@@ -3275,6 +3360,14 @@
             [
               "2026-11-03T03:00:00.000Z",
               6.09
+            ],
+            [
+              "2026-11-04T03:00:00.000Z",
+              6.07
+            ],
+            [
+              "2026-11-05T03:00:00.000Z",
+              6.1
             ]
           ]
         }
@@ -3312,9 +3405,9 @@
           "name": "Esquina",
           "lat": -30.01924089,
           "lng": -59.53663483,
-          "date": "2026-11-03T03:00:00Z",
-          "valueM": 5.51,
-          "previousValueM": 5.44,
+          "date": "2026-11-05T03:00:00Z",
+          "valueM": 5.58,
+          "previousValueM": 5.56,
           "trend": "crece",
           "status": "evacuación",
           "condition": "crece:e",
@@ -3324,14 +3417,6 @@
           "evacuationLevelM": 5.400000095367432,
           "lowWaterLevelM": 2.200000047683716,
           "timeseries": [
-            [
-              "2026-10-28T03:00:00.000Z",
-              5.16
-            ],
-            [
-              "2026-10-29T03:00:00.000Z",
-              5.19
-            ],
             [
               "2026-10-30T03:00:00.000Z",
               5.21
@@ -3351,6 +3436,14 @@
             [
               "2026-11-03T03:00:00.000Z",
               5.51
+            ],
+            [
+              "2026-11-04T03:00:00.000Z",
+              5.56
+            ],
+            [
+              "2026-11-05T03:00:00.000Z",
+              5.58
             ]
           ]
         }
@@ -3373,26 +3466,18 @@
           "name": "Garruchos",
           "lat": -28.18333333,
           "lng": -55.65,
-          "date": "2026-11-03T03:00:00Z",
-          "valueM": 4.18,
-          "previousValueM": 4.78,
-          "trend": "baja",
+          "date": "2026-11-05T03:00:00Z",
+          "valueM": 5.1,
+          "previousValueM": 3.41,
+          "trend": "crece",
           "status": "normal",
-          "condition": "baja:n",
+          "condition": "crece:n",
           "seriesId": 67,
           "river": "URUGUAY",
           "alertLevelM": 12.0,
           "evacuationLevelM": 14.0,
           "lowWaterLevelM": 0.029999999329447746,
           "timeseries": [
-            [
-              "2026-10-28T03:00:00.000Z",
-              11.24
-            ],
-            [
-              "2026-10-29T03:00:00.000Z",
-              9.0
-            ],
             [
               "2026-10-30T03:00:00.000Z",
               6.55
@@ -3412,6 +3497,14 @@
             [
               "2026-11-03T03:00:00.000Z",
               4.18
+            ],
+            [
+              "2026-11-04T03:00:00.000Z",
+              3.41
+            ],
+            [
+              "2026-11-05T03:00:00.000Z",
+              5.1
             ]
           ]
         }
@@ -3434,26 +3527,18 @@
           "name": "Goya",
           "lat": -29.14376844,
           "lng": -59.27303952,
-          "date": "2026-11-03T03:00:00Z",
+          "date": "2026-11-05T03:00:00Z",
           "valueM": 6.1,
-          "previousValueM": 6.09,
-          "trend": "crece",
+          "previousValueM": 6.1,
+          "trend": "permanece",
           "status": "evacuación",
-          "condition": "crece:e",
+          "condition": "permanece:e",
           "seriesId": 23,
           "river": "PARANAINF",
           "alertLevelM": 5.199999809265137,
           "evacuationLevelM": 5.699999809265137,
           "lowWaterLevelM": 2.2300000190734863,
           "timeseries": [
-            [
-              "2026-10-28T03:00:00.000Z",
-              5.68
-            ],
-            [
-              "2026-10-29T03:00:00.000Z",
-              5.76
-            ],
             [
               "2026-10-30T03:00:00.000Z",
               5.82
@@ -3472,6 +3557,14 @@
             ],
             [
               "2026-11-03T03:00:00.000Z",
+              6.1
+            ],
+            [
+              "2026-11-04T03:00:00.000Z",
+              6.1
+            ],
+            [
+              "2026-11-05T03:00:00.000Z",
               6.1
             ]
           ]
@@ -3510,26 +3603,18 @@
           "name": "Itá Ibaté",
           "lat": -27.42336098,
           "lng": -57.33326783,
-          "date": "2026-11-03T03:00:00Z",
-          "valueM": 6.0,
-          "previousValueM": 6.06,
-          "trend": "baja",
+          "date": "2026-11-05T03:00:00Z",
+          "valueM": 6.02,
+          "previousValueM": 5.98,
+          "trend": "crece",
           "status": "normal",
-          "condition": "baja:n",
+          "condition": "crece:n",
           "seriesId": 16,
           "river": "PARANAMED",
           "alertLevelM": 7.0,
           "evacuationLevelM": 7.5,
           "lowWaterLevelM": 1.340000033378601,
           "timeseries": [
-            [
-              "2026-10-28T03:00:00.000Z",
-              6.7
-            ],
-            [
-              "2026-10-29T03:00:00.000Z",
-              6.54
-            ],
             [
               "2026-10-30T03:00:00.000Z",
               6.28
@@ -3549,6 +3634,14 @@
             [
               "2026-11-03T03:00:00.000Z",
               6.0
+            ],
+            [
+              "2026-11-04T03:00:00.000Z",
+              5.98
+            ],
+            [
+              "2026-11-05T03:00:00.000Z",
+              6.02
             ]
           ]
         }
@@ -3571,26 +3664,18 @@
           "name": "Itatí",
           "lat": -27.26677773,
           "lng": -58.24407387,
-          "date": "2026-11-03T03:00:00Z",
-          "valueM": 7.55,
-          "previousValueM": 7.56,
+          "date": "2026-11-05T03:00:00Z",
+          "valueM": 7.44,
+          "previousValueM": 7.48,
           "trend": "baja",
-          "status": "evacuación",
-          "condition": "baja:e",
+          "status": "alerta",
+          "condition": "baja:a",
           "seriesId": 17,
           "river": "PARANAMED",
           "alertLevelM": 6.800000190734863,
           "evacuationLevelM": 7.5,
           "lowWaterLevelM": 2.700000047683716,
           "timeseries": [
-            [
-              "2026-10-28T03:00:00.000Z",
-              8.2
-            ],
-            [
-              "2026-10-29T03:00:00.000Z",
-              8.11
-            ],
             [
               "2026-10-30T03:00:00.000Z",
               7.99
@@ -3610,6 +3695,14 @@
             [
               "2026-11-03T03:00:00.000Z",
               7.55
+            ],
+            [
+              "2026-11-04T03:00:00.000Z",
+              7.48
+            ],
+            [
+              "2026-11-05T03:00:00.000Z",
+              7.44
             ]
           ]
         }
@@ -3632,26 +3725,18 @@
           "name": "Ituzaingó",
           "lat": -27.58333333,
           "lng": -56.7,
-          "date": "2026-11-03T03:00:00Z",
-          "valueM": 3.74,
-          "previousValueM": 3.75,
-          "trend": "baja",
+          "date": "2026-11-05T03:00:00Z",
+          "valueM": 3.75,
+          "previousValueM": 3.74,
+          "trend": "crece",
           "status": "alerta",
-          "condition": "baja:a",
+          "condition": "crece:a",
           "seriesId": 15,
           "river": "PARANAMED",
           "alertLevelM": 3.5,
           "evacuationLevelM": 4.0,
           "lowWaterLevelM": 0.8100000023841858,
           "timeseries": [
-            [
-              "2026-10-28T03:00:00.000Z",
-              4.3
-            ],
-            [
-              "2026-10-29T03:00:00.000Z",
-              4.0
-            ],
             [
               "2026-10-30T03:00:00.000Z",
               3.93
@@ -3671,6 +3756,14 @@
             [
               "2026-11-03T03:00:00.000Z",
               3.74
+            ],
+            [
+              "2026-11-04T03:00:00.000Z",
+              3.74
+            ],
+            [
+              "2026-11-05T03:00:00.000Z",
+              3.75
             ]
           ]
         }
@@ -3693,9 +3786,9 @@
           "name": "La Cruz",
           "lat": -29.18062,
           "lng": -56.633977,
-          "date": "2026-11-03T03:00:00Z",
-          "valueM": 6.9,
-          "previousValueM": 7.44,
+          "date": "2026-11-05T03:00:00Z",
+          "valueM": 5.84,
+          "previousValueM": 6.2,
           "trend": "baja",
           "status": "normal",
           "condition": "baja:n",
@@ -3705,14 +3798,6 @@
           "evacuationLevelM": 11.5,
           "lowWaterLevelM": 0.25999999046325684,
           "timeseries": [
-            [
-              "2026-10-28T03:00:00.000Z",
-              8.83
-            ],
-            [
-              "2026-10-29T03:00:00.000Z",
-              9.08
-            ],
             [
               "2026-10-30T03:00:00.000Z",
               9.0
@@ -3732,6 +3817,14 @@
             [
               "2026-11-03T03:00:00.000Z",
               6.9
+            ],
+            [
+              "2026-11-04T03:00:00.000Z",
+              6.2
+            ],
+            [
+              "2026-11-05T03:00:00.000Z",
+              5.84
             ]
           ]
         }
@@ -3784,9 +3877,9 @@
           "name": "Corrientes - Los Laureles",
           "lat": -29.75722222,
           "lng": -59.21722222,
-          "date": "2026-11-03T11:00:00Z",
-          "valueM": 1.8,
-          "previousValueM": 1.91,
+          "date": "2026-11-05T11:00:00Z",
+          "valueM": 1.76,
+          "previousValueM": 1.78,
           "trend": "baja",
           "status": "",
           "condition": "baja:x",
@@ -3796,50 +3889,6 @@
           "evacuationLevelM": null,
           "lowWaterLevelM": null,
           "timeseries": [
-            [
-              "2026-11-01T07:00:00.000Z",
-              1.96
-            ],
-            [
-              "2026-11-01T11:00:00.000Z",
-              1.95
-            ],
-            [
-              "2026-11-01T15:00:00.000Z",
-              1.94
-            ],
-            [
-              "2026-11-01T19:00:00.000Z",
-              1.93
-            ],
-            [
-              "2026-11-01T23:00:00.000Z",
-              1.92
-            ],
-            [
-              "2026-11-02T03:00:00.000Z",
-              1.91
-            ],
-            [
-              "2026-11-02T07:00:00.000Z",
-              1.9
-            ],
-            [
-              "2026-11-02T11:00:00.000Z",
-              1.88
-            ],
-            [
-              "2026-11-02T15:00:00.000Z",
-              1.86
-            ],
-            [
-              "2026-11-02T19:00:00.000Z",
-              1.85
-            ],
-            [
-              "2026-11-02T23:00:00.000Z",
-              1.84
-            ],
             [
               "2026-11-03T03:00:00.000Z",
               1.83
@@ -3851,6 +3900,50 @@
             [
               "2026-11-03T11:00:00.000Z",
               1.8
+            ],
+            [
+              "2026-11-03T15:00:00.000Z",
+              1.8
+            ],
+            [
+              "2026-11-03T19:00:00.000Z",
+              1.79
+            ],
+            [
+              "2026-11-03T23:00:00.000Z",
+              1.79
+            ],
+            [
+              "2026-11-04T03:00:00.000Z",
+              1.78
+            ],
+            [
+              "2026-11-04T07:00:00.000Z",
+              1.77
+            ],
+            [
+              "2026-11-04T11:00:00.000Z",
+              1.77
+            ],
+            [
+              "2026-11-04T15:00:00.000Z",
+              1.77
+            ],
+            [
+              "2026-11-04T19:00:00.000Z",
+              1.76
+            ],
+            [
+              "2026-11-04T23:00:00.000Z",
+              1.76
+            ],
+            [
+              "2026-11-05T03:00:00.000Z",
+              1.76
+            ],
+            [
+              "2026-11-05T11:00:00.000Z",
+              1.76
             ]
           ]
         }
@@ -3873,12 +3966,12 @@
           "name": "Miriñay - Paso Mesa",
           "lat": -28.91666667,
           "lng": -57.23638889,
-          "date": "2026-11-03T15:00:00Z",
-          "valueM": 2.67,
-          "previousValueM": 2.7,
-          "trend": "baja",
+          "date": "2026-11-05T15:00:00Z",
+          "valueM": 2.74,
+          "previousValueM": 2.69,
+          "trend": "crece",
           "status": "",
-          "condition": "baja:x",
+          "condition": "crece:x",
           "seriesId": 9542,
           "river": null,
           "alertLevelM": null,
@@ -3886,60 +3979,60 @@
           "lowWaterLevelM": null,
           "timeseries": [
             [
-              "2026-11-01T11:00:00.000Z",
-              2.7
-            ],
-            [
-              "2026-11-01T15:00:00.000Z",
-              2.71
-            ],
-            [
-              "2026-11-01T19:00:00.000Z",
-              2.7
-            ],
-            [
-              "2026-11-01T23:00:00.000Z",
-              2.7
-            ],
-            [
-              "2026-11-02T03:00:00.000Z",
-              2.7
-            ],
-            [
-              "2026-11-02T07:00:00.000Z",
-              2.7
-            ],
-            [
-              "2026-11-02T11:00:00.000Z",
-              2.7
-            ],
-            [
-              "2026-11-02T15:00:00.000Z",
-              2.69
-            ],
-            [
-              "2026-11-02T19:00:00.000Z",
-              2.69
-            ],
-            [
-              "2026-11-02T23:00:00.000Z",
-              2.69
-            ],
-            [
-              "2026-11-03T03:00:00.000Z",
-              2.69
-            ],
-            [
-              "2026-11-03T07:00:00.000Z",
-              2.68
-            ],
-            [
               "2026-11-03T11:00:00.000Z",
               2.68
             ],
             [
               "2026-11-03T15:00:00.000Z",
               2.67
+            ],
+            [
+              "2026-11-03T19:00:00.000Z",
+              2.67
+            ],
+            [
+              "2026-11-03T23:00:00.000Z",
+              2.67
+            ],
+            [
+              "2026-11-04T03:00:00.000Z",
+              2.67
+            ],
+            [
+              "2026-11-04T07:00:00.000Z",
+              2.67
+            ],
+            [
+              "2026-11-04T11:00:00.000Z",
+              2.73
+            ],
+            [
+              "2026-11-04T15:00:00.000Z",
+              2.74
+            ],
+            [
+              "2026-11-04T19:00:00.000Z",
+              2.73
+            ],
+            [
+              "2026-11-04T23:00:00.000Z",
+              2.73
+            ],
+            [
+              "2026-11-05T03:00:00.000Z",
+              2.74
+            ],
+            [
+              "2026-11-05T07:00:00.000Z",
+              2.74
+            ],
+            [
+              "2026-11-05T11:00:00.000Z",
+              2.74
+            ],
+            [
+              "2026-11-05T15:00:00.000Z",
+              2.74
             ]
           ]
         }
@@ -3962,12 +4055,12 @@
           "name": "Miriñay - San Roquito",
           "lat": -29.29694444,
           "lng": -57.56555556,
-          "date": "2026-11-03T11:00:00Z",
-          "valueM": 4.28,
-          "previousValueM": 4.49,
-          "trend": "baja",
+          "date": "2026-11-05T11:00:00Z",
+          "valueM": 4.32,
+          "previousValueM": 4.1,
+          "trend": "crece",
           "status": "",
-          "condition": "baja:x",
+          "condition": "crece:x",
           "seriesId": 34121,
           "river": null,
           "alertLevelM": null,
@@ -3975,60 +4068,60 @@
           "lowWaterLevelM": null,
           "timeseries": [
             [
-              "2026-11-01T07:00:00.000Z",
-              4.59
-            ],
-            [
-              "2026-11-01T11:00:00.000Z",
-              4.59
-            ],
-            [
-              "2026-11-01T15:00:00.000Z",
-              4.52
-            ],
-            [
-              "2026-11-01T19:00:00.000Z",
-              4.49
-            ],
-            [
-              "2026-11-01T23:00:00.000Z",
-              4.49
-            ],
-            [
-              "2026-11-02T03:00:00.000Z",
-              4.5
-            ],
-            [
-              "2026-11-02T07:00:00.000Z",
-              4.5
-            ],
-            [
-              "2026-11-02T11:00:00.000Z",
-              4.46
-            ],
-            [
-              "2026-11-02T15:00:00.000Z",
-              4.37
-            ],
-            [
-              "2026-11-02T19:00:00.000Z",
-              4.3
-            ],
-            [
-              "2026-11-02T23:00:00.000Z",
-              4.34
-            ],
-            [
-              "2026-11-03T03:00:00.000Z",
-              4.35
-            ],
-            [
               "2026-11-03T07:00:00.000Z",
               4.33
             ],
             [
               "2026-11-03T11:00:00.000Z",
               4.28
+            ],
+            [
+              "2026-11-03T15:00:00.000Z",
+              4.19
+            ],
+            [
+              "2026-11-03T19:00:00.000Z",
+              4.08
+            ],
+            [
+              "2026-11-03T23:00:00.000Z",
+              4.08
+            ],
+            [
+              "2026-11-04T03:00:00.000Z",
+              4.07
+            ],
+            [
+              "2026-11-04T07:00:00.000Z",
+              4.05
+            ],
+            [
+              "2026-11-04T11:00:00.000Z",
+              4.11
+            ],
+            [
+              "2026-11-04T15:00:00.000Z",
+              4.15
+            ],
+            [
+              "2026-11-04T19:00:00.000Z",
+              4.13
+            ],
+            [
+              "2026-11-04T23:00:00.000Z",
+              4.21
+            ],
+            [
+              "2026-11-05T03:00:00.000Z",
+              4.27
+            ],
+            [
+              "2026-11-05T07:00:00.000Z",
+              4.29
+            ],
+            [
+              "2026-11-05T11:00:00.000Z",
+              4.32
             ]
           ]
         }
@@ -4051,9 +4144,9 @@
           "name": "Mocoretá",
           "lat": -30.715682,
           "lng": -57.81776,
-          "date": "2026-11-03T03:00:00Z",
-          "valueM": 9.16,
-          "previousValueM": 9.2,
+          "date": "2026-11-05T03:00:00Z",
+          "valueM": 8.98,
+          "previousValueM": 9.08,
           "trend": "baja",
           "status": "normal",
           "condition": "baja:n",
@@ -4063,14 +4156,6 @@
           "evacuationLevelM": 12.0,
           "lowWaterLevelM": 5.239999771118164,
           "timeseries": [
-            [
-              "2026-10-28T03:00:00.000Z",
-              8.72
-            ],
-            [
-              "2026-10-29T03:00:00.000Z",
-              8.81
-            ],
             [
               "2026-10-30T03:00:00.000Z",
               8.96
@@ -4090,6 +4175,14 @@
             [
               "2026-11-03T03:00:00.000Z",
               9.16
+            ],
+            [
+              "2026-11-04T03:00:00.000Z",
+              9.08
+            ],
+            [
+              "2026-11-05T03:00:00.000Z",
+              8.98
             ]
           ]
         }
@@ -4112,9 +4205,9 @@
           "name": "Aº Mocoretá - RN Nº 14",
           "lat": -30.6275,
           "lng": -57.98277778,
-          "date": "2026-11-03T11:00:00Z",
-          "valueM": 2.63,
-          "previousValueM": 2.69,
+          "date": "2026-11-05T15:00:00Z",
+          "valueM": 2.47,
+          "previousValueM": 2.55,
           "trend": "baja",
           "status": "",
           "condition": "baja:x",
@@ -4125,60 +4218,60 @@
           "lowWaterLevelM": null,
           "timeseries": [
             [
-              "2026-11-01T07:00:00.000Z",
-              2.69
-            ],
-            [
-              "2026-11-01T11:00:00.000Z",
-              2.7
-            ],
-            [
-              "2026-11-01T15:00:00.000Z",
-              2.7
-            ],
-            [
-              "2026-11-01T19:00:00.000Z",
-              2.71
-            ],
-            [
-              "2026-11-01T23:00:00.000Z",
-              2.65
-            ],
-            [
-              "2026-11-02T03:00:00.000Z",
-              2.67
-            ],
-            [
-              "2026-11-02T07:00:00.000Z",
-              2.68
-            ],
-            [
-              "2026-11-02T11:00:00.000Z",
-              2.7
-            ],
-            [
-              "2026-11-02T15:00:00.000Z",
-              2.69
-            ],
-            [
-              "2026-11-02T19:00:00.000Z",
-              2.65
-            ],
-            [
-              "2026-11-02T23:00:00.000Z",
-              2.61
-            ],
-            [
-              "2026-11-03T03:00:00.000Z",
-              2.6
-            ],
-            [
               "2026-11-03T07:00:00.000Z",
               2.63
             ],
             [
               "2026-11-03T11:00:00.000Z",
               2.63
+            ],
+            [
+              "2026-11-03T19:00:00.000Z",
+              2.57
+            ],
+            [
+              "2026-11-03T23:00:00.000Z",
+              2.57
+            ],
+            [
+              "2026-11-04T03:00:00.000Z",
+              2.54
+            ],
+            [
+              "2026-11-04T07:00:00.000Z",
+              2.58
+            ],
+            [
+              "2026-11-04T11:00:00.000Z",
+              2.55
+            ],
+            [
+              "2026-11-04T15:00:00.000Z",
+              2.52
+            ],
+            [
+              "2026-11-04T19:00:00.000Z",
+              2.52
+            ],
+            [
+              "2026-11-04T23:00:00.000Z",
+              2.48
+            ],
+            [
+              "2026-11-05T03:00:00.000Z",
+              2.46
+            ],
+            [
+              "2026-11-05T07:00:00.000Z",
+              2.45
+            ],
+            [
+              "2026-11-05T11:00:00.000Z",
+              2.48
+            ],
+            [
+              "2026-11-05T15:00:00.000Z",
+              2.47
             ]
           ]
         }
@@ -4201,9 +4294,9 @@
           "name": "Mocoretá - RN Nº 127",
           "lat": -30.10833333,
           "lng": -58.05888889,
-          "date": "2026-11-03T11:00:00Z",
-          "valueM": 1.3,
-          "previousValueM": 1.82,
+          "date": "2026-11-05T15:00:00Z",
+          "valueM": 1.44,
+          "previousValueM": 1.47,
           "trend": "baja",
           "status": "",
           "condition": "baja:x",
@@ -4214,60 +4307,60 @@
           "lowWaterLevelM": null,
           "timeseries": [
             [
-              "2026-11-01T07:00:00.000Z",
-              2.17
-            ],
-            [
-              "2026-11-01T11:00:00.000Z",
-              2.09
-            ],
-            [
-              "2026-11-01T15:00:00.000Z",
-              2.0
-            ],
-            [
-              "2026-11-01T19:00:00.000Z",
-              1.93
-            ],
-            [
-              "2026-11-01T23:00:00.000Z",
-              1.85
-            ],
-            [
-              "2026-11-02T03:00:00.000Z",
-              1.78
-            ],
-            [
-              "2026-11-02T07:00:00.000Z",
-              1.71
-            ],
-            [
-              "2026-11-02T11:00:00.000Z",
-              1.64
-            ],
-            [
-              "2026-11-02T15:00:00.000Z",
-              1.58
-            ],
-            [
-              "2026-11-02T19:00:00.000Z",
-              1.51
-            ],
-            [
-              "2026-11-02T23:00:00.000Z",
-              1.46
-            ],
-            [
-              "2026-11-03T03:00:00.000Z",
-              1.41
-            ],
-            [
               "2026-11-03T07:00:00.000Z",
               1.36
             ],
             [
               "2026-11-03T11:00:00.000Z",
               1.3
+            ],
+            [
+              "2026-11-03T19:00:00.000Z",
+              1.44
+            ],
+            [
+              "2026-11-03T23:00:00.000Z",
+              1.46
+            ],
+            [
+              "2026-11-04T03:00:00.000Z",
+              1.5
+            ],
+            [
+              "2026-11-04T07:00:00.000Z",
+              1.5
+            ],
+            [
+              "2026-11-04T11:00:00.000Z",
+              1.38
+            ],
+            [
+              "2026-11-04T15:00:00.000Z",
+              1.53
+            ],
+            [
+              "2026-11-04T19:00:00.000Z",
+              1.54
+            ],
+            [
+              "2026-11-04T23:00:00.000Z",
+              1.46
+            ],
+            [
+              "2026-11-05T03:00:00.000Z",
+              1.37
+            ],
+            [
+              "2026-11-05T07:00:00.000Z",
+              1.62
+            ],
+            [
+              "2026-11-05T11:00:00.000Z",
+              1.41
+            ],
+            [
+              "2026-11-05T15:00:00.000Z",
+              1.44
             ]
           ]
         }
@@ -4290,9 +4383,9 @@
           "name": "Monte Caseros",
           "lat": -30.25,
           "lng": -57.63333333,
-          "date": "2026-11-03T03:00:00Z",
-          "valueM": 5.42,
-          "previousValueM": 5.8,
+          "date": "2026-11-05T03:00:00Z",
+          "valueM": 4.42,
+          "previousValueM": 4.92,
           "trend": "baja",
           "status": "normal",
           "condition": "baja:n",
@@ -4302,14 +4395,6 @@
           "evacuationLevelM": 8.5,
           "lowWaterLevelM": 0.800000011920929,
           "timeseries": [
-            [
-              "2026-10-28T03:00:00.000Z",
-              5.58
-            ],
-            [
-              "2026-10-29T03:00:00.000Z",
-              5.8
-            ],
             [
               "2026-10-30T03:00:00.000Z",
               6.02
@@ -4329,6 +4414,14 @@
             [
               "2026-11-03T03:00:00.000Z",
               5.42
+            ],
+            [
+              "2026-11-04T03:00:00.000Z",
+              4.92
+            ],
+            [
+              "2026-11-05T03:00:00.000Z",
+              4.42
             ]
           ]
         }
@@ -4381,12 +4474,12 @@
           "name": "Paraná - Itatí",
           "lat": -27.26638889,
           "lng": -58.24444444,
-          "date": "2026-11-03T17:00:00Z",
-          "valueM": 7.43,
-          "previousValueM": 7.53,
-          "trend": "baja",
+          "date": "2026-11-05T17:00:00Z",
+          "valueM": 7.42,
+          "previousValueM": 7.4,
+          "trend": "crece",
           "status": "alerta",
-          "condition": "baja:a",
+          "condition": "crece:a",
           "seriesId": 6711,
           "river": null,
           "alertLevelM": 6.840000152587891,
@@ -4394,60 +4487,60 @@
           "lowWaterLevelM": 2.740000009536743,
           "timeseries": [
             [
-              "2026-11-03T04:00:00.000Z",
-              7.47
+              "2026-11-05T04:00:00.000Z",
+              7.4
             ],
             [
-              "2026-11-03T05:00:00.000Z",
-              7.46
+              "2026-11-05T05:00:00.000Z",
+              7.4
             ],
             [
-              "2026-11-03T06:00:00.000Z",
-              7.46
+              "2026-11-05T06:00:00.000Z",
+              7.41
             ],
             [
-              "2026-11-03T07:00:00.000Z",
-              7.46
+              "2026-11-05T07:00:00.000Z",
+              7.41
             ],
             [
-              "2026-11-03T08:00:00.000Z",
-              7.45
+              "2026-11-05T08:00:00.000Z",
+              7.41
             ],
             [
-              "2026-11-03T09:00:00.000Z",
-              7.45
+              "2026-11-05T09:00:00.000Z",
+              7.41
             ],
             [
-              "2026-11-03T10:00:00.000Z",
-              7.45
+              "2026-11-05T10:00:00.000Z",
+              7.41
             ],
             [
-              "2026-11-03T11:00:00.000Z",
-              7.44
+              "2026-11-05T11:00:00.000Z",
+              7.41
             ],
             [
-              "2026-11-03T12:00:00.000Z",
-              7.44
+              "2026-11-05T12:00:00.000Z",
+              7.41
             ],
             [
-              "2026-11-03T13:00:00.000Z",
-              7.44
+              "2026-11-05T13:00:00.000Z",
+              7.41
             ],
             [
-              "2026-11-03T14:00:00.000Z",
-              7.44
+              "2026-11-05T14:00:00.000Z",
+              7.42
             ],
             [
-              "2026-11-03T15:00:00.000Z",
-              7.43
+              "2026-11-05T15:00:00.000Z",
+              7.42
             ],
             [
-              "2026-11-03T16:00:00.000Z",
-              7.43
+              "2026-11-05T16:00:00.000Z",
+              7.42
             ],
             [
-              "2026-11-03T17:00:00.000Z",
-              7.43
+              "2026-11-05T17:00:00.000Z",
+              7.42
             ]
           ]
         }
@@ -4470,9 +4563,9 @@
           "name": "Paso de la Patria",
           "lat": -27.33333333,
           "lng": -58.58333333,
-          "date": "2026-11-03T03:00:00Z",
-          "valueM": 7.27,
-          "previousValueM": 7.35,
+          "date": "2026-11-05T03:00:00Z",
+          "valueM": 7.2,
+          "previousValueM": 7.22,
           "trend": "baja",
           "status": "evacuación",
           "condition": "baja:e",
@@ -4482,14 +4575,6 @@
           "evacuationLevelM": 7.0,
           "lowWaterLevelM": 2.200000047683716,
           "timeseries": [
-            [
-              "2026-10-28T03:00:00.000Z",
-              7.74
-            ],
-            [
-              "2026-10-29T03:00:00.000Z",
-              7.74
-            ],
             [
               "2026-10-30T03:00:00.000Z",
               7.63
@@ -4509,6 +4594,14 @@
             [
               "2026-11-03T03:00:00.000Z",
               7.27
+            ],
+            [
+              "2026-11-04T03:00:00.000Z",
+              7.22
+            ],
+            [
+              "2026-11-05T03:00:00.000Z",
+              7.2
             ]
           ]
         }
@@ -4531,9 +4624,9 @@
           "name": "Paso de los Libres",
           "lat": -29.71666667,
           "lng": -57.08333333,
-          "date": "2026-11-03T03:00:00Z",
-          "valueM": 6.65,
-          "previousValueM": 7.24,
+          "date": "2026-11-05T03:00:00Z",
+          "valueM": 5.31,
+          "previousValueM": 6.02,
           "trend": "baja",
           "status": "normal",
           "condition": "baja:n",
@@ -4543,14 +4636,6 @@
           "evacuationLevelM": 8.5,
           "lowWaterLevelM": 0.8999999761581421,
           "timeseries": [
-            [
-              "2026-10-28T03:00:00.000Z",
-              7.5
-            ],
-            [
-              "2026-10-29T03:00:00.000Z",
-              8.01
-            ],
             [
               "2026-10-30T03:00:00.000Z",
               8.04
@@ -4570,6 +4655,14 @@
             [
               "2026-11-03T03:00:00.000Z",
               6.65
+            ],
+            [
+              "2026-11-04T03:00:00.000Z",
+              6.02
+            ],
+            [
+              "2026-11-05T03:00:00.000Z",
+              5.31
             ]
           ]
         }
@@ -4592,9 +4685,9 @@
           "name": "Miriñay - Paso Ledesma",
           "lat": -29.84583333,
           "lng": -57.675,
-          "date": "2026-11-03T11:00:00Z",
-          "valueM": 3.38,
-          "previousValueM": 3.66,
+          "date": "2026-11-05T15:00:00Z",
+          "valueM": 3.0,
+          "previousValueM": 3.23,
           "trend": "baja",
           "status": "",
           "condition": "baja:x",
@@ -4605,60 +4698,60 @@
           "lowWaterLevelM": null,
           "timeseries": [
             [
-              "2026-11-01T07:00:00.000Z",
-              3.81
-            ],
-            [
-              "2026-11-01T11:00:00.000Z",
-              3.78
-            ],
-            [
-              "2026-11-01T15:00:00.000Z",
-              3.75
-            ],
-            [
-              "2026-11-01T19:00:00.000Z",
-              3.71
-            ],
-            [
-              "2026-11-01T23:00:00.000Z",
-              3.68
-            ],
-            [
-              "2026-11-02T03:00:00.000Z",
-              3.64
-            ],
-            [
-              "2026-11-02T07:00:00.000Z",
-              3.61
-            ],
-            [
-              "2026-11-02T11:00:00.000Z",
-              3.58
-            ],
-            [
-              "2026-11-02T15:00:00.000Z",
-              3.55
-            ],
-            [
-              "2026-11-02T19:00:00.000Z",
-              3.52
-            ],
-            [
-              "2026-11-02T23:00:00.000Z",
-              3.48
-            ],
-            [
-              "2026-11-03T03:00:00.000Z",
-              3.45
-            ],
-            [
               "2026-11-03T07:00:00.000Z",
               3.41
             ],
             [
               "2026-11-03T11:00:00.000Z",
               3.38
+            ],
+            [
+              "2026-11-03T19:00:00.000Z",
+              3.31
+            ],
+            [
+              "2026-11-03T23:00:00.000Z",
+              3.27
+            ],
+            [
+              "2026-11-04T03:00:00.000Z",
+              3.24
+            ],
+            [
+              "2026-11-04T07:00:00.000Z",
+              3.21
+            ],
+            [
+              "2026-11-04T11:00:00.000Z",
+              3.18
+            ],
+            [
+              "2026-11-04T15:00:00.000Z",
+              3.16
+            ],
+            [
+              "2026-11-04T19:00:00.000Z",
+              3.14
+            ],
+            [
+              "2026-11-04T23:00:00.000Z",
+              3.1
+            ],
+            [
+              "2026-11-05T03:00:00.000Z",
+              3.07
+            ],
+            [
+              "2026-11-05T07:00:00.000Z",
+              3.04
+            ],
+            [
+              "2026-11-05T11:00:00.000Z",
+              3.02
+            ],
+            [
+              "2026-11-05T15:00:00.000Z",
+              3.0
             ]
           ]
         }
@@ -4681,12 +4774,12 @@
           "name": "Corriente - Paso Lucero",
           "lat": -28.995,
           "lng": -58.55833333,
-          "date": "2026-11-03T18:00:00Z",
-          "valueM": 2.25,
-          "previousValueM": 2.28,
-          "trend": "baja",
+          "date": "2026-11-05T18:00:00Z",
+          "valueM": 2.34,
+          "previousValueM": 2.25,
+          "trend": "crece",
           "status": "",
-          "condition": "baja:x",
+          "condition": "crece:x",
           "seriesId": 9021,
           "river": null,
           "alertLevelM": null,
@@ -4694,60 +4787,60 @@
           "lowWaterLevelM": null,
           "timeseries": [
             [
-              "2026-11-03T05:00:00.000Z",
-              2.26
+              "2026-11-05T05:00:00.000Z",
+              2.29
             ],
             [
-              "2026-11-03T06:00:00.000Z",
-              2.26
+              "2026-11-05T06:00:00.000Z",
+              2.29
             ],
             [
-              "2026-11-03T07:00:00.000Z",
-              2.26
+              "2026-11-05T07:00:00.000Z",
+              2.29
             ],
             [
-              "2026-11-03T08:00:00.000Z",
-              2.26
+              "2026-11-05T08:00:00.000Z",
+              2.3
             ],
             [
-              "2026-11-03T09:00:00.000Z",
-              2.26
+              "2026-11-05T09:00:00.000Z",
+              2.3
             ],
             [
-              "2026-11-03T10:00:00.000Z",
-              2.26
+              "2026-11-05T10:00:00.000Z",
+              2.3
             ],
             [
-              "2026-11-03T11:00:00.000Z",
-              2.26
+              "2026-11-05T11:00:00.000Z",
+              2.31
             ],
             [
-              "2026-11-03T12:00:00.000Z",
-              2.26
+              "2026-11-05T12:00:00.000Z",
+              2.31
             ],
             [
-              "2026-11-03T13:00:00.000Z",
-              2.25
+              "2026-11-05T13:00:00.000Z",
+              2.32
             ],
             [
-              "2026-11-03T14:00:00.000Z",
-              2.25
+              "2026-11-05T14:00:00.000Z",
+              2.32
             ],
             [
-              "2026-11-03T15:00:00.000Z",
-              2.25
+              "2026-11-05T15:00:00.000Z",
+              2.32
             ],
             [
-              "2026-11-03T16:00:00.000Z",
-              2.25
+              "2026-11-05T16:00:00.000Z",
+              2.33
             ],
             [
-              "2026-11-03T17:00:00.000Z",
-              2.25
+              "2026-11-05T17:00:00.000Z",
+              2.33
             ],
             [
-              "2026-11-03T18:00:00.000Z",
-              2.25
+              "2026-11-05T18:00:00.000Z",
+              2.34
             ]
           ]
         }
@@ -4770,12 +4863,12 @@
           "name": "Aº Riachuelo - RP Nº5",
           "lat": -27.51055556,
           "lng": -58.56972222,
-          "date": "2026-11-03T17:00:00Z",
-          "valueM": 1.42,
-          "previousValueM": 1.48,
-          "trend": "baja",
+          "date": "2026-11-05T17:00:00Z",
+          "valueM": 1.48,
+          "previousValueM": 1.43,
+          "trend": "crece",
           "status": "",
-          "condition": "baja:x",
+          "condition": "crece:x",
           "seriesId": 9551,
           "river": null,
           "alertLevelM": null,
@@ -4783,60 +4876,60 @@
           "lowWaterLevelM": null,
           "timeseries": [
             [
-              "2026-11-03T03:00:00.000Z",
-              1.46
+              "2026-11-05T04:00:00.000Z",
+              1.48
             ],
             [
-              "2026-11-03T04:00:00.000Z",
-              1.46
+              "2026-11-05T05:00:00.000Z",
+              1.48
             ],
             [
-              "2026-11-03T05:00:00.000Z",
-              1.46
+              "2026-11-05T06:00:00.000Z",
+              1.49
             ],
             [
-              "2026-11-03T06:00:00.000Z",
-              1.46
+              "2026-11-05T07:00:00.000Z",
+              1.49
             ],
             [
-              "2026-11-03T07:00:00.000Z",
-              1.45
+              "2026-11-05T08:00:00.000Z",
+              1.49
             ],
             [
-              "2026-11-03T08:00:00.000Z",
-              1.45
+              "2026-11-05T09:00:00.000Z",
+              1.49
             ],
             [
-              "2026-11-03T09:00:00.000Z",
-              1.45
+              "2026-11-05T10:00:00.000Z",
+              1.49
             ],
             [
-              "2026-11-03T10:00:00.000Z",
-              1.44
+              "2026-11-05T11:00:00.000Z",
+              1.48
             ],
             [
-              "2026-11-03T11:00:00.000Z",
-              1.44
+              "2026-11-05T12:00:00.000Z",
+              1.48
             ],
             [
-              "2026-11-03T12:00:00.000Z",
-              1.43
+              "2026-11-05T13:00:00.000Z",
+              1.48
             ],
             [
-              "2026-11-03T13:00:00.000Z",
-              1.43
+              "2026-11-05T14:00:00.000Z",
+              1.47
             ],
             [
-              "2026-11-03T14:00:00.000Z",
-              1.43
+              "2026-11-05T15:00:00.000Z",
+              1.48
             ],
             [
-              "2026-11-03T15:00:00.000Z",
-              1.42
+              "2026-11-05T16:00:00.000Z",
+              1.48
             ],
             [
-              "2026-11-03T17:00:00.000Z",
-              1.42
+              "2026-11-05T17:00:00.000Z",
+              1.48
             ]
           ]
         }
@@ -4904,26 +4997,18 @@
           "name": "Santo Tomé",
           "lat": -28.55,
           "lng": -56.03333333,
-          "date": "2026-11-03T03:00:00Z",
-          "valueM": 5.71,
-          "previousValueM": 6.2,
-          "trend": "baja",
+          "date": "2026-11-05T03:00:00Z",
+          "valueM": 5.5,
+          "previousValueM": 5.01,
+          "trend": "crece",
           "status": "normal",
-          "condition": "baja:n",
+          "condition": "crece:n",
           "seriesId": 68,
           "river": "URUGUAY",
           "alertLevelM": 11.5,
           "evacuationLevelM": 12.5,
           "lowWaterLevelM": 1.3200000524520874,
           "timeseries": [
-            [
-              "2026-10-28T03:00:00.000Z",
-              11.35
-            ],
-            [
-              "2026-10-29T03:00:00.000Z",
-              10.43
-            ],
             [
               "2026-10-30T03:00:00.000Z",
               8.9
@@ -4943,6 +5028,14 @@
             [
               "2026-11-03T03:00:00.000Z",
               5.71
+            ],
+            [
+              "2026-11-04T03:00:00.000Z",
+              5.01
+            ],
+            [
+              "2026-11-05T03:00:00.000Z",
+              5.5
             ]
           ]
         }
@@ -4995,9 +5088,9 @@
           "name": "Uruguay - Paso de los Libres",
           "lat": -29.72194444,
           "lng": -57.08305556,
-          "date": "2026-11-03T11:00:00Z",
-          "valueM": 6.39,
-          "previousValueM": 7.27,
+          "date": "2026-11-05T15:00:00Z",
+          "valueM": 5.14,
+          "previousValueM": 5.88,
           "trend": "baja",
           "status": "",
           "condition": "baja:x",
@@ -5008,60 +5101,60 @@
           "lowWaterLevelM": null,
           "timeseries": [
             [
-              "2026-11-01T07:00:00.000Z",
-              7.66
-            ],
-            [
-              "2026-11-01T11:00:00.000Z",
-              7.59
-            ],
-            [
-              "2026-11-01T15:00:00.000Z",
-              7.5
-            ],
-            [
-              "2026-11-01T19:00:00.000Z",
-              7.42
-            ],
-            [
-              "2026-11-01T23:00:00.000Z",
-              7.32
-            ],
-            [
-              "2026-11-02T03:00:00.000Z",
-              7.23
-            ],
-            [
-              "2026-11-02T07:00:00.000Z",
-              7.13
-            ],
-            [
-              "2026-11-02T11:00:00.000Z",
-              7.03
-            ],
-            [
-              "2026-11-02T15:00:00.000Z",
-              6.92
-            ],
-            [
-              "2026-11-02T19:00:00.000Z",
-              6.82
-            ],
-            [
-              "2026-11-02T23:00:00.000Z",
-              6.71
-            ],
-            [
-              "2026-11-03T03:00:00.000Z",
-              6.6
-            ],
-            [
               "2026-11-03T07:00:00.000Z",
               6.5
             ],
             [
               "2026-11-03T11:00:00.000Z",
               6.39
+            ],
+            [
+              "2026-11-03T19:00:00.000Z",
+              6.16
+            ],
+            [
+              "2026-11-03T23:00:00.000Z",
+              6.05
+            ],
+            [
+              "2026-11-04T03:00:00.000Z",
+              5.93
+            ],
+            [
+              "2026-11-04T07:00:00.000Z",
+              5.82
+            ],
+            [
+              "2026-11-04T11:00:00.000Z",
+              5.73
+            ],
+            [
+              "2026-11-04T15:00:00.000Z",
+              5.62
+            ],
+            [
+              "2026-11-04T19:00:00.000Z",
+              5.52
+            ],
+            [
+              "2026-11-04T23:00:00.000Z",
+              5.41
+            ],
+            [
+              "2026-11-05T03:00:00.000Z",
+              5.32
+            ],
+            [
+              "2026-11-05T07:00:00.000Z",
+              5.25
+            ],
+            [
+              "2026-11-05T11:00:00.000Z",
+              5.19
+            ],
+            [
+              "2026-11-05T15:00:00.000Z",
+              5.14
             ]
           ]
         }
@@ -5084,12 +5177,12 @@
           "name": "Uruguay - Santo Tomé",
           "lat": -28.545,
           "lng": -56.02888889,
-          "date": "2026-11-03T15:00:00Z",
-          "valueM": 5.44,
-          "previousValueM": 6.21,
-          "trend": "baja",
+          "date": "2026-11-05T15:00:00Z",
+          "valueM": 6.67,
+          "previousValueM": 5.13,
+          "trend": "crece",
           "status": "",
-          "condition": "baja:x",
+          "condition": "crece:x",
           "seriesId": 33189,
           "river": null,
           "alertLevelM": null,
@@ -5097,60 +5190,60 @@
           "lowWaterLevelM": null,
           "timeseries": [
             [
-              "2026-11-01T11:00:00.000Z",
-              6.58
-            ],
-            [
-              "2026-11-01T15:00:00.000Z",
-              6.47
-            ],
-            [
-              "2026-11-01T19:00:00.000Z",
-              6.38
-            ],
-            [
-              "2026-11-01T23:00:00.000Z",
-              6.31
-            ],
-            [
-              "2026-11-02T03:00:00.000Z",
-              6.25
-            ],
-            [
-              "2026-11-02T07:00:00.000Z",
-              6.19
-            ],
-            [
-              "2026-11-02T11:00:00.000Z",
-              6.12
-            ],
-            [
-              "2026-11-02T15:00:00.000Z",
-              6.04
-            ],
-            [
-              "2026-11-02T19:00:00.000Z",
-              5.94
-            ],
-            [
-              "2026-11-02T23:00:00.000Z",
-              5.84
-            ],
-            [
-              "2026-11-03T03:00:00.000Z",
-              5.74
-            ],
-            [
-              "2026-11-03T07:00:00.000Z",
-              5.65
-            ],
-            [
               "2026-11-03T11:00:00.000Z",
               5.55
             ],
             [
               "2026-11-03T15:00:00.000Z",
               5.44
+            ],
+            [
+              "2026-11-03T19:00:00.000Z",
+              5.31
+            ],
+            [
+              "2026-11-03T23:00:00.000Z",
+              5.18
+            ],
+            [
+              "2026-11-04T03:00:00.000Z",
+              5.08
+            ],
+            [
+              "2026-11-04T07:00:00.000Z",
+              5.01
+            ],
+            [
+              "2026-11-04T11:00:00.000Z",
+              5.05
+            ],
+            [
+              "2026-11-04T15:00:00.000Z",
+              5.15
+            ],
+            [
+              "2026-11-04T19:00:00.000Z",
+              5.26
+            ],
+            [
+              "2026-11-04T23:00:00.000Z",
+              5.41
+            ],
+            [
+              "2026-11-05T03:00:00.000Z",
+              5.66
+            ],
+            [
+              "2026-11-05T07:00:00.000Z",
+              5.97
+            ],
+            [
+              "2026-11-05T11:00:00.000Z",
+              6.33
+            ],
+            [
+              "2026-11-05T15:00:00.000Z",
+              6.67
             ]
           ]
         }
@@ -5203,9 +5296,9 @@
           "name": "Yapeyú",
           "lat": -29.470031,
           "lng": -56.810674,
-          "date": "2026-11-03T03:00:00Z",
-          "valueM": 6.7,
-          "previousValueM": 7.32,
+          "date": "2026-11-05T03:00:00Z",
+          "valueM": 5.5,
+          "previousValueM": 6.1,
           "trend": "baja",
           "status": "normal",
           "condition": "baja:n",
@@ -5215,14 +5308,6 @@
           "evacuationLevelM": 10.5,
           "lowWaterLevelM": 0.0,
           "timeseries": [
-            [
-              "2026-10-28T03:00:00.000Z",
-              8.16
-            ],
-            [
-              "2026-10-29T03:00:00.000Z",
-              8.48
-            ],
             [
               "2026-10-30T03:00:00.000Z",
               8.56
@@ -5242,6 +5327,14 @@
             [
               "2026-11-03T03:00:00.000Z",
               6.7
+            ],
+            [
+              "2026-11-04T03:00:00.000Z",
+              6.1
+            ],
+            [
+              "2026-11-05T03:00:00.000Z",
+              5.5
             ]
           ]
         }
@@ -5999,7 +6092,7 @@
         "lat": -28.8997222222222,
         "lng": -58.6749444444444,
         "valueM": 2.75,
-        "date": "2026-11-03T15:00:00.000Z",
+        "date": "2026-11-05T15:00:00.000Z",
         "previousValueM": null,
         "trend": "",
         "status": "Dato telemétrico preliminar",
@@ -6026,7 +6119,7 @@
         "lat": -27.8245277777778,
         "lng": -56.2584444444444,
         "valueM": -8.24,
-        "date": "2026-11-03T15:00:00.000Z",
+        "date": "2026-11-05T15:00:00.000Z",
         "previousValueM": null,
         "trend": "",
         "status": "Dato telemétrico preliminar",
@@ -6052,8 +6145,8 @@
         "department": "Gral. San Martín",
         "lat": -28.5380861111111,
         "lng": -57.1868611111111,
-        "valueM": 1.68,
-        "date": "2026-11-03T15:00:00.000Z",
+        "valueM": 1.75,
+        "date": "2026-11-05T15:00:00.000Z",
         "previousValueM": null,
         "trend": "",
         "status": "Dato telemétrico preliminar",
@@ -6073,14 +6166,41 @@
         "sourceUrl": "https://snih.hidricosargentina.gob.ar/",
         "validation": "telemétrica sin validación definitiva",
         "unit": "m",
+        "stationId": "13846",
+        "name": "Colonia Liebig",
+        "river": "Chimiray",
+        "department": "Santo Tomé",
+        "lat": -27.9121388888889,
+        "lng": -55.8174444444444,
+        "valueM": 2.94,
+        "date": "2026-11-05T18:00:00.000Z",
+        "previousValueM": null,
+        "trend": "",
+        "status": "Dato telemétrico preliminar",
+        "condition": "",
+        "alertLevelM": null,
+        "evacuationLevelM": null,
+        "lowWaterLevelM": null,
+        "timeseries": [],
+        "automatic": true,
+        "transmission": "T",
+        "zeroScaleM": 95.908,
+        "elevationSystem": 5
+      },
+      {
+        "sourceId": "snih",
+        "sourceLabel": "Sistema Nacional de Información Hídrica",
+        "sourceUrl": "https://snih.hidricosargentina.gob.ar/",
+        "validation": "telemétrica sin validación definitiva",
+        "unit": "m",
         "stationId": "13805",
         "name": "Corrientes",
         "river": "Paraná",
         "department": "Capital",
         "lat": -27.4597222222222,
         "lng": -58.8333333333333,
-        "valueM": 7.04,
-        "date": "2026-11-03T18:00:00.000Z",
+        "valueM": 7.01,
+        "date": "2026-11-05T18:00:00.000Z",
         "previousValueM": null,
         "trend": "",
         "status": "Dato telemétrico preliminar",
@@ -6106,8 +6226,8 @@
         "department": "Santo Tomé",
         "lat": -28.1755555555556,
         "lng": -55.6434722222222,
-        "valueM": 3.92,
-        "date": "2026-11-03T11:00:00.000Z",
+        "valueM": 6.59,
+        "date": "2026-11-05T15:00:00.000Z",
         "previousValueM": null,
         "trend": "",
         "status": "Dato telemétrico preliminar",
@@ -6133,8 +6253,8 @@
         "department": "Goya",
         "lat": -29.1651388888889,
         "lng": -59.3281666666667,
-        "valueM": 6.06,
-        "date": "2026-11-03T11:00:00.000Z",
+        "valueM": 6.05,
+        "date": "2026-11-05T15:00:00.000Z",
         "previousValueM": null,
         "trend": "",
         "status": "Dato telemétrico preliminar",
@@ -6161,7 +6281,7 @@
         "lat": -27.26625,
         "lng": -58.2443055555556,
         "valueM": 7.42,
-        "date": "2026-11-03T18:00:00.000Z",
+        "date": "2026-11-05T18:00:00.000Z",
         "previousValueM": null,
         "trend": "",
         "status": "Dato telemétrico preliminar",
@@ -6187,8 +6307,8 @@
         "department": "Esquina",
         "lat": -30.346475,
         "lng": -59.3004333333333,
-        "valueM": 1.7,
-        "date": "2026-11-03T15:00:00.000Z",
+        "valueM": 1.66,
+        "date": "2026-11-05T15:00:00.000Z",
         "previousValueM": null,
         "trend": "",
         "status": "Dato telemétrico preliminar",
@@ -6214,8 +6334,8 @@
         "department": "Santo Tomé",
         "lat": -28.4166666666667,
         "lng": -56.5421666666667,
-        "valueM": 5.11,
-        "date": "2026-11-03T11:00:00.000Z",
+        "valueM": 5.17,
+        "date": "2026-11-05T15:00:00.000Z",
         "previousValueM": null,
         "trend": "",
         "status": "Dato telemétrico preliminar",
@@ -6241,8 +6361,8 @@
         "department": "",
         "lat": -29.7571111111111,
         "lng": -59.2171666666667,
-        "valueM": 1.8,
-        "date": "2026-11-03T11:00:00.000Z",
+        "valueM": 1.66,
+        "date": "2026-11-05T15:00:00.000Z",
         "previousValueM": null,
         "trend": "",
         "status": "Dato telemétrico preliminar",
@@ -6268,8 +6388,8 @@
         "department": "Monte Caseros",
         "lat": -30.1077222222222,
         "lng": -58.0580555555556,
-        "valueM": 1.3,
-        "date": "2026-11-03T11:00:00.000Z",
+        "valueM": 1.44,
+        "date": "2026-11-05T15:00:00.000Z",
         "previousValueM": null,
         "trend": "",
         "status": "Dato telemétrico preliminar",
@@ -6295,8 +6415,8 @@
         "department": "Monte Caseros",
         "lat": -30.6279444444444,
         "lng": -57.9831666666667,
-        "valueM": 2.63,
-        "date": "2026-11-03T11:00:00.000Z",
+        "valueM": 2.47,
+        "date": "2026-11-05T15:00:00.000Z",
         "previousValueM": null,
         "trend": "",
         "status": "Dato telemétrico preliminar",
@@ -6322,8 +6442,8 @@
         "department": "Monte Caseros",
         "lat": -30.2510194444444,
         "lng": -57.6215944444444,
-        "valueM": 5.08,
-        "date": "2026-11-03T18:00:00.000Z",
+        "valueM": 4.12,
+        "date": "2026-11-05T18:00:00.000Z",
         "previousValueM": null,
         "trend": "",
         "status": "Dato telemétrico preliminar",
@@ -6349,35 +6469,8 @@
         "department": "",
         "lat": -28.5052777777778,
         "lng": -59.0497222222222,
-        "valueM": 6.11,
-        "date": "2026-11-03T18:00:00.000Z",
-        "previousValueM": null,
-        "trend": "",
-        "status": "Dato telemétrico preliminar",
-        "condition": "",
-        "alertLevelM": null,
-        "evacuationLevelM": null,
-        "lowWaterLevelM": null,
-        "timeseries": [],
-        "automatic": true,
-        "transmission": "T",
-        "zeroScaleM": 0,
-        "elevationSystem": -1
-      },
-      {
-        "sourceId": "snih",
-        "sourceLabel": "Sistema Nacional de Información Hídrica",
-        "sourceUrl": "https://snih.hidricosargentina.gob.ar/",
-        "validation": "telemétrica sin validación definitiva",
-        "unit": "m",
-        "stationId": "13899",
-        "name": "Parque Provincial San Cayetano",
-        "river": "Riachuelo",
-        "department": "",
-        "lat": -27.5463888888889,
-        "lng": -58.6816666666667,
-        "valueM": 4.14,
-        "date": "2026-11-03T03:00:00.000Z",
+        "valueM": 6.1,
+        "date": "2026-11-05T18:00:00.000Z",
         "previousValueM": null,
         "trend": "",
         "status": "Dato telemétrico preliminar",
@@ -6403,8 +6496,8 @@
         "department": "Lavalle",
         "lat": -29.0311111111111,
         "lng": -58.7883333333333,
-        "valueM": 0.87,
-        "date": "2026-11-03T07:00:00.000Z",
+        "valueM": 0.84,
+        "date": "2026-11-05T15:00:00.000Z",
         "previousValueM": null,
         "trend": "",
         "status": "Dato telemétrico preliminar",
@@ -6430,8 +6523,8 @@
         "department": "Paso de los Libres",
         "lat": -29.7193611111111,
         "lng": -57.084,
-        "valueM": 6.39,
-        "date": "2026-11-03T11:00:00.000Z",
+        "valueM": 5.14,
+        "date": "2026-11-05T15:00:00.000Z",
         "previousValueM": null,
         "trend": "",
         "status": "Dato telemétrico preliminar",
@@ -6457,8 +6550,8 @@
         "department": "Paso de los Libres",
         "lat": -29.8458,
         "lng": -57.6745111111111,
-        "valueM": 3.38,
-        "date": "2026-11-03T11:00:00.000Z",
+        "valueM": 3,
+        "date": "2026-11-05T15:00:00.000Z",
         "previousValueM": null,
         "trend": "",
         "status": "Dato telemétrico preliminar",
@@ -6484,8 +6577,8 @@
         "department": "Mercedes",
         "lat": -28.9943611111111,
         "lng": -58.5593888888889,
-        "valueM": 2.25,
-        "date": "2026-11-03T18:00:00.000Z",
+        "valueM": 2.34,
+        "date": "2026-11-05T18:00:00.000Z",
         "previousValueM": null,
         "trend": "",
         "status": "Dato telemétrico preliminar",
@@ -6511,8 +6604,8 @@
         "department": "San Martín",
         "lat": -28.9178333333333,
         "lng": -57.2355277777778,
-        "valueM": 2.67,
-        "date": "2026-11-03T15:00:00.000Z",
+        "valueM": 2.74,
+        "date": "2026-11-05T15:00:00.000Z",
         "previousValueM": null,
         "trend": "",
         "status": "Dato telemétrico preliminar",
@@ -6538,8 +6631,8 @@
         "department": "San Luis del Palmar",
         "lat": -27.5104722222222,
         "lng": -58.56975,
-        "valueM": 1.41,
-        "date": "2026-11-03T18:00:00.000Z",
+        "valueM": 1.48,
+        "date": "2026-11-05T18:00:00.000Z",
         "previousValueM": null,
         "trend": "",
         "status": "Dato telemétrico preliminar",
@@ -6565,8 +6658,8 @@
         "department": "San Roque",
         "lat": -28.5711388888889,
         "lng": -58.7214166666667,
-        "valueM": 2,
-        "date": "2026-11-03T15:00:00.000Z",
+        "valueM": 2.6,
+        "date": "2026-11-05T15:00:00.000Z",
         "previousValueM": null,
         "trend": "",
         "status": "Dato telemétrico preliminar",
@@ -6592,8 +6685,8 @@
         "department": "Paso de los Libres",
         "lat": -29.2968333333333,
         "lng": -57.5651666666667,
-        "valueM": 4.19,
-        "date": "2026-11-03T15:00:00.000Z",
+        "valueM": 4.24,
+        "date": "2026-11-05T15:00:00.000Z",
         "previousValueM": null,
         "trend": "",
         "status": "Dato telemétrico preliminar",
@@ -6619,8 +6712,8 @@
         "department": "Lavalle",
         "lat": -28.9911111111111,
         "lng": -59.0982222222222,
-        "valueM": 1,
-        "date": "2026-11-03T18:00:00.000Z",
+        "valueM": 1.17,
+        "date": "2026-11-05T18:00:00.000Z",
         "previousValueM": null,
         "trend": "",
         "status": "Dato telemétrico preliminar",
@@ -6646,8 +6739,8 @@
         "department": "Santo Tomé",
         "lat": -28.5454388888889,
         "lng": -56.0292222222222,
-        "valueM": 5.44,
-        "date": "2026-11-03T15:00:00.000Z",
+        "valueM": 6.67,
+        "date": "2026-11-05T15:00:00.000Z",
         "previousValueM": null,
         "trend": "",
         "status": "Dato telemétrico preliminar",
@@ -6695,9 +6788,9 @@
         "department": "",
         "lat": -28.416682,
         "lng": -56.542211,
-        "valueM": 5.07,
-        "date": "2026-11-03T18:00:00.000Z",
-        "previousValueM": 5.07,
+        "valueM": 5.13,
+        "date": "2026-11-05T18:00:00.000Z",
+        "previousValueM": 5.13,
         "trend": "estable",
         "status": "Dato operativo telemétrico",
         "condition": "",
@@ -6706,60 +6799,60 @@
         "lowWaterLevelM": null,
         "timeseries": [
           [
-            "2026-11-03T14:45:00.000Z",
-            5.08
+            "2026-11-05T14:45:00.000Z",
+            5.14
           ],
           [
-            "2026-11-03T15:00:00.000Z",
-            5.08
+            "2026-11-05T15:00:00.000Z",
+            5.14
           ],
           [
-            "2026-11-03T15:15:00.000Z",
-            5.08
+            "2026-11-05T15:15:00.000Z",
+            5.14
           ],
           [
-            "2026-11-03T15:30:00.000Z",
-            5.08
+            "2026-11-05T15:30:00.000Z",
+            5.14
           ],
           [
-            "2026-11-03T15:45:00.000Z",
-            5.08
+            "2026-11-05T15:45:00.000Z",
+            5.14
           ],
           [
-            "2026-11-03T16:00:00.000Z",
-            5.08
+            "2026-11-05T16:00:00.000Z",
+            5.14
           ],
           [
-            "2026-11-03T16:15:00.000Z",
-            5.08
+            "2026-11-05T16:15:00.000Z",
+            5.14
           ],
           [
-            "2026-11-03T16:30:00.000Z",
-            5.07
+            "2026-11-05T16:30:00.000Z",
+            5.14
           ],
           [
-            "2026-11-03T16:45:00.000Z",
-            5.08
+            "2026-11-05T16:45:00.000Z",
+            5.14
           ],
           [
-            "2026-11-03T17:00:00.000Z",
-            5.08
+            "2026-11-05T17:00:00.000Z",
+            5.14
           ],
           [
-            "2026-11-03T17:15:00.000Z",
-            5.07
+            "2026-11-05T17:15:00.000Z",
+            5.13
           ],
           [
-            "2026-11-03T17:30:00.000Z",
-            5.07
+            "2026-11-05T17:30:00.000Z",
+            5.13
           ],
           [
-            "2026-11-03T17:45:00.000Z",
-            5.07
+            "2026-11-05T17:45:00.000Z",
+            5.13
           ],
           [
-            "2026-11-03T18:00:00.000Z",
-            5.07
+            "2026-11-05T18:00:00.000Z",
+            5.13
           ]
         ],
         "automatic": true,
@@ -6767,7 +6860,7 @@
           "P",
           "H"
         ],
-        "lastTransmissionAt": "2026-11-03T18:00:00.000Z"
+        "lastTransmissionAt": "2026-11-05T18:00:00.000Z"
       },
       {
         "sourceId": "salto",
@@ -6781,9 +6874,9 @@
         "department": "",
         "lat": -29.112957,
         "lng": -56.555522,
-        "valueM": 6.75,
-        "date": "2026-11-03T18:15:00.000Z",
-        "previousValueM": 6.75,
+        "valueM": 6.21,
+        "date": "2026-11-05T18:30:00.000Z",
+        "previousValueM": 6.21,
         "trend": "estable",
         "status": "Dato operativo telemétrico",
         "condition": "",
@@ -6792,60 +6885,60 @@
         "lowWaterLevelM": null,
         "timeseries": [
           [
-            "2026-11-03T15:00:00.000Z",
-            6.85
+            "2026-11-05T15:15:00.000Z",
+            6.14
           ],
           [
-            "2026-11-03T15:15:00.000Z",
-            6.84
+            "2026-11-05T15:30:00.000Z",
+            6.14
           ],
           [
-            "2026-11-03T15:30:00.000Z",
-            6.83
+            "2026-11-05T15:45:00.000Z",
+            6.14
           ],
           [
-            "2026-11-03T15:45:00.000Z",
-            6.83
+            "2026-11-05T16:00:00.000Z",
+            6.15
           ],
           [
-            "2026-11-03T16:00:00.000Z",
-            6.81
+            "2026-11-05T16:15:00.000Z",
+            6.16
           ],
           [
-            "2026-11-03T16:15:00.000Z",
-            6.8
+            "2026-11-05T16:30:00.000Z",
+            6.16
           ],
           [
-            "2026-11-03T16:30:00.000Z",
-            6.79
+            "2026-11-05T16:45:00.000Z",
+            6.16
           ],
           [
-            "2026-11-03T16:45:00.000Z",
-            6.79
+            "2026-11-05T17:00:00.000Z",
+            6.18
           ],
           [
-            "2026-11-03T17:00:00.000Z",
-            6.79
+            "2026-11-05T17:15:00.000Z",
+            6.18
           ],
           [
-            "2026-11-03T17:15:00.000Z",
-            6.78
+            "2026-11-05T17:30:00.000Z",
+            6.18
           ],
           [
-            "2026-11-03T17:30:00.000Z",
-            6.76
+            "2026-11-05T17:45:00.000Z",
+            6.19
           ],
           [
-            "2026-11-03T17:45:00.000Z",
-            6.76
+            "2026-11-05T18:00:00.000Z",
+            6.2
           ],
           [
-            "2026-11-03T18:00:00.000Z",
-            6.75
+            "2026-11-05T18:15:00.000Z",
+            6.21
           ],
           [
-            "2026-11-03T18:15:00.000Z",
-            6.75
+            "2026-11-05T18:30:00.000Z",
+            6.21
           ]
         ],
         "automatic": true,
@@ -6853,7 +6946,7 @@
           "P",
           "H"
         ],
-        "lastTransmissionAt": "2026-11-03T18:15:00.000Z"
+        "lastTransmissionAt": "2026-11-05T18:30:00.000Z"
       },
       {
         "sourceId": "salto",
@@ -6867,10 +6960,10 @@
         "department": "",
         "lat": -28.177515,
         "lng": -55.642269,
-        "valueM": 3.45,
-        "date": "2026-11-03T18:00:00.000Z",
-        "previousValueM": 3.45,
-        "trend": "estable",
+        "valueM": 6.53,
+        "date": "2026-11-05T18:00:00.000Z",
+        "previousValueM": 6.5,
+        "trend": "sube",
         "status": "Dato operativo telemétrico",
         "condition": "",
         "alertLevelM": null,
@@ -6878,60 +6971,60 @@
         "lowWaterLevelM": null,
         "timeseries": [
           [
-            "2026-11-03T14:45:00.000Z",
-            3.55
+            "2026-11-05T14:45:00.000Z",
+            6.4
           ],
           [
-            "2026-11-03T15:00:00.000Z",
-            3.53
+            "2026-11-05T15:00:00.000Z",
+            6.43
           ],
           [
-            "2026-11-03T15:15:00.000Z",
-            3.53
+            "2026-11-05T15:15:00.000Z",
+            6.43
           ],
           [
-            "2026-11-03T15:30:00.000Z",
-            3.53
+            "2026-11-05T15:30:00.000Z",
+            6.43
           ],
           [
-            "2026-11-03T15:45:00.000Z",
-            3.5
+            "2026-11-05T15:45:00.000Z",
+            6.45
           ],
           [
-            "2026-11-03T16:00:00.000Z",
-            3.5
+            "2026-11-05T16:00:00.000Z",
+            6.45
           ],
           [
-            "2026-11-03T16:15:00.000Z",
-            3.5
+            "2026-11-05T16:15:00.000Z",
+            6.48
           ],
           [
-            "2026-11-03T16:30:00.000Z",
-            3.48
+            "2026-11-05T16:30:00.000Z",
+            6.48
           ],
           [
-            "2026-11-03T16:45:00.000Z",
-            3.48
+            "2026-11-05T16:45:00.000Z",
+            6.48
           ],
           [
-            "2026-11-03T17:00:00.000Z",
-            3.48
+            "2026-11-05T17:00:00.000Z",
+            6.48
           ],
           [
-            "2026-11-03T17:15:00.000Z",
-            3.48
+            "2026-11-05T17:15:00.000Z",
+            6.5
           ],
           [
-            "2026-11-03T17:30:00.000Z",
-            3.45
+            "2026-11-05T17:30:00.000Z",
+            6.5
           ],
           [
-            "2026-11-03T17:45:00.000Z",
-            3.45
+            "2026-11-05T17:45:00.000Z",
+            6.5
           ],
           [
-            "2026-11-03T18:00:00.000Z",
-            3.45
+            "2026-11-05T18:00:00.000Z",
+            6.53
           ]
         ],
         "automatic": true,
@@ -6940,7 +7033,7 @@
           "H",
           "Q"
         ],
-        "lastTransmissionAt": "2026-11-03T18:00:00.000Z"
+        "lastTransmissionAt": "2026-11-05T18:00:00.000Z"
       },
       {
         "sourceId": "salto",
@@ -6954,9 +7047,9 @@
         "department": "",
         "lat": -29.845637,
         "lng": -57.674446,
-        "valueM": 3.36,
-        "date": "2026-11-03T18:15:00.000Z",
-        "previousValueM": 3.36,
+        "valueM": 3.02,
+        "date": "2026-11-05T18:15:00.000Z",
+        "previousValueM": 3.02,
         "trend": "estable",
         "status": "Dato operativo telemétrico",
         "condition": "",
@@ -6965,60 +7058,60 @@
         "lowWaterLevelM": null,
         "timeseries": [
           [
-            "2026-11-03T15:00:00.000Z",
-            3.4
+            "2026-11-05T15:00:00.000Z",
+            3.04
           ],
           [
-            "2026-11-03T15:15:00.000Z",
-            3.4
+            "2026-11-05T15:15:00.000Z",
+            3.04
           ],
           [
-            "2026-11-03T15:30:00.000Z",
-            3.4
+            "2026-11-05T15:30:00.000Z",
+            3.04
           ],
           [
-            "2026-11-03T15:45:00.000Z",
-            3.38
+            "2026-11-05T15:45:00.000Z",
+            3.04
           ],
           [
-            "2026-11-03T16:00:00.000Z",
-            3.38
+            "2026-11-05T16:00:00.000Z",
+            3.04
           ],
           [
-            "2026-11-03T16:15:00.000Z",
-            3.38
+            "2026-11-05T16:15:00.000Z",
+            3.04
           ],
           [
-            "2026-11-03T16:30:00.000Z",
-            3.38
+            "2026-11-05T16:30:00.000Z",
+            3.04
           ],
           [
-            "2026-11-03T16:45:00.000Z",
-            3.38
+            "2026-11-05T16:45:00.000Z",
+            3.04
           ],
           [
-            "2026-11-03T17:00:00.000Z",
-            3.38
+            "2026-11-05T17:00:00.000Z",
+            3.02
           ],
           [
-            "2026-11-03T17:15:00.000Z",
-            3.36
+            "2026-11-05T17:15:00.000Z",
+            3.02
           ],
           [
-            "2026-11-03T17:30:00.000Z",
-            3.38
+            "2026-11-05T17:30:00.000Z",
+            3.04
           ],
           [
-            "2026-11-03T17:45:00.000Z",
-            3.38
+            "2026-11-05T17:45:00.000Z",
+            3.02
           ],
           [
-            "2026-11-03T18:00:00.000Z",
-            3.36
+            "2026-11-05T18:00:00.000Z",
+            3.02
           ],
           [
-            "2026-11-03T18:15:00.000Z",
-            3.36
+            "2026-11-05T18:15:00.000Z",
+            3.02
           ]
         ],
         "automatic": true,
@@ -7027,7 +7120,7 @@
           "H",
           "Q"
         ],
-        "lastTransmissionAt": "2026-11-03T18:15:00.000Z"
+        "lastTransmissionAt": "2026-11-05T18:15:00.000Z"
       },
       {
         "sourceId": "salto",
@@ -7041,9 +7134,9 @@
         "department": "",
         "lat": -30.690307,
         "lng": -57.820722,
-        "valueM": 35.14,
-        "date": "2026-11-03T18:15:00.000Z",
-        "previousValueM": 35.14,
+        "valueM": 34.98,
+        "date": "2026-11-05T18:30:00.000Z",
+        "previousValueM": 34.98,
         "trend": "estable",
         "status": "Dato operativo telemétrico",
         "condition": "",
@@ -7052,60 +7145,60 @@
         "lowWaterLevelM": null,
         "timeseries": [
           [
-            "2026-11-03T15:00:00.000Z",
-            35.16
+            "2026-11-05T15:15:00.000Z",
+            35
           ],
           [
-            "2026-11-03T15:15:00.000Z",
-            35.16
+            "2026-11-05T15:30:00.000Z",
+            35
           ],
           [
-            "2026-11-03T15:30:00.000Z",
-            35.16
+            "2026-11-05T15:45:00.000Z",
+            35
           ],
           [
-            "2026-11-03T15:45:00.000Z",
-            35.15
+            "2026-11-05T16:00:00.000Z",
+            35
           ],
           [
-            "2026-11-03T16:00:00.000Z",
-            35.15
+            "2026-11-05T16:15:00.000Z",
+            35
           ],
           [
-            "2026-11-03T16:15:00.000Z",
-            35.15
+            "2026-11-05T16:30:00.000Z",
+            35
           ],
           [
-            "2026-11-03T16:30:00.000Z",
-            35.15
+            "2026-11-05T16:45:00.000Z",
+            34.99
           ],
           [
-            "2026-11-03T16:45:00.000Z",
-            35.15
+            "2026-11-05T17:00:00.000Z",
+            34.99
           ],
           [
-            "2026-11-03T17:00:00.000Z",
-            35.14
+            "2026-11-05T17:15:00.000Z",
+            34.99
           ],
           [
-            "2026-11-03T17:15:00.000Z",
-            35.14
+            "2026-11-05T17:30:00.000Z",
+            34.99
           ],
           [
-            "2026-11-03T17:30:00.000Z",
-            35.14
+            "2026-11-05T17:45:00.000Z",
+            34.99
           ],
           [
-            "2026-11-03T17:45:00.000Z",
-            35.14
+            "2026-11-05T18:00:00.000Z",
+            34.98
           ],
           [
-            "2026-11-03T18:00:00.000Z",
-            35.14
+            "2026-11-05T18:15:00.000Z",
+            34.98
           ],
           [
-            "2026-11-03T18:15:00.000Z",
-            35.14
+            "2026-11-05T18:30:00.000Z",
+            34.98
           ]
         ],
         "automatic": true,
@@ -7113,7 +7206,7 @@
           "P",
           "H"
         ],
-        "lastTransmissionAt": "2026-11-03T18:15:00.000Z"
+        "lastTransmissionAt": "2026-11-05T18:30:00.000Z"
       },
       {
         "sourceId": "salto",
@@ -7127,9 +7220,9 @@
         "department": "",
         "lat": -30.626772,
         "lng": -57.982836,
-        "valueM": 35.39,
-        "date": "2026-11-03T18:15:00.000Z",
-        "previousValueM": 35.4,
+        "valueM": 35.21,
+        "date": "2026-11-05T18:15:00.000Z",
+        "previousValueM": 35.22,
         "trend": "baja",
         "status": "Dato operativo telemétrico",
         "condition": "",
@@ -7138,60 +7231,60 @@
         "lowWaterLevelM": null,
         "timeseries": [
           [
-            "2026-11-03T15:00:00.000Z",
-            35.41
+            "2026-11-05T15:00:00.000Z",
+            35.25
           ],
           [
-            "2026-11-03T15:15:00.000Z",
-            35.41
+            "2026-11-05T15:15:00.000Z",
+            35.25
           ],
           [
-            "2026-11-03T15:30:00.000Z",
-            35.41
+            "2026-11-05T15:30:00.000Z",
+            35.25
           ],
           [
-            "2026-11-03T15:45:00.000Z",
-            35.42
+            "2026-11-05T15:45:00.000Z",
+            35.25
           ],
           [
-            "2026-11-03T16:00:00.000Z",
-            35.41
+            "2026-11-05T16:00:00.000Z",
+            35.25
           ],
           [
-            "2026-11-03T16:15:00.000Z",
-            35.41
+            "2026-11-05T16:15:00.000Z",
+            35.24
           ],
           [
-            "2026-11-03T16:30:00.000Z",
-            35.41
+            "2026-11-05T16:30:00.000Z",
+            35.24
           ],
           [
-            "2026-11-03T16:45:00.000Z",
-            35.41
+            "2026-11-05T16:45:00.000Z",
+            35.24
           ],
           [
-            "2026-11-03T17:00:00.000Z",
-            35.41
+            "2026-11-05T17:00:00.000Z",
+            35.22
           ],
           [
-            "2026-11-03T17:15:00.000Z",
-            35.4
+            "2026-11-05T17:15:00.000Z",
+            35.22
           ],
           [
-            "2026-11-03T17:30:00.000Z",
-            35.4
+            "2026-11-05T17:30:00.000Z",
+            35.22
           ],
           [
-            "2026-11-03T17:45:00.000Z",
-            35.4
+            "2026-11-05T17:45:00.000Z",
+            35.22
           ],
           [
-            "2026-11-03T18:00:00.000Z",
-            35.4
+            "2026-11-05T18:00:00.000Z",
+            35.22
           ],
           [
-            "2026-11-03T18:15:00.000Z",
-            35.39
+            "2026-11-05T18:15:00.000Z",
+            35.21
           ]
         ],
         "automatic": true,
@@ -7199,7 +7292,7 @@
           "P",
           "H"
         ],
-        "lastTransmissionAt": "2026-11-03T18:15:00.000Z"
+        "lastTransmissionAt": "2026-11-05T18:15:00.000Z"
       },
       {
         "sourceId": "salto",
@@ -7213,10 +7306,10 @@
         "department": "",
         "lat": -30.249296,
         "lng": -57.622519,
-        "valueM": 5.01,
-        "date": "2026-11-03T18:15:00.000Z",
-        "previousValueM": 5.02,
-        "trend": "baja",
+        "valueM": 4.06,
+        "date": "2026-11-05T18:30:00.000Z",
+        "previousValueM": 4.06,
+        "trend": "estable",
         "status": "Dato operativo telemétrico",
         "condition": "",
         "alertLevelM": null,
@@ -7224,60 +7317,60 @@
         "lowWaterLevelM": null,
         "timeseries": [
           [
-            "2026-11-03T15:00:00.000Z",
-            5.07
+            "2026-11-05T15:15:00.000Z",
+            4.11
           ],
           [
-            "2026-11-03T15:15:00.000Z",
-            5.07
+            "2026-11-05T15:30:00.000Z",
+            4.11
           ],
           [
-            "2026-11-03T15:30:00.000Z",
-            5.06
+            "2026-11-05T15:45:00.000Z",
+            4.1
           ],
           [
-            "2026-11-03T15:45:00.000Z",
-            5.06
+            "2026-11-05T16:00:00.000Z",
+            4.1
           ],
           [
-            "2026-11-03T16:00:00.000Z",
-            5.05
+            "2026-11-05T16:15:00.000Z",
+            4.1
           ],
           [
-            "2026-11-03T16:15:00.000Z",
-            5.05
+            "2026-11-05T16:30:00.000Z",
+            4.1
           ],
           [
-            "2026-11-03T16:30:00.000Z",
-            5.05
+            "2026-11-05T16:45:00.000Z",
+            4.09
           ],
           [
-            "2026-11-03T16:45:00.000Z",
-            5.05
+            "2026-11-05T17:00:00.000Z",
+            4.09
           ],
           [
-            "2026-11-03T17:00:00.000Z",
-            5.04
+            "2026-11-05T17:15:00.000Z",
+            4.09
           ],
           [
-            "2026-11-03T17:15:00.000Z",
-            5.02
+            "2026-11-05T17:30:00.000Z",
+            4.07
           ],
           [
-            "2026-11-03T17:30:00.000Z",
-            5.02
+            "2026-11-05T17:45:00.000Z",
+            4.07
           ],
           [
-            "2026-11-03T17:45:00.000Z",
-            5.02
+            "2026-11-05T18:00:00.000Z",
+            4.07
           ],
           [
-            "2026-11-03T18:00:00.000Z",
-            5.02
+            "2026-11-05T18:15:00.000Z",
+            4.06
           ],
           [
-            "2026-11-03T18:15:00.000Z",
-            5.01
+            "2026-11-05T18:30:00.000Z",
+            4.06
           ]
         ],
         "automatic": true,
@@ -7285,7 +7378,7 @@
           "P",
           "H"
         ],
-        "lastTransmissionAt": "2026-11-03T18:15:00.000Z"
+        "lastTransmissionAt": "2026-11-05T18:30:00.000Z"
       },
       {
         "sourceId": "salto",
@@ -7299,10 +7392,10 @@
         "department": "",
         "lat": -29.721745,
         "lng": -57.082856,
-        "valueM": 6.2,
-        "date": "2026-11-03T18:00:00.000Z",
-        "previousValueM": 6.22,
-        "trend": "baja",
+        "valueM": 5.15,
+        "date": "2026-11-05T18:30:00.000Z",
+        "previousValueM": 5.15,
+        "trend": "estable",
         "status": "Dato operativo telemétrico",
         "condition": "",
         "alertLevelM": null,
@@ -7310,60 +7403,60 @@
         "lowWaterLevelM": null,
         "timeseries": [
           [
-            "2026-11-03T14:45:00.000Z",
-            6.31
+            "2026-11-05T15:15:00.000Z",
+            5.18
           ],
           [
-            "2026-11-03T15:00:00.000Z",
-            6.31
+            "2026-11-05T15:30:00.000Z",
+            5.18
           ],
           [
-            "2026-11-03T15:15:00.000Z",
-            6.31
+            "2026-11-05T15:45:00.000Z",
+            5.15
           ],
           [
-            "2026-11-03T15:30:00.000Z",
-            6.29
+            "2026-11-05T16:00:00.000Z",
+            5.18
           ],
           [
-            "2026-11-03T15:45:00.000Z",
-            6.31
+            "2026-11-05T16:15:00.000Z",
+            5.15
           ],
           [
-            "2026-11-03T16:00:00.000Z",
-            6.29
+            "2026-11-05T16:30:00.000Z",
+            5.18
           ],
           [
-            "2026-11-03T16:15:00.000Z",
-            6.26
+            "2026-11-05T16:45:00.000Z",
+            5.18
           ],
           [
-            "2026-11-03T16:30:00.000Z",
-            6.26
+            "2026-11-05T17:00:00.000Z",
+            5.18
           ],
           [
-            "2026-11-03T16:45:00.000Z",
-            6.24
+            "2026-11-05T17:15:00.000Z",
+            5.18
           ],
           [
-            "2026-11-03T17:00:00.000Z",
-            6.24
+            "2026-11-05T17:30:00.000Z",
+            5.18
           ],
           [
-            "2026-11-03T17:15:00.000Z",
-            6.24
+            "2026-11-05T17:45:00.000Z",
+            5.15
           ],
           [
-            "2026-11-03T17:30:00.000Z",
-            6.22
+            "2026-11-05T18:00:00.000Z",
+            5.18
           ],
           [
-            "2026-11-03T17:45:00.000Z",
-            6.22
+            "2026-11-05T18:15:00.000Z",
+            5.15
           ],
           [
-            "2026-11-03T18:00:00.000Z",
-            6.2
+            "2026-11-05T18:30:00.000Z",
+            5.15
           ]
         ],
         "automatic": true,
@@ -7371,7 +7464,7 @@
           "P",
           "H"
         ],
-        "lastTransmissionAt": "2026-11-03T18:00:00.000Z"
+        "lastTransmissionAt": "2026-11-05T18:30:00.000Z"
       },
       {
         "sourceId": "salto",
@@ -7385,9 +7478,9 @@
         "department": "",
         "lat": -29.296744,
         "lng": -57.565952,
-        "valueM": 4.54,
-        "date": "2026-11-03T18:15:00.000Z",
-        "previousValueM": 4.54,
+        "valueM": 4.49,
+        "date": "2026-11-05T18:15:00.000Z",
+        "previousValueM": 4.49,
         "trend": "estable",
         "status": "Dato operativo telemétrico",
         "condition": "",
@@ -7396,60 +7489,60 @@
         "lowWaterLevelM": null,
         "timeseries": [
           [
-            "2026-11-03T15:00:00.000Z",
-            4.56
+            "2026-11-05T15:00:00.000Z",
+            4.51
           ],
           [
-            "2026-11-03T15:15:00.000Z",
-            4.56
+            "2026-11-05T15:15:00.000Z",
+            4.51
           ],
           [
-            "2026-11-03T15:30:00.000Z",
-            4.56
+            "2026-11-05T15:30:00.000Z",
+            4.51
           ],
           [
-            "2026-11-03T15:45:00.000Z",
-            4.56
+            "2026-11-05T15:45:00.000Z",
+            4.51
           ],
           [
-            "2026-11-03T16:00:00.000Z",
-            4.56
+            "2026-11-05T16:00:00.000Z",
+            4.51
           ],
           [
-            "2026-11-03T16:15:00.000Z",
-            4.55
+            "2026-11-05T16:15:00.000Z",
+            4.51
           ],
           [
-            "2026-11-03T16:30:00.000Z",
-            4.55
+            "2026-11-05T16:30:00.000Z",
+            4.51
           ],
           [
-            "2026-11-03T16:45:00.000Z",
-            4.55
+            "2026-11-05T16:45:00.000Z",
+            4.51
           ],
           [
-            "2026-11-03T17:00:00.000Z",
-            4.54
+            "2026-11-05T17:00:00.000Z",
+            4.5
           ],
           [
-            "2026-11-03T17:15:00.000Z",
-            4.54
+            "2026-11-05T17:15:00.000Z",
+            4.5
           ],
           [
-            "2026-11-03T17:30:00.000Z",
-            4.54
+            "2026-11-05T17:30:00.000Z",
+            4.51
           ],
           [
-            "2026-11-03T17:45:00.000Z",
-            4.54
+            "2026-11-05T17:45:00.000Z",
+            4.51
           ],
           [
-            "2026-11-03T18:00:00.000Z",
-            4.54
+            "2026-11-05T18:00:00.000Z",
+            4.49
           ],
           [
-            "2026-11-03T18:15:00.000Z",
-            4.54
+            "2026-11-05T18:15:00.000Z",
+            4.49
           ]
         ],
         "automatic": true,
@@ -7457,7 +7550,7 @@
           "P",
           "H"
         ],
-        "lastTransmissionAt": "2026-11-03T18:15:00.000Z"
+        "lastTransmissionAt": "2026-11-05T18:15:00.000Z"
       },
       {
         "sourceId": "salto",
@@ -7471,10 +7564,10 @@
         "department": "",
         "lat": -28.545073,
         "lng": -56.028995,
-        "valueM": 5.35,
-        "date": "2026-11-03T18:15:00.000Z",
-        "previousValueM": 5.36,
-        "trend": "baja",
+        "valueM": 6.95,
+        "date": "2026-11-05T18:30:00.000Z",
+        "previousValueM": 6.93,
+        "trend": "sube",
         "status": "Dato operativo telemétrico",
         "condition": "",
         "alertLevelM": null,
@@ -7482,60 +7575,60 @@
         "lowWaterLevelM": null,
         "timeseries": [
           [
-            "2026-11-03T15:00:00.000Z",
-            5.46
+            "2026-11-05T15:15:00.000Z",
+            6.71
           ],
           [
-            "2026-11-03T15:15:00.000Z",
-            5.45
+            "2026-11-05T15:30:00.000Z",
+            6.73
           ],
           [
-            "2026-11-03T15:30:00.000Z",
-            5.44
+            "2026-11-05T15:45:00.000Z",
+            6.75
           ],
           [
-            "2026-11-03T15:45:00.000Z",
-            5.44
+            "2026-11-05T16:00:00.000Z",
+            6.76
           ],
           [
-            "2026-11-03T16:00:00.000Z",
-            5.43
+            "2026-11-05T16:15:00.000Z",
+            6.79
           ],
           [
-            "2026-11-03T16:15:00.000Z",
-            5.43
+            "2026-11-05T16:30:00.000Z",
+            6.8
           ],
           [
-            "2026-11-03T16:30:00.000Z",
-            5.41
+            "2026-11-05T16:45:00.000Z",
+            6.83
           ],
           [
-            "2026-11-03T16:45:00.000Z",
-            5.4
+            "2026-11-05T17:00:00.000Z",
+            6.84
           ],
           [
-            "2026-11-03T17:00:00.000Z",
-            5.4
+            "2026-11-05T17:15:00.000Z",
+            6.85
           ],
           [
-            "2026-11-03T17:15:00.000Z",
-            5.39
+            "2026-11-05T17:30:00.000Z",
+            6.88
           ],
           [
-            "2026-11-03T17:30:00.000Z",
-            5.39
+            "2026-11-05T17:45:00.000Z",
+            6.89
           ],
           [
-            "2026-11-03T17:45:00.000Z",
-            5.38
+            "2026-11-05T18:00:00.000Z",
+            6.9
           ],
           [
-            "2026-11-03T18:00:00.000Z",
-            5.36
+            "2026-11-05T18:15:00.000Z",
+            6.93
           ],
           [
-            "2026-11-03T18:15:00.000Z",
-            5.35
+            "2026-11-05T18:30:00.000Z",
+            6.95
           ]
         ],
         "automatic": true,
@@ -7543,7 +7636,7 @@
           "P",
           "H"
         ],
-        "lastTransmissionAt": "2026-11-03T18:15:00.000Z"
+        "lastTransmissionAt": "2026-11-05T18:30:00.000Z"
       },
       {
         "sourceId": "salto",
@@ -7557,10 +7650,10 @@
         "department": "",
         "lat": -29.470444,
         "lng": -56.81167,
-        "valueM": 6.35,
-        "date": "2026-11-03T18:15:00.000Z",
-        "previousValueM": 6.36,
-        "trend": "baja",
+        "valueM": 5.54,
+        "date": "2026-11-05T18:30:00.000Z",
+        "previousValueM": 5.54,
+        "trend": "estable",
         "status": "Dato operativo telemétrico",
         "condition": "",
         "alertLevelM": null,
@@ -7568,60 +7661,60 @@
         "lowWaterLevelM": null,
         "timeseries": [
           [
-            "2026-11-03T15:00:00.000Z",
-            6.44
+            "2026-11-05T15:15:00.000Z",
+            5.51
           ],
           [
-            "2026-11-03T15:15:00.000Z",
-            6.44
+            "2026-11-05T15:30:00.000Z",
+            5.51
           ],
           [
-            "2026-11-03T15:30:00.000Z",
-            6.43
+            "2026-11-05T15:45:00.000Z",
+            5.51
           ],
           [
-            "2026-11-03T15:45:00.000Z",
-            6.43
+            "2026-11-05T16:00:00.000Z",
+            5.51
           ],
           [
-            "2026-11-03T16:00:00.000Z",
-            6.41
+            "2026-11-05T16:15:00.000Z",
+            5.51
           ],
           [
-            "2026-11-03T16:15:00.000Z",
-            6.41
+            "2026-11-05T16:30:00.000Z",
+            5.51
           ],
           [
-            "2026-11-03T16:30:00.000Z",
-            6.4
+            "2026-11-05T16:45:00.000Z",
+            5.51
           ],
           [
-            "2026-11-03T16:45:00.000Z",
-            6.39
+            "2026-11-05T17:00:00.000Z",
+            5.53
           ],
           [
-            "2026-11-03T17:00:00.000Z",
-            6.39
+            "2026-11-05T17:15:00.000Z",
+            5.53
           ],
           [
-            "2026-11-03T17:15:00.000Z",
-            6.38
+            "2026-11-05T17:30:00.000Z",
+            5.53
           ],
           [
-            "2026-11-03T17:30:00.000Z",
-            6.38
+            "2026-11-05T17:45:00.000Z",
+            5.53
           ],
           [
-            "2026-11-03T17:45:00.000Z",
-            6.38
+            "2026-11-05T18:00:00.000Z",
+            5.54
           ],
           [
-            "2026-11-03T18:00:00.000Z",
-            6.36
+            "2026-11-05T18:15:00.000Z",
+            5.54
           ],
           [
-            "2026-11-03T18:15:00.000Z",
-            6.35
+            "2026-11-05T18:30:00.000Z",
+            5.54
           ]
         ],
         "automatic": true,
@@ -7629,7 +7722,7 @@
           "P",
           "H"
         ],
-        "lastTransmissionAt": "2026-11-03T18:15:00.000Z"
+        "lastTransmissionAt": "2026-11-05T18:30:00.000Z"
       }
     ],
     "metadata": {
@@ -7655,8 +7748,8 @@
   },
   "satelliteFlood": {
     "ok": true,
-    "generatedAt": "2026-11-03T18:34:14.407Z",
-    "availableCount": 2,
+    "generatedAt": "2026-11-05T18:53:52.074Z",
+    "availableCount": 3,
     "refreshPolicy": {
       "metadataCacheMinutes": 60,
       "note": "La fecha corresponde a la escena más reciente que intersecta el rectángulo de Corrientes; no implica cobertura completa de toda la provincia."
@@ -7666,8 +7759,8 @@
         "id": "operaS1",
         "label": "NASA OPERA DSWx-S1",
         "available": true,
-        "acquiredAt": "2026-10-31T09:21:52.000Z",
-        "endAt": "2026-10-31T09:22:15.000Z",
+        "acquiredAt": "2026-10-31T22:15:17.000Z",
+        "endAt": "2026-10-31T22:15:28.000Z",
         "date": "2026-10-31",
         "availableDates": [
           "2026-10-31",
@@ -7677,7 +7770,7 @@
           "2026-10-25",
           "2026-10-24"
         ],
-        "sceneId": "OPERA_L3_DSWx-S1_T20JQL_20261031T092149Z_20261101T111937Z_S1D_30_v1.0",
+        "sceneId": "OPERA_L3_DSWx-S1_T21JWL_20261031T221502Z_20261102T184848Z_S1C_30_v1.0",
         "sourceUrl": "https://www.earthdata.nasa.gov/data/catalog/pocloud-opera-l3-dswx-s1-v1-1.0",
         "discovery": "NASA CMR · intersección espacial con Corrientes"
       },
@@ -7685,40 +7778,47 @@
         "id": "nasaViirsFlood",
         "label": "NASA LANCE VIIRS · inundación 3 días",
         "available": true,
-        "acquiredAt": "2026-11-02T23:00:00.000Z",
-        "endAt": "2026-11-03T23:00:00.000Z",
-        "date": "2026-11-02",
+        "acquiredAt": "2026-11-04T23:00:00.000Z",
+        "endAt": "2026-11-05T23:00:00.000Z",
+        "date": "2026-11-04",
         "availableDates": [
+          "2026-11-04",
+          "2026-11-03",
           "2026-11-02",
           "2026-11-01",
           "2026-10-31",
           "2026-10-30",
-          "2026-10-29",
-          "2026-10-28",
-          "2026-10-27"
+          "2026-10-29"
         ],
-        "sceneId": "VCDWD_L3_F3_NRT.A2026306.h12v11.002.tif",
+        "sceneId": "VCDWD_L3_F3_NRT.A2026308.h12v11.002.tif",
         "sourceUrl": "https://www.earthdata.nasa.gov/data/catalog/lancemodis-vcdwd-l3-nrt-2",
         "discovery": "NASA CMR · intersección espacial con Corrientes"
       },
       "gfmObservedFlood": {
         "id": "gfmObservedFlood",
         "label": "Copernicus GFM · inundación observada",
-        "available": false,
-        "acquiredAt": null,
+        "available": true,
+        "acquiredAt": "2026-11-05T09:29:48.000Z",
         "endAt": null,
-        "date": null,
-        "availableDates": [],
-        "sceneId": "",
+        "date": "2026-11-05",
+        "availableDates": [
+          "2026-11-05",
+          "2026-11-03",
+          "2026-11-02",
+          "2026-11-01",
+          "2026-10-31",
+          "2026-10-30"
+        ],
+        "sceneId": "ENSEMBLE_FLOOD_20261105T092948_VV_SA020M_E072N036T3",
         "sourceUrl": "https://global-flood.emergency.copernicus.eu/technical-information/glofas-gfm/",
-        "error": "The operation was aborted due to timeout"
+        "discovery": "Catálogo STAC oficial de GFM · intersección espacial con Corrientes"
       }
     }
   },
   "nasaPower": {
     "endpoint": "https://power.larc.nasa.gov/api/temporal/daily/regional",
     "pointCount": 28,
-    "date": "2026-11-01",
+    "date": "2026-11-03",
     "parameter": "PRECTOTCORR",
     "parameterLabel": "Precipitación corregida",
     "unit": "mm/día",
@@ -7731,231 +7831,231 @@
       "latitudeDegrees": 0.5,
       "longitudeDegrees": 0.625
     },
-    "requestUrl": "https://power.larc.nasa.gov/api/temporal/daily/regional?latitude-min=-30.8&latitude-max=-27.0&longitude-min=-59.9&longitude-max=-55.5&parameters=PRECTOTCORR&community=AG&start=20261012&end=20261103&format=JSON&time-standard=UTC",
+    "requestUrl": "https://power.larc.nasa.gov/api/temporal/daily/regional?latitude-min=-30.8&latitude-max=-27.0&longitude-min=-59.9&longitude-max=-55.5&parameters=PRECTOTCORR&community=AG&start=20261014&end=20261105&format=JSON&time-standard=UTC",
     "points": [
       {
         "id": "POWER_-30.000_-59.375",
-        "date": "2026-11-01",
+        "date": "2026-11-03",
         "lat": -30.0,
         "lng": -59.375,
         "elevationM": 35.18,
-        "precipitationMm": 0.02
+        "precipitationMm": 13.6
       },
       {
         "id": "POWER_-30.000_-58.750",
-        "date": "2026-11-01",
+        "date": "2026-11-03",
         "lat": -30.0,
         "lng": -58.75,
         "elevationM": 61.55,
-        "precipitationMm": 0.0
+        "precipitationMm": 14.56
       },
       {
         "id": "POWER_-30.000_-58.125",
-        "date": "2026-11-01",
+        "date": "2026-11-03",
         "lat": -30.0,
         "lng": -58.125,
         "elevationM": 75.05,
-        "precipitationMm": 0.0
+        "precipitationMm": 7.81
       },
       {
         "id": "POWER_-30.000_-57.500",
-        "date": "2026-11-01",
+        "date": "2026-11-03",
         "lat": -30.0,
         "lng": -57.5,
         "elevationM": 61.71,
-        "precipitationMm": 0.0
+        "precipitationMm": 4.6
       },
       {
         "id": "POWER_-29.500_-59.375",
-        "date": "2026-11-01",
+        "date": "2026-11-03",
         "lat": -29.5,
         "lng": -59.375,
         "elevationM": 37.69,
-        "precipitationMm": 0.22
+        "precipitationMm": 30.82
       },
       {
         "id": "POWER_-29.500_-58.750",
-        "date": "2026-11-01",
+        "date": "2026-11-03",
         "lat": -29.5,
         "lng": -58.75,
         "elevationM": 55.88,
-        "precipitationMm": 0.0
+        "precipitationMm": 35.06
       },
       {
         "id": "POWER_-29.500_-58.125",
-        "date": "2026-11-01",
+        "date": "2026-11-03",
         "lat": -29.5,
         "lng": -58.125,
         "elevationM": 85.25,
-        "precipitationMm": 0.0
+        "precipitationMm": 27.69
       },
       {
         "id": "POWER_-29.500_-57.500",
-        "date": "2026-11-01",
+        "date": "2026-11-03",
         "lat": -29.5,
         "lng": -57.5,
         "elevationM": 68.48,
-        "precipitationMm": 0.0
+        "precipitationMm": 16.38
       },
       {
         "id": "POWER_-29.500_-56.875",
-        "date": "2026-11-01",
+        "date": "2026-11-03",
         "lat": -29.5,
         "lng": -56.875,
         "elevationM": 63.74,
-        "precipitationMm": 0.0
+        "precipitationMm": 11.47
       },
       {
         "id": "POWER_-29.000_-58.750",
-        "date": "2026-11-01",
+        "date": "2026-11-03",
         "lat": -29.0,
         "lng": -58.75,
         "elevationM": 56.06,
-        "precipitationMm": 0.12
+        "precipitationMm": 48.41
       },
       {
         "id": "POWER_-29.000_-58.125",
-        "date": "2026-11-01",
+        "date": "2026-11-03",
         "lat": -29.0,
         "lng": -58.125,
         "elevationM": 72.95,
-        "precipitationMm": 0.07
+        "precipitationMm": 55.09
       },
       {
         "id": "POWER_-29.000_-57.500",
-        "date": "2026-11-01",
+        "date": "2026-11-03",
         "lat": -29.0,
         "lng": -57.5,
         "elevationM": 71.59,
-        "precipitationMm": 0.0
+        "precipitationMm": 55.32
       },
       {
         "id": "POWER_-29.000_-56.875",
-        "date": "2026-11-01",
+        "date": "2026-11-03",
         "lat": -29.0,
         "lng": -56.875,
         "elevationM": 67.58,
-        "precipitationMm": 0.22
+        "precipitationMm": 44.72
       },
       {
         "id": "POWER_-28.500_-58.750",
-        "date": "2026-11-01",
+        "date": "2026-11-03",
         "lat": -28.5,
         "lng": -58.75,
         "elevationM": 60.68,
-        "precipitationMm": 0.48
+        "precipitationMm": 24.81
       },
       {
         "id": "POWER_-28.500_-58.125",
-        "date": "2026-11-01",
+        "date": "2026-11-03",
         "lat": -28.5,
         "lng": -58.125,
         "elevationM": 64.4,
-        "precipitationMm": 0.6
+        "precipitationMm": 35.27
       },
       {
         "id": "POWER_-28.500_-57.500",
-        "date": "2026-11-01",
+        "date": "2026-11-03",
         "lat": -28.5,
         "lng": -57.5,
         "elevationM": 65.23,
-        "precipitationMm": 0.12
+        "precipitationMm": 46.41
       },
       {
         "id": "POWER_-28.500_-56.875",
-        "date": "2026-11-01",
+        "date": "2026-11-03",
         "lat": -28.5,
         "lng": -56.875,
         "elevationM": 69.15,
-        "precipitationMm": 0.2
+        "precipitationMm": 48.72
       },
       {
         "id": "POWER_-28.500_-56.250",
-        "date": "2026-11-01",
+        "date": "2026-11-03",
         "lat": -28.5,
         "lng": -56.25,
         "elevationM": 76.36,
-        "precipitationMm": 0.39
+        "precipitationMm": 62.24
       },
       {
         "id": "POWER_-28.000_-58.750",
-        "date": "2026-11-01",
+        "date": "2026-11-03",
         "lat": -28.0,
         "lng": -58.75,
         "elevationM": 58.27,
-        "precipitationMm": 0.72
+        "precipitationMm": 7.0
       },
       {
         "id": "POWER_-28.000_-58.125",
-        "date": "2026-11-01",
+        "date": "2026-11-03",
         "lat": -28.0,
         "lng": -58.125,
         "elevationM": 69.18,
-        "precipitationMm": 0.44
+        "precipitationMm": 8.04
       },
       {
         "id": "POWER_-28.000_-57.500",
-        "date": "2026-11-01",
+        "date": "2026-11-03",
         "lat": -28.0,
         "lng": -57.5,
         "elevationM": 67.78,
-        "precipitationMm": 0.31
+        "precipitationMm": 9.58
       },
       {
         "id": "POWER_-28.000_-56.875",
-        "date": "2026-11-01",
+        "date": "2026-11-03",
         "lat": -28.0,
         "lng": -56.875,
         "elevationM": 69.44,
-        "precipitationMm": 0.02
+        "precipitationMm": 7.49
       },
       {
         "id": "POWER_-28.000_-56.250",
-        "date": "2026-11-01",
+        "date": "2026-11-03",
         "lat": -28.0,
         "lng": -56.25,
         "elevationM": 98.82,
-        "precipitationMm": 0.73
+        "precipitationMm": 17.55
       },
       {
         "id": "POWER_-27.500_-58.750",
-        "date": "2026-11-01",
+        "date": "2026-11-03",
         "lat": -27.5,
         "lng": -58.75,
         "elevationM": 55.8,
-        "precipitationMm": 0.62
+        "precipitationMm": 5.08
       },
       {
         "id": "POWER_-27.500_-58.125",
-        "date": "2026-11-01",
+        "date": "2026-11-03",
         "lat": -27.5,
         "lng": -58.125,
         "elevationM": 64.37,
-        "precipitationMm": 0.17
+        "precipitationMm": 5.61
       },
       {
         "id": "POWER_-27.500_-57.500",
-        "date": "2026-11-01",
+        "date": "2026-11-03",
         "lat": -27.5,
         "lng": -57.5,
         "elevationM": 67.31,
-        "precipitationMm": 0.13
+        "precipitationMm": 6.1
       },
       {
         "id": "POWER_-27.500_-56.875",
-        "date": "2026-11-01",
+        "date": "2026-11-03",
         "lat": -27.5,
         "lng": -56.875,
         "elevationM": 73.37,
-        "precipitationMm": 0.83
+        "precipitationMm": 3.8
       },
       {
         "id": "POWER_-27.500_-56.250",
-        "date": "2026-11-01",
+        "date": "2026-11-03",
         "lat": -27.5,
         "lng": -56.25,
         "elevationM": 101.43,
-        "precipitationMm": 1.49
+        "precipitationMm": 3.97
       }
     ]
   },
@@ -8305,9 +8405,9 @@
   "quality": {
     "canonicalInaInventory": "pub/datos/estaciones",
     "inaInventoryDifference": 21,
-    "primaryHeightCount": 71,
+    "primaryHeightCount": 72,
     "primaryHeightSourceCounts": {
-      "ina": 35,
+      "ina": 36,
       "snih": 25,
       "salto": 11
     },
